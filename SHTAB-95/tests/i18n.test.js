@@ -49,3 +49,7 @@ test('important dynamic mission and instrument strings have both translations',(
   assert.notEqual(en[key],ru[key],'expected a Russian translation for '+key);
  }
 });
+
+test('runtime JavaScript contains no hardcoded Cyrillic text',()=>{
+ for(const file of runtimeFiles){const code=fs.readFileSync(path.join(root,'js',file),'utf8');assert.doesNotMatch(code,/[А-Яа-яЁё]/,'Cyrillic must live in locales/ru.js, not js/'+file)}
+});
