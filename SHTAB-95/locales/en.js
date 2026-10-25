@@ -458,5 +458,13 @@ window.SHTAB_LOCALES.en = {
   "boot.radio": "RADIO    [OK] RF interface diagnostics",
   "boot.map": "MAP      [OK] Terrain data mounted",
   "boot.ready": "SHTAB 95 [READY] Operator terminal online",
-  "Select charge 1 through 5.": "Select charge 1 through 5."
+  "Select charge 1 through 5.": "Select charge 1 through 5.",
+  "Projectile": "Projectile",
+  "Muzzle velocity": "Muzzle velocity",
+  "OF-41 Sokol": "OF-41 Sokol",
+  "OF-42 Krechet": "OF-42 Krechet",
+  "OF-43M Granit": "OF-43M Granit",
+  "OF-44 Buran": "OF-44 Buran",
+  "OF-45 Grom": "OF-45 Grom",
+  "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.": "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model."
 };

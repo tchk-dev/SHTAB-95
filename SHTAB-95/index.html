@@ -23,8 +23,14 @@
   <div class="pane">
    <div class="panel"><h3>Mission Data</h3><div class="b"><table id="data"></table>
     <div class="hint">Azimuth measured from north. Wind direction indicates source. Targets are hidden.</div></div></div>
-   <div class="panel"><h3>Ammunition Table</h3><div class="b"><table><tr><td>OF-43M / No. 1</td><td>250 m/s</td></tr><tr><td>OF-43M / No. 2</td><td>350 m/s</td></tr><tr><td>OF-43M / No. 3</td><td>450 m/s</td></tr><tr><td>OF-43M / No. 4</td><td>550 m/s</td></tr></table>
-    <div class="hint">OF-43M Granit · high-explosive fragmentation training model · 43 kg.</div></div></div>
+   <div class="panel"><h3>Ammunition Table</h3><div class="b"><table>
+    <tr><th>Charge</th><th>Projectile</th><th>Muzzle velocity</th></tr>
+    <tr><td>1</td><td>OF-41 Sokol</td><td>250 m/s</td></tr>
+    <tr><td>2</td><td>OF-42 Krechet</td><td>350 m/s</td></tr>
+    <tr><td>3</td><td>OF-43M Granit</td><td>450 m/s</td></tr>
+    <tr><td>4</td><td>OF-44 Buran</td><td>550 m/s</td></tr>
+    <tr><td>5</td><td>OF-45 Grom</td><td>800 m/s</td></tr>
+   </table><div class="hint">Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.</div></div></div>
    <div class="panel"><h3>Fire Mission</h3><div class="b">
     <div class="link off" id="link"></div>
     <div class="crew-resources" id="crewResources" aria-live="off"><div class="crew-resources-title">Ammunition and Gun Status</div><div id="crewResourceRows"></div></div>

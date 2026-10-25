@@ -241,7 +241,7 @@ $('sendBearing').onclick=()=>{
  const c=CR[k];
  if(c.identified){$('bearingStatus').textContent=I18n.t("✓ Channel already identified");return}
  c.identified=true;
- $('bearingStatus').textContent='✓ '+c.name+' / '+c.f+I18n.t(" kHz");
+ $('bearingStatus').textContent='✓ '+I18n.t(c.name)+' / '+c.f+I18n.t(" kHz");
  updateBearingPanel();renderData();lkKey='';updateLink();
  if(window.sh95Event)window.sh95Event(I18n.format('mission.bearingConfirmed',{crew:I18n.t(c.name),frequency:c.f}));
 };
