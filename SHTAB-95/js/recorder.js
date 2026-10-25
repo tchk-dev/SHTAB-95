@@ -2,12 +2,12 @@
 /* MG-95: PCM recording of the processed radio output, encoded as WAV. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id),toggle=$('recToggle'),play=$('recPlay'),pause=$('recPause'),deleteBtn=$('recDelete'),audio=$('recAudio'),seek=$('recSeek'),speed=$('recSpeed'),state=$('recState'),panel=$('recorderPanel');
-let recording=false,blocks=[],samples=0,sampleRate=44100,clipUrl=null,qualitySum=0,qualitySamples=0,recordStart=0,clock=null,limit=null,recordedPCM=null,recordedQuality=0,currentEntryId=null,pendingSave=null;
+let recording=false,blocks=[],samples=0,sampleRate=44100,clipUrl=null,qualitySum=0,qualitySamples=0,recordStart=0,clock=null,limit=null,recordedPCM=null,recordedQuality=0,currentEntryId=null,pendingSave=null,recordTaskId=null;
 const fmt=s=>{s=Math.max(0,Math.floor(s||0));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 const say=t=>state.textContent=t;
 const readQuality=()=>{const r=window.Radio;if(!r?.isOn())return 0;const k=r.link();return k>=0?r.quality(k):0};
 function sample(){qualitySum+=readQuality();qualitySamples++;$('recDuration').textContent=fmt((performance.now()-recordStart)/1000)}
-function resetPlayback(){currentEntryId=null;deleteBtn.disabled=true;recordedPCM=null;$('recDecode').disabled=true;$('decodeStatus').textContent='НЕТ ЗАПИСИ';$('decodeOutput').textContent='ОЖИДАНИЕ АУДИОЗАПИСИ';audio.pause();audio.removeAttribute('src');audio.load();play.disabled=pause.disabled=seek.disabled=true;seek.value=0;if(clipUrl){URL.revokeObjectURL(clipUrl);clipUrl=null}}
+function resetPlayback(){recordTaskId=null;currentEntryId=null;deleteBtn.disabled=true;recordedPCM=null;$('recDecode').disabled=true;$('decodeStatus').textContent='НЕТ ЗАПИСИ';$('decodeOutput').textContent='ОЖИДАНИЕ АУДИОЗАПИСИ';audio.pause();audio.removeAttribute('src');audio.load();play.disabled=pause.disabled=seek.disabled=true;seek.value=0;if(clipUrl){URL.revokeObjectURL(clipUrl);clipUrl=null}}
 function wavEncode(chunks,count,rate){
  const buffer=new ArrayBuffer(44+count*2),view=new DataView(buffer);
  const ascii=(pos,str)=>{for(let i=0;i<str.length;i++)view.setUint8(pos+i,str.charCodeAt(i))};
@@ -28,17 +28,19 @@ function stop(){
  if(!samples){say('НЕТ АУДИОДАННЫХ');return}
  try{recordedPCM=new Float32Array(samples);let pos=0;for(const b of blocks){recordedPCM.set(b,pos);pos+=b.length}const blob=wavEncode(blocks,samples,sampleRate);blocks=[];clipUrl=URL.createObjectURL(blob);$('recDecode').disabled=false;$('decodeStatus').textContent='ГОТОВ К АНАЛИЗУ';$('decodeOutput').textContent='НАЖМИТЕ «ДЕШИФРОВАТЬ ЗАПИСЬ»';
   audio.src=clipUrl;audio.playbackRate=Number(speed.value);play.disabled=pause.disabled=seek.disabled=false;
-  say('ЗАПИСЬ СОХРАНЕНА · '+fmt(samples/sampleRate));$('recDuration').textContent=fmt(samples/sampleRate);
+  say('ЗАПИСЬ ГОТОВА · СОХРАНЕНИЕ…');$('recDuration').textContent=fmt(samples/sampleRate);
   const id=Date.now(),frequency=Number((window.Radio?.frequency?.()||0).toFixed(1));currentEntryId=id;deleteBtn.disabled=false;
-  const entry={id,name:`REC_${new Date(id).toISOString().replace(/[-:]/g,'').slice(0,15)}.WAV`,blob,seconds:samples/sampleRate,quality:mean,frequency};
-  pendingSave=window.sh95Archive?.save(entry);pendingSave?.then(ok=>{if(!ok&&currentEntryId===id)say('ЗАПИСЬ В ПАМЯТИ · ХРАНИЛИЩЕ НЕДОСТУПНО')});
+  const entry={taskId:recordTaskId,id,name:`REC_${new Date(id).toISOString().replace(/[-:]/g,'').slice(0,15)}.WAV`,blob,seconds:samples/sampleRate,quality:mean,frequency};
+  pendingSave=window.sh95Archive?.save(entry);
+  if(!pendingSave){say('ЗАПИСЬ ТОЛЬКО В ПАМЯТИ · АРХИВ НЕДОСТУПЕН')}
+  else pendingSave.then(ok=>{if(currentEntryId===id)say(ok?'ЗАПИСЬ СОХРАНЕНА · '+fmt(samples/sampleRate):'ЗАПИСЬ ТОЛЬКО В ПАМЯТИ · ХРАНИЛИЩЕ НЕДОСТУПНО')}).catch(err=>{if(currentEntryId===id)say('ОШИБКА СОХРАНЕНИЯ: '+err.message)});
  }catch(e){blocks=[];say('ОШИБКА СОХРАНЕНИЯ: '+e.message)}
 }
 function start(){
  const radio=window.Radio;
  if(!radio?.isOn()){say('ВКЛЮЧИТЕ РАДИОПРИЁМНИК');return}
  if(!window.sh95TapeSampleRate){say('АУДИОСИСТЕМА ЕЩЁ НЕ ГОТОВА');return}
- resetPlayback();blocks=[];samples=0;qualitySum=0;qualitySamples=0;
+ resetPlayback();recordTaskId=window.sh95CurrentTaskId||null;blocks=[];samples=0;qualitySum=0;qualitySamples=0;
  sampleRate=window.sh95TapeSampleRate;recordStart=performance.now();
  $('recFreq').textContent='ЧАСТОТА: '+Math.round(radio.frequency())+' кГц';
  $('recQuality').textContent='РАЗБОРЧИВОСТЬ: ИЗМЕРЕНИЕ';$('recDuration').textContent='00:00';
@@ -63,7 +65,10 @@ function goertzelPower(pcm,begin,end,rate,hz){
  for(let i=begin;i<end;i++){const q=pcm[i]+coeff*q1-q2;q2=q1;q1=q}
  return Math.max(0,q1*q1+q2*q2-coeff*q1*q2)/Math.max(1,end-begin)**2;
 }
-function decodeAudio(pcm,rate,quality){
+function decodeAudio(pcm,rate,quality,seed){
+ // Stable per-recording noise: re-decoding cannot reroll uncertain symbols.
+ let rngState=(Number(seed)||0)>>>0;
+ const seededRandom=()=>{rngState=(rngState+0x6D2B79F5)|0;let t=Math.imul(rngState^(rngState>>>15),1|rngState);t^=t+Math.imul(t^(t>>>7),61|t);return ((t^(t>>>14))>>>0)/4294967296};
  // The generator uses 90ms Morse units and a 690 Hz carrier; each frame spans 10ms.
  const hop=Math.max(1,Math.round(rate*.01)),energies=[];
  for(let a=0;a+hop<=pcm.length;a+=hop){
@@ -95,7 +100,7 @@ function decodeAudio(pcm,rate,quality){
  // Reception quality affects confidence, with visible uncertainty rather than invented precision.
  const penalty=Math.pow(Math.max(0,1-quality),2)*.22;
  let errors=0;
- transcript=[...transcript].map(ch=>{if(ch===' '||ch==='?')return ch;if(Math.random()<penalty){errors++;return '?'}return ch}).join('');
+ transcript=[...transcript].map(ch=>{if(ch===' '||ch==='?')return ch;if(seededRandom()<penalty){errors++;return '?'}return ch}).join('');
  return {text:transcript,errors,hasUnknown,contrast,message:transcript.includes('?')?'ЧАСТЬ СИМВОЛОВ НЕ РАСПОЗНАНА':'ТЕЛЕГРАММА РАСПОЗНАНА'};
 }
 $('recDecode').onclick=()=>{
@@ -104,16 +109,16 @@ $('recDecode').onclick=()=>{
  // Defer CPU work to allow the UI to show the analysis state.
  setTimeout(()=>{
   try{
-   const r=decodeAudio(recordedPCM,sampleRate,recordedQuality);
+   const r=decodeAudio(recordedPCM,sampleRate,recordedQuality,currentEntryId);
    $('decodeOutput').textContent=(r.text||'—')+'\n\n'+r.message+'\nСР. РАЗБОРЧИВОСТЬ: '+Math.round(recordedQuality*100)+'%'+(r.errors?'\nНЕУВЕРЕННЫХ СИМВОЛОВ: '+r.errors:'');
    $('decodeStatus').textContent=r.text?'АНАЛИЗ ЗАВЕРШЁН':'СИГНАЛ НЕ РАСПОЗНАН';
    // Заполняем исходные данные исключительно при полностью распознанных полях.
    // Не подставляем настоящие скрытые координаты при ошибках декодирования.
    const matches=[...(r.text||'').matchAll(/(?:^|\s)DE\s+([123])\s+AZ\s+\d{3}\s+X\s+(\d{5})\s+Y\s+(\d{5})(?=\s|$)/g)];
    if(matches.length){
-    const m=matches[0],ok=window.sh95AcceptDecodedCoordinates?.(Number(m[1]),Number(m[2]),Number(m[3]));
+    const m=matches[0],ok=window.sh95AcceptDecodedCoordinates?.(Number(m[1]),Number(m[2]),Number(m[3]),recordTaskId);
     if(ok){$('decodeStatus').textContent='КООРДИНАТЫ ПЕРЕДАНЫ';$('decodeOutput').textContent+='\n\n✓ КООРДИНАТЫ ВНЕСЕНЫ В «ИСХОДНЫЕ ДАННЫЕ»'}
-    else $('decodeOutput').textContent+='\n\n⚠ РАСЧЁТ НЕ ПОДТВЕРЖДЁН — КООРДИНАТЫ НЕ ВНЕСЕНЫ';
+    else $('decodeOutput').textContent+='\n\n⚠ ЗАПИСЬ ОТ ДРУГОГО ЗАДАНИЯ ИЛИ РАСЧЁТ НЕ ПОДТВЕРЖДЁН — КООРДИНАТЫ НЕ ВНЕСЕНЫ';
    }else if(r.text){$('decodeOutput').textContent+='\n\n⚠ НЕДОСТАТОЧНО ДАННЫХ ДЛЯ ПЕРЕДАЧИ КООРДИНАТ';}
 
   }catch(e){$('decodeStatus').textContent='ОШИБКА ДЕШИФРАЦИИ';$('decodeOutput').textContent=String(e.message||e)}
@@ -128,7 +133,7 @@ window.sh95LoadTape=async(entry)=>{
  try{decoded=await ac.decodeAudioData(buf.slice(0))}finally{await ac.close()}
  sampleRate=decoded.sampleRate;recordedPCM=new Float32Array(decoded.length);
  for(let c=0;c<decoded.numberOfChannels;c++){const data=decoded.getChannelData(c);for(let i=0;i<data.length;i++)recordedPCM[i]+=data[i]/decoded.numberOfChannels}
- recordedQuality=entry.quality;currentEntryId=entry.id;deleteBtn.disabled=false;clipUrl=URL.createObjectURL(entry.blob);audio.src=clipUrl;audio.playbackRate=Number(speed.value);
+ recordedQuality=entry.quality;currentEntryId=entry.id;recordTaskId=entry.taskId||null;deleteBtn.disabled=false;clipUrl=URL.createObjectURL(entry.blob);audio.src=clipUrl;audio.playbackRate=Number(speed.value);
  play.disabled=pause.disabled=seek.disabled=$('recDecode').disabled=false;
  $('recQuality').textContent='СР. РАЗБОРЧИВОСТЬ: '+Math.round(entry.quality*100)+'%';
  $('recFreq').textContent='ЧАСТОТА: '+entry.frequency+' кГц';$('recDuration').textContent=fmt(entry.seconds);
@@ -141,7 +146,7 @@ deleteBtn.onclick=async()=>{
  const id=currentEntryId;
  deleteBtn.disabled=true;
  // Дожидаемся завершения сохранения, чтобы удалённая запись не появилась снова.
- try{if(pendingSave)await pendingSave;if(id!=null)await window.sh95Archive?.remove(id)}
+ try{if(pendingSave)await pendingSave;if(id!=null&&await window.sh95Archive?.remove(id)===false)throw new Error('Не удалось удалить файл из архива')}
  catch(err){say('ОШИБКА УДАЛЕНИЯ: '+err.message);deleteBtn.disabled=false;return}
  pendingSave=null;resetPlayback();$('recDuration').textContent='00:00';
  $('recQuality').textContent='РАЗБОРЧИВОСТЬ: —';$('recFreq').textContent='ЧАСТОТА: —';
