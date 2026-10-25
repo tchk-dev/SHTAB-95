@@ -104,7 +104,8 @@ function renderData(){
   $('data').innerHTML=h}
 // Публикуем только координаты, которые декодер действительно прочитал из аудио.
 // При новом задании сведения сбрасываются вместе с массивом расчётов.
-window.sh95AcceptDecodedCoordinates=(crewNumber,x,y)=>{
+window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
+ if(!recordTaskId||recordTaskId!==window.sh95CurrentTaskId)return false;
  const c=CR[crewNumber-1];
  if(!c||!c.identified||!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x>99999||y>99999)return false;
  c.decodedTarget={x,y};
@@ -113,6 +114,7 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y)=>{
  return true;
 };
 function newTask(noWind){
+  window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
   const fr=pickFreqs();
