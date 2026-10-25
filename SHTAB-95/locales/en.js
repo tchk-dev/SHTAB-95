@@ -445,5 +445,10 @@ window.SHTAB_LOCALES.en = {
   "550 m/s": "550 m/s",
   "X: — Y: —": "X: — Y: —",
   "ui.successPattern": "confirmed|accepted|correct|identified",
-  "ui.errorPattern": "error|invalid|rejected|no signal"
+  "ui.errorPattern": "error|invalid|rejected|no signal",
+  "conditions.header": "MISSION CONDITIONS / DETAILS",
+  "conditions.close": "Close details",
+  "conditions.interference": "RADIO INTERFERENCE  +{value} pp",
+  "conditions.drag": "AIR RESISTANCE     ×{value}",
+  "conditions.note": "Modifiers are combined with the other mission conditions. Values shown are this condition's contribution."
 };
