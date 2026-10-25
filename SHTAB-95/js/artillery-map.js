@@ -19,7 +19,7 @@ function ground(x,y){
   const i=u|0,j=w|0,a=u-i,b=w-j;
   return HM[j*N+i]*(1-a)*(1-b)+HM[j*N+i+1]*a*(1-b)+HM[(j+1)*N+i]*(1-a)*b+HM[(j+1)*N+i+1]*a*b}
 
-// Гипсометрическая палитра: зелёные низины, охристые склоны, бурые высоты.
+// Hypsometric palette: green lowlands, ochre slopes, brown highlands.
 const RAMP=[[0,[105,160,95]],[.22,[155,187,111]],[.45,[210,190,119]],[.7,[174,135,101]],[1,[235,227,204]]];
 function colorAt(h){
   if(h<4)return[78,132,200];
@@ -71,7 +71,7 @@ function place(){
   if(best){best.g.z=Math.round(best.gz);best.t.z=Math.round(best.tz);return{g:best.g,t:best.t}}
   const g={x:ORG.x+WS/2,y:ORG.y+WS/2},t={x:g.x+3000,y:g.y};g.z=Math.round(ground(g.x,g.y));t.z=Math.round(ground(t.x,t.y));return{g,t}
 }
-// Температура — условная игровая модель, а не реальные теплотехнические данные.
+// Temperature is a simplified game model, not actual thermal engineering data.
 const TIMES=[{id:'morning',name:'Morning',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'Day',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Evening',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Night',icon:'🌙',noise:.34,drag:1.025}];
 // Weighted conditional weather: keys are time-of-day IDs; zero means impossible.
 // Probabilities are relative weights and are normalized for each mission.
@@ -132,8 +132,8 @@ function renderData(){
     row(I18n.t("Frequency"),c.identified?c.f+I18n.t(" kHz"):I18n.t("NOT SET"))+row(I18n.t("Gun X / Y"),'X '+Math.round(c.g.x)+' / Y '+Math.round(c.g.y))+row(I18n.t("Gun Elevation"),c.g.z+I18n.t(" m"))+row(I18n.t("Target"),c.decodedTarget?('X '+c.decodedTarget.x+' / Y '+c.decodedTarget.y+(c.hit?I18n.t(" · DESTROYED"):'')):(c.hit?I18n.t("Confirmed"):I18n.t("HIDDEN — intercept Morse")))).join('');
   h+=`<tr><td colspan="2" style="text-align:left;border-bottom:1px solid #215dc6;color:#215dc6">${I18n.t("Weather Data")}</td></tr>`+row(I18n.t("Wind From"),S.ws?S.wd+'°':'—')+row(I18n.t("Wind Speed"),S.ws+I18n.t(" m/s"));
   $('data').innerHTML=h}
-// Публикуем только координаты, которые декодер действительно прочитал из аудио.
-// При новом задании сведения сбрасываются вместе с массивом расчётов.
+// Expose only coordinates that the decoder actually recovered from audio.
+// Reset mission intelligence together with the gun crews.
 window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  if(!recordTaskId||recordTaskId!==window.sh95CurrentTaskId)return false;
  const c=CR[crewNumber-1];
@@ -216,7 +216,7 @@ function fire(){
   if(!Number.isInteger(ch)||ch<1||ch>4){reject(I18n.t("Select charge 1 through 4."));return}
   const ku=mil?Math.PI/3200:Math.PI/180;
   if(e0*ku<=0||e0*ku>=1.55){reject(I18n.t("Elevation is out of range (0…90°)."));return}
-  // --- искажения при плохой связи
+  // --- Distortion caused by poor reception
   const q=Radio.quality(k),er=clamp((0.8-q)/0.5,0,1),pm=er*0.4,unit=mil?17.78:1;
   let ra=a,re=e0,rc=ch;
   if(er>0){
@@ -240,13 +240,13 @@ function fire(){
   $('s1').textContent=all?I18n.t("All targets destroyed!"):I18n.format('mission.deviation',{crew:I18n.t(c.name),distance:d.toFixed(0)});
   renderData();renderCrewResources();draw();if(window.sh95Brief)window.sh95Brief();if(!hit&&c.ammo===0)showDefeat(c)}
 
-/* ---- карта ---- */
+/* ---- map ---- */
 function fitView(){const xs=CR.flatMap(c=>[c.g.x,c.t.x]),ys=CR.flatMap(c=>[c.g.y,c.t.y]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
   v.cx=(x0+x1)/2;v.cy=(y0+y1)/2;v.m=Math.max((x1-x0)/(W*.8),(y1-y0)/(H*.8),6)}
 function halo(x,s,px,py){x.lineWidth=3;x.strokeStyle='rgba(255,255,255,.85)';x.strokeText(s,px,py);x.fillText(s,px,py)}
 function marker(x,wx,wy,sym,col,label){
   const px=X(wx),py=Y(wy);if(px<-45||py<-45||px>W+45||py>H+45)return;
-  // Штабной условный знак: прямоугольная табличка с индексом расчёта.
+  // Military map symbol: rectangular label with the crew index.
   const id=(String(label).match(/\d+/)||[''])[0]||label.slice(0,2);
   x.save();x.lineWidth=1.5;x.fillStyle='#0a2419';x.strokeStyle='#000000';
   x.fillRect(px-15,py-13,30,26);x.strokeRect(px-15.5,py-13.5,31,27);
@@ -264,7 +264,7 @@ function draw(){
   x.imageSmoothingEnabled=true;x.save();x.filter=window.sh95GreenMap?'grayscale(1) sepia(.8) hue-rotate(70deg) saturate(1.5) brightness(.64) contrast(1.2)':'none';x.drawImage(terr,X(ORG.x),Y(ORG.y+WS),WS/v.m,WS/v.m);x.restore();
   const steps=[100,200,500,1000,2000,5000],st=steps.find(s=>s/v.m>=80)||5000;
   x.lineWidth=1;x.strokeStyle='rgba(95,209,130,.27)';x.font='bold 11px Courier New,monospace';x.textBaseline='alphabetic';
-  // Координаты выводятся в отдельных непрозрачных табличках, без белого ореола.
+  // Render coordinates in separate opaque labels without white outlines.
   function gridLabel(txt,px,py){const str=String(txt),width=x.measureText(str).width+8;
     x.fillStyle='#06190f';x.fillRect(px,py-11,width,15);x.strokeStyle='#4a865a';x.strokeRect(px+.5,py-10.5,width-1,14);
     x.fillStyle='#e0f6d9';x.fillText(str,px+4,py);x.strokeStyle='rgba(95,209,130,.27)';}
@@ -278,7 +278,7 @@ function draw(){
   CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,I18n.t(c.name).toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'T'+(c.k+1)):null)});
   if(S.ws){const a=(S.wd+180)*Math.PI/180,ox=W-60,oy=60,dx=Math.sin(a)*24,dy=-Math.cos(a)*24;x.fillStyle='rgba(255,255,225,.9)';x.fillRect(ox-45,oy-40,90,86);x.strokeStyle='#000';x.lineWidth=1;x.strokeRect(ox-45,oy-40,90,86);
     x.lineWidth=3;x.beginPath();x.moveTo(ox-dx,oy-dy);x.lineTo(ox+dx,oy+dy);x.stroke();x.beginPath();x.arc(ox+dx,oy+dy,4,0,7);x.fillStyle='#000';x.fill();x.font='11px Tahoma';x.textAlign='center';x.fillText(I18n.t("wind ")+S.ws+I18n.t(" m/s"),ox,oy+38);x.fillText('N ↑',ox,oy-30);x.textAlign='start'}
-  // Высотная легенда с цветами исходного рельефа.
+  // Elevation legend matching the original terrain palette.
   const lx=W-155,ly=H-47,lw=138,lh=9;
   x.fillStyle='rgba(5,17,14,.90)';x.fillRect(lx-8,ly-18,lw+16,51);
   x.fillStyle='#eef4e5';x.font='bold 10px Courier New';x.textAlign='left';
@@ -314,9 +314,9 @@ function drawProfile(){
   }
   const c=CR[last],tr=c.trajs?.[c.trajs.length-1];
   if(!Array.isArray(tr)||tr.length<2){state.textContent=I18n.t("TRAJECTORY UNAVAILABLE");ctx.restore();return}
-  // Разрез направлен по фактическому выстрелу, а не по цели.
-  // Иначе при стрельбе в другую сторону вся траектория оказывалась
-  // левее графика и полностью скрывалась областью clip().
+  // Align the cross-section with the actual shot, not the target.
+  // Otherwise, a shot in the opposite direction would move the entire trajectory
+  // left of the plot, where the clipping region would hide it.
   const end=tr[tr.length-1];
   const shotLen=Math.hypot(end[0],end[1]);
   const firstMove=tr.find(p=>Math.hypot(p[0],p[1])>1);
@@ -372,7 +372,7 @@ function drawProfile(){
   state.textContent=I18n.format('profile.status',{crew:c.k+1,height:Math.round(zmax-pad),offset:Math.round(targetSide)});
   ctx.restore();
 }
-/* ---- взаимодействие ---- */
+/* ---- interaction ---- */
 function zoom(f,px=W/2,py=H/2){const wx=v.cx+(px-W/2)*v.m,wy=v.cy-(py-H/2)*v.m;v.m=Math.min(60,Math.max(1.5,v.m*f));v.cx=wx-(px-W/2)*v.m;v.cy=wy+(py-H/2)*v.m;draw()}
 const pos=e=>{const r=mapC.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
 const showTargets=$('showTargets');showTargets.addEventListener('change',draw);
