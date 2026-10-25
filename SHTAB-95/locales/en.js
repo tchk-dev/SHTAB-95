@@ -443,5 +443,7 @@ window.SHTAB_LOCALES.en = {
   "350 m/s": "350 m/s",
   "450 m/s": "450 m/s",
   "550 m/s": "550 m/s",
-  "X: — Y: —": "X: — Y: —"
+  "X: — Y: —": "X: — Y: —",
+  "ui.successPattern": "confirmed|accepted|correct|identified",
+  "ui.errorPattern": "error|invalid|rejected|no signal"
 };
