@@ -18,7 +18,7 @@ function randomCivilFrequencies(){
 const fq=document.getElementById('fq');
 let ctx,proc,lp1,lp2,hp,vg,comp,analyser,tt=0,SR=44100;
 const PI2=Math.PI*2,rnd=Math.random;
-// --- генераторы сигналов станций
+// --- station signal generators
 function melody(){const N=[220,261.6,329.6,440,329.6,261.6,196,246.9,293.7,392,293.7,246.9];let p=0,q=0;
  return t=>{const n=Math.floor(t/.2),lt=t-n*.2;p+=PI2*N[n%12]/SR;q+=PI2*N[(n>>2)%3*4%12]/2/SR;
  const e=Math.min(1,lt*200)*Math.exp(-lt*9);return (Math.sin(p)+.4*Math.sin(2*p)+.15*Math.sin(3*p))*.5*e+.18*Math.sin(q)}}
@@ -71,7 +71,7 @@ function codedTransmission(message){
 }
 const GEN=[melody,morse,speech,numbers,rtty,()=>codedTransmission('DE 1 AZ 000 X 00000 Y 00000'),()=>codedTransmission('DE 2 AZ 000 X 00000 Y 00000'),()=>codedTransmission('DE 3 AZ 000 X 00000 Y 00000')];
 ST.forEach((s,i)=>{s.g=null;s.a=0;s.tg=0;s.pw=0;s.wp=0;s.wf=0;s.wg=0;s.mk=GEN[i]});
-// --- аудио
+// --- audio
 function setFilter(){document.getElementById("bandread").textContent=S.bw.toFixed(1)+I18n.t(" kHz");if(!ctx)return;const c=Math.max(400,S.bw*500);
  [lp1,lp2].forEach(f=>f.frequency.setTargetAtTime(c,ctx.currentTime,.03));
  vg.gain.setTargetAtTime(S.on?S.vol*S.vol*2.2:0,ctx.currentTime,.03)}
@@ -110,7 +110,7 @@ function startAudio(){ctx=new (window.AudioContext||window.webkitAudioContext)()
   S.sig=L}
 }
 async function power(){try{if(!ctx)startAudio();S.on=!S.on;if(S.on)await ctx.resume();setFilter();bp.setAttribute('aria-pressed',S.on);bp.textContent=S.on?I18n.t("Power Off"):I18n.t("Power On");document.getElementById('powerled').classList.toggle('lit',S.on);document.getElementById('rxstate').textContent=S.on?'RX':'OFF';if(!S.on)setTimeout(()=>{if(!S.on&&ctx)ctx.suspend().catch(()=>{})},300)}catch(err){S.on=false;bp.setAttribute('aria-pressed','false');bp.textContent=I18n.t("Power On");console.error(I18n.t("Could not start audio:"),err);document.getElementById('powerled').classList.remove('lit');document.getElementById('rxstate').textContent='ERR';const el=document.getElementById('link');el.className='link off';el.textContent=I18n.t("Audio is unavailable or blocked in this browser. Try a modern browser.")}}
-// --- ручки
+// --- knobs
 function Knob(id,o){const el=document.getElementById(id),m=el.querySelector('.k'),out=el.parentNode.querySelector('.val');
  let v=o.val,ang=0;const pd=o.inf?o.pd:(o.max-o.min)/270;
  function draw(){const a=o.inf?ang:-135+270*(v-o.min)/(o.max-o.min);m.style.transform='rotate('+a+'deg)';out.textContent=o.fmt(v);
@@ -138,7 +138,7 @@ const renderHint=()=>{hint.innerHTML=ST.slice(0,5).map((s,i)=>`<div data-i="${i}
  window.addEventListener('shtab:languagechange',()=>{renderHint();setFilter();bp.textContent=I18n.t(S.on?'Power Off':'Power On')});
 let showH=false;document.getElementById('bh').onclick=function(){showH=!showH;hint.hidden=!showH;this.setAttribute('aria-pressed',showH)};
 hint.onclick=e=>{const d=e.target.closest('[data-i]');if(d)document.getElementById('kt').focus()};
-// --- шкала и спектр
+// --- scale and spectrum
 const rfwater=document.getElementById('rfwater'),rfc=rfwater.getContext('2d');let rfTick=0;
 const mb=document.getElementById('mb'),sv=document.getElementById('sv');
 const spec=document.getElementById('spectrum'),sc=spec.getContext('2d'),water=document.getElementById('waterfall'),wc=water.getContext('2d');
