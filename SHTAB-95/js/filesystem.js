@@ -18,5 +18,6 @@ async function refresh(){const entries=(await all()).sort((a,b)=>b.id-a.id);list
  const del=document.createElement('button');del.textContent=I18n.t("× Delete");del.onclick=async()=>{if(!confirm(I18n.t("Delete recording ")+e.name+'?'))return;release();const ok=await remove(e.id);if(!ok){info.textContent=I18n.t("FILE DELETION ERROR");return}refresh()};row.append(del);list.append(row)}
 }
 window.sh95Archive={save,all,remove,refresh};window.sh95OpenFiles=()=>{$('filesWindow').hidden=false;refresh()};$('filesClose').onclick=()=>{$('filesWindow').hidden=true;release()};
+window.addEventListener('shtab:languagechange',()=>{if(!$('filesWindow').hidden)refresh()});
 window.addEventListener('beforeunload',release);
 })();
