@@ -1,0 +1,1 @@
+window.addEventListener('load',()=>{const b=document.getElementById('mhelp');if(b)b.click();},{once:true});
