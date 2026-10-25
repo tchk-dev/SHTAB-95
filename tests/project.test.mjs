@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
 
 const root = new URL('../SHTAB-95/', import.meta.url);
 const file = path => readFileSync(new URL(path, root), 'utf8');
@@ -16,8 +15,8 @@ test('all JavaScript files are present and nonempty', () => {
 test('every local script and stylesheet referenced in HTML exists', () => {
   const html = file('index.html');
   const resources = [
-    ...html.matchAll(/<script\\b[^>]*\\bsrc=["']([^"']+)["']/gi),
-    ...html.matchAll(/<link\\b[^>]*\\bhref=["']([^"']+)["']/gi),
+    ...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/gi),
+    ...html.matchAll(/<link\b[^>]*\bhref=["']([^"']+)["']/gi),
   ].map(match => match[1]).filter(path => !/^(https?:|data:|\/\/)/i.test(path));
   assert.ok(resources.length >= 10, 'Expected local JS/CSS assets');
   for (const resource of resources) {
@@ -28,8 +27,8 @@ test('every local script and stylesheet referenced in HTML exists', () => {
 
 test('task identifier is created and checked before coordinates are accepted', () => {
   const code = file('js/artillery-map.js');
-  assert.match(code, /window\\.sh95CurrentTaskId\\s*=/);
-  assert.match(code, /recordTaskId\\s*!==\\s*window\\.sh95CurrentTaskId/);
+  assert.match(code, /window\.sh95CurrentTaskId\s*=/);
+  assert.match(code, /recordTaskId\s*!==\s*window\.sh95CurrentTaskId/);
 });
 
 test('recording keeps its task identifier through archive save and load', () => {
