@@ -19,7 +19,7 @@ function ground(x,y){
   const i=u|0,j=w|0,a=u-i,b=w-j;
   return HM[j*N+i]*(1-a)*(1-b)+HM[j*N+i+1]*a*(1-b)+HM[(j+1)*N+i]*(1-a)*b+HM[(j+1)*N+i+1]*a*b}
 
-// Гипсометрическая палитра: зелёные низины, охристые склоны, бурые высоты.
+// Hypsometric palette: green lowlands, ochre slopes, brown highlands.
 const RAMP=[[0,[105,160,95]],[.22,[155,187,111]],[.45,[210,190,119]],[.7,[174,135,101]],[1,[235,227,204]]];
 function colorAt(h){
   if(h<4)return[78,132,200];
@@ -41,7 +41,7 @@ function renderTerrain(){
   c.putImageData(im,0,0);terr=cv}
 
 
-const CALL=[['Гром','#0a3fc4'],['Молот','#c2185b'],['Ураган','#ff7900']];
+const CALL=[['Thunder','#0a3fc4'],['Hammer','#c2185b'],['Hurricane','#ff7900']];
 // Three intelligence stations per mission; frequency allocations are classified until confirmed.
 function pickFreqs(){
  const used=[];
@@ -71,19 +71,19 @@ function place(){
   if(best){best.g.z=Math.round(best.gz);best.t.z=Math.round(best.tz);return{g:best.g,t:best.t}}
   const g={x:ORG.x+WS/2,y:ORG.y+WS/2},t={x:g.x+3000,y:g.y};g.z=Math.round(ground(g.x,g.y));t.z=Math.round(ground(t.x,t.y));return{g,t}
 }
-// Температура — условная игровая модель, а не реальные теплотехнические данные.
-const TIMES=[{id:'morning',name:'Утро',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'День',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Вечер',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Ночь',icon:'🌙',noise:.34,drag:1.025}];
+// Temperature is a simplified game model, not actual thermal engineering data.
+const TIMES=[{id:'morning',name:'Morning',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'Day',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Evening',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Night',icon:'🌙',noise:.34,drag:1.025}];
 // Weighted conditional weather: keys are time-of-day IDs; zero means impossible.
 // Probabilities are relative weights and are normalized for each mission.
 const WEATHERS=[
- {id:'clear',name:'Ясно',icon:'☀️',noise:0,drag:1,weights:{morning:25,day:35,evening:25,night:35}},
- {id:'cloudy',name:'Облачно',icon:'☁️',noise:.04,drag:1.015,weights:{morning:22,day:25,evening:27,night:25}},
- {id:'overcast',name:'Пасмурно',icon:'🌥️',noise:.09,drag:1.03,weights:{morning:15,day:16,evening:20,night:15}},
- {id:'fog',name:'Туман',icon:'🌫️',noise:.06,drag:1.025,weights:{morning:20,day:0,evening:0,night:0}},
- {id:'drizzle',name:'Морось',icon:'🌦️',noise:.17,drag:1.04,weights:{morning:8,day:9,evening:10,night:10}},
- {id:'rain',name:'Дождь',icon:'🌧️',noise:.28,drag:1.06,weights:{morning:7,day:10,evening:11,night:10}},
- {id:'downpour',name:'Ливень',icon:'🌧️',noise:.45,drag:1.085,weights:{morning:2,day:3,evening:4,night:3}},
- {id:'thunderstorm',name:'Гроза',icon:'⛈️',noise:.58,drag:1.1,weights:{morning:1,day:2,evening:3,night:2}}
+ {id:'clear',name:'Clear',icon:'☀️',noise:0,drag:1,weights:{morning:25,day:35,evening:25,night:35}},
+ {id:'cloudy',name:'Cloudy',icon:'☁️',noise:.04,drag:1.015,weights:{morning:22,day:25,evening:27,night:25}},
+ {id:'overcast',name:'Overcast',icon:'🌥️',noise:.09,drag:1.03,weights:{morning:15,day:16,evening:20,night:15}},
+ {id:'fog',name:'Fog',icon:'🌫️',noise:.06,drag:1.025,weights:{morning:20,day:0,evening:0,night:0}},
+ {id:'drizzle',name:'Drizzle',icon:'🌦️',noise:.17,drag:1.04,weights:{morning:8,day:9,evening:10,night:10}},
+ {id:'rain',name:'Rain',icon:'🌧️',noise:.28,drag:1.06,weights:{morning:7,day:10,evening:11,night:10}},
+ {id:'downpour',name:'Heavy Rain',icon:'🌧️',noise:.45,drag:1.085,weights:{morning:2,day:3,evening:4,night:3}},
+ {id:'thunderstorm',name:'Thunderstorm',icon:'⛈️',noise:.58,drag:1.1,weights:{morning:1,day:2,evening:3,night:2}}
 ];
 function pickWeather(timeId,random=Math.random){
  const total=WEATHERS.reduce((sum,w)=>sum+(w.weights[timeId]||0),0);
@@ -92,15 +92,49 @@ function pickWeather(timeId,random=Math.random){
  return WEATHERS.find(w=>(w.weights[timeId]||0)>0);
 }
 let missionConditions=null,missionOver=false;
+function conditionDetails(item,kind){
+ const title=I18n.t(kind==='time'?'Time of Day':'Weather');
+ const label=I18n.t(item.name);
+ return {title,label,noise:I18n.format('conditions.interference',{value:Math.round(item.noise*100)}),drag:I18n.format('conditions.drag',{value:item.drag.toFixed(3)})};
+}
+function renderMissionConditions(){
+ const box=$('missionConditions');if(!box||!missionConditions)return;
+ box.replaceChildren();
+ const panel=document.createElement('section');panel.className='condition-panel';panel.id='conditionPanel';panel.hidden=true;panel.setAttribute('role','region');
+ let active=null;
+ const close=()=>{panel.hidden=true;active?.setAttribute('aria-expanded','false');active=null};
+ const show=(button,item,kind)=>{
+  if(active&&active!==button)active.setAttribute('aria-expanded','false');
+  const info=conditionDetails(item,kind);active=button;button.setAttribute('aria-expanded','true');
+  panel.replaceChildren();
+  const bar=document.createElement('div');bar.className='condition-panel-title';bar.textContent='▣ '+I18n.t('conditions.header');
+  const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='condition-panel-close';dismiss.textContent='×';dismiss.setAttribute('aria-label',I18n.t('conditions.close'));dismiss.onclick=()=>{close();button.focus()};bar.append(dismiss);
+  const name=document.createElement('div');name.className='condition-panel-name';name.textContent=item.icon+' '+info.title+' / '+info.label;
+  const metrics=document.createElement('div');metrics.className='condition-panel-metrics';
+  for(const value of [info.noise,info.drag]){const row=document.createElement('div');row.textContent=value;metrics.append(row)}
+  const foot=document.createElement('div');foot.className='condition-panel-foot';foot.textContent=I18n.t('conditions.note');
+  panel.append(bar,name,metrics,foot);panel.hidden=false;
+ };
+ for(const [kind,item] of [['time',missionConditions.time],['weather',missionConditions.weather]]){
+  const button=document.createElement('button');button.type='button';button.className='mission-condition';
+  button.textContent=item.icon+' '+I18n.t(item.name)+'  ▾';
+  button.setAttribute('aria-controls','conditionPanel');button.setAttribute('aria-expanded','false');
+  button.setAttribute('aria-label',I18n.t(kind==='time'?'Time of Day':'Weather')+': '+I18n.t(item.name));
+  button.onclick=()=>active===button?close():show(button,item,kind);
+  box.append(button);
+ }
+ box.append(panel);
+ box.onkeydown=e=>{if(e.key==='Escape'&&!panel.hidden){close();e.preventDefault()}};
+ box.onfocusout=e=>{if(!box.contains(e.relatedTarget))close()};
+}
+document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
 function setMissionConditions(){
  const time=TIMES[Math.floor(Math.random()*TIMES.length)],weather=pickWeather(time.id);
  const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
  missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);
- const box=$('missionConditions');box.replaceChildren();
- for(const item of [time,weather]){const el=document.createElement('span');el.className='mission-condition';el.tabIndex=0;el.textContent=item.icon+' '+item.name;
-  el.title=(item===time?'Время суток':'Погода')+' · вклад в радиопомехи: +'+Math.round(item.noise*100)+' п.п. · множитель сопротивления воздуха: ×'+item.drag.toFixed(3);box.append(el)}
+ renderMissionConditions();
 }
-function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat95');$('defeatText').textContent='Расчёт «'+c.name+'» израсходовал все '+c.ammoMax+' снарядов, не поразив цель. Задание завершено неудачей.';el.hidden=false;if(window.sh95Event)window.sh95Event('Задание провалено: боекомплект расчёта '+c.name+' исчерпан')}
+function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat95');$('defeatText').textContent=I18n.format('mission.defeat',{crew:I18n.t(c.name),ammo:c.ammoMax});el.hidden=false;if(window.sh95Event)window.sh95Event(I18n.format('mission.defeatEvent',{crew:I18n.t(c.name)}))}
 $('defeatRetry').onclick=()=>{newTask(false)};
 const CREW_RELOAD_MS=9500,CREW_HEAT_PER_SHOT=19,CREW_COOL_PER_SEC=0.85;
 const CREW_BASE_TEMP=32,CREW_MAX_TEMP=120,CREW_UNLOCK_TEMP=88;
@@ -112,10 +146,10 @@ function advanceCrewThermal(c,now=performance.now()){
 }
 function crewState(c,now=performance.now()){
   advanceCrewThermal(c,now);
-  if(c.ammo<=0)return ['БОЕКОМПЛЕКТ ИСЧЕРПАН','empty'];
-  if(c.temperature>=CREW_UNLOCK_TEMP)return ['ОХЛАЖДЕНИЕ','hot'];
-  if(now<c.reloadUntil)return ['ПЕРЕЗАРЯДКА','loading'];
-  return ['ГОТОВ','ready'];
+  if(c.ammo<=0)return [I18n.t("AMMUNITION DEPLETED"),'empty'];
+  if(c.temperature>=CREW_UNLOCK_TEMP)return [I18n.t("COOLING"),'hot'];
+  if(now<c.reloadUntil)return [I18n.t("RELOADING"),'loading'];
+  return [I18n.t("READY"),'ready'];
 }
 function renderCrewResources(){
   const box=document.getElementById('crewResourceRows');if(!box||!CR?.length)return;
@@ -123,24 +157,24 @@ function renderCrewResources(){
   box.innerHTML=CR.map(c=>{
     const [state,kind]=crewState(c,now),left=Math.max(0,(c.reloadUntil-now)/1000),progress=100*(1-Math.min(1,left/(CREW_RELOAD_MS/1000)));
     const temp=Math.round(c.temperature),heat=Math.max(0,Math.min(100,(temp-CREW_BASE_TEMP)/(CREW_MAX_TEMP-CREW_BASE_TEMP)*100));
-    return `<div class="crew-resource ${kind==='hot'?'hot':kind==='empty'?'empty':''}"><div class="crew-resource-head"><span>РАСЧЁТ ${c.k+1} «${c.name}»</span><span>${state}</span></div><div class="crew-resource-meta">БОЕЗАПАС ${c.ammo}/${c.ammoMax} · ТЕМП. ${temp} °C<br>ПЕРЕЗАРЯДКА ${left>0?left.toFixed(1)+' с':'ГОТОВО'}</div><div class="crew-resource-track heat" title="Температура ствола"><i style="width:${heat}%"></i></div><div class="crew-resource-track reload" title="Готовность перезарядки"><i style="width:${progress}%"></i></div></div>`;
+    return `<div class="crew-resource ${kind==='hot'?'hot':kind==='empty'?'empty':''}"><div class="crew-resource-head"><span>${I18n.t('CREW')} ${c.k+1} «${I18n.t(c.name)}»</span><span>${state}</span></div><div class="crew-resource-meta">${I18n.t('AMMO')} ${c.ammo}/${c.ammoMax} · ${I18n.t('TEMP.')} ${temp} °C<br>${I18n.t('RELOADING')} ${left>0?left.toFixed(1)+I18n.t(' s'):I18n.t('READY')}</div><div class="crew-resource-track heat" title="${I18n.t('Barrel Temperature')}"><i style="width:${heat}%"></i></div><div class="crew-resource-track reload" title="${I18n.t('Reload Progress')}"><i style="width:${progress}%"></i></div></div>`;
   }).join('');
 }
 function renderData(){
   const row=(a,b)=>`<tr><td>${a}</td><td>${b}</td></tr>`;
-  let h=CR.map(c=>`<tr><td colspan="2" style="text-align:left;color:${c.color};border-bottom:1px solid ${c.color}">Расчёт ${c.k+1} «${c.name}» ${c.hit?'✔ цель поражена':''}</td></tr>`+
-    row('Частота',c.identified?c.f+' кГц':'НЕ УСТАНОВЛЕНА')+row('Орудие X / Y','X '+Math.round(c.g.x)+' / Y '+Math.round(c.g.y))+row('Высота орудия',c.g.z+' м')+row('Цель',c.decodedTarget?('X '+c.decodedTarget.x+' / Y '+c.decodedTarget.y+(c.hit?' · ПОРАЖЕНА':'')):(c.hit?'Подтверждена':'СКРЫТА — перехватите Морзе'))).join('');
-  h+=`<tr><td colspan="2" style="text-align:left;border-bottom:1px solid #215dc6;color:#215dc6">Метео</td></tr>`+row('Ветер, откуда',S.ws?S.wd+'°':'—')+row('Скорость ветра',S.ws+' м/с');
+  let h=CR.map(c=>`<tr><td colspan="2" style="text-align:left;color:${c.color};border-bottom:1px solid ${c.color}">${I18n.t('Crew')} ${c.k+1} «${I18n.t(c.name)}» ${c.hit?I18n.t('✔ target destroyed'):''}</td></tr>`+
+    row(I18n.t("Frequency"),c.identified?c.f+I18n.t(" kHz"):I18n.t("NOT SET"))+row(I18n.t("Gun X / Y"),'X '+Math.round(c.g.x)+' / Y '+Math.round(c.g.y))+row(I18n.t("Gun Elevation"),c.g.z+I18n.t(" m"))+row(I18n.t("Target X / Y"),c.decodedTarget?('X '+c.decodedTarget.x+' / Y '+c.decodedTarget.y+(c.hit?I18n.t(" · DESTROYED"):'')):(c.hit?I18n.t("Confirmed"):I18n.t("HIDDEN — intercept Morse")))).join('');
+  h+=`<tr><td colspan="2" style="text-align:left;border-bottom:1px solid #215dc6;color:#215dc6">${I18n.t("Weather Data")}</td></tr>`+row(I18n.t("Wind From"),S.ws?S.wd+'°':'—')+row(I18n.t("Wind Speed"),S.ws+I18n.t(" m/s"));
   $('data').innerHTML=h}
-// Публикуем только координаты, которые декодер действительно прочитал из аудио.
-// При новом задании сведения сбрасываются вместе с массивом расчётов.
+// Expose only coordinates that the decoder actually recovered from audio.
+// Reset mission intelligence together with the gun crews.
 window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  if(!recordTaskId||recordTaskId!==window.sh95CurrentTaskId)return false;
  const c=CR[crewNumber-1];
  if(!c||!c.identified||!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x>99999||y>99999)return false;
  c.decodedTarget={x,y};
  renderData();
- if(window.sh95Event)window.sh95Event('Радиоперехват: координаты цели расчёта '+crewNumber+' занесены в исходные данные');
+ if(window.sh95Event)window.sh95Event(I18n.format('mission.intercept',{crew:crewNumber}));
  return true;
 };
 function newTask(noWind){
@@ -153,11 +187,11 @@ function newTask(noWind){
   renderCrewResources();
   window.sh95CrewData=()=>CR;
   S={ws:noWind?0:Math.round(rnd(2,12)),wd:Math.round(rnd(0,359))};
-  Radio.setCrews(CR.map(c=>({f:c.f,label:`Разведка ${c.k+1} «${c.name}»`,az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
-  last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent='НЕ ВЫБРАНА'}showTargets.checked=false;
-  $('s2').textContent=S.ws?`Ветер: ${S.wd}°, ${S.ws} м/с`:'Ветер: штиль';
-  $('log').innerHTML='<tr><th>Выстрел</th><th>Расчёт</th><th>Азимут</th><th>Возвышение</th><th>Заряд</th><th>Время, с</th><th>Откл., м</th></tr>';
-  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event('Создано новое задание: '+CR.length+' расчёта, '+(S.ws?'ветер '+S.ws+' м/с':'штиль'));if(window.sh95Brief)window.sh95Brief()}
+  Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
+  last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
+  $('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t("Wind: Calm");
+  $('log').innerHTML='<tr>'+['Shot','Crew','Azimuth','Elevation','Charge','Time, s','Deviation, m'].map(label=>'<th>'+I18n.t(label)+'</th>').join('')+'</tr>';
+  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
 
 function simulate(az,el,v0,c){
   const wx=-S.ws*Math.sin(S.wd*Math.PI/180),wy=-S.ws*Math.cos(S.wd*Math.PI/180),gx=c.g.x,gy=c.g.y;
@@ -175,25 +209,25 @@ function say(t,cls=''){$('res').innerHTML=`<div class="m ${cls}">${t}</div>`}
 let lkKey='';
 function updateLink(){
   const raw=Radio.link(),k=raw>=0&&CR[raw]?.identified?raw:-1,q=k<0?0:Radio.quality(k),key=k+':'+Math.round(q*100);if(key===lkKey)return;lkKey=key;const el=$('link');
-  if(k<0){el.className='link off';el.textContent='Канал не подтверждён. Найдите сигнал и передайте пеленг.';return}
-  const p=Math.round(q*100),w=p>=80?'отличная':p>=65?'хорошая':p>=45?'слабая':'очень плохая',col=p>=65?'#2e8420':p>=45?'#c78a00':'#b3392b';
+  if(k<0){el.className='link off';el.textContent=I18n.t("Channel not confirmed. Find the signal and transmit a bearing.");return}
+  const p=Math.round(q*100),w=p>=80?I18n.t("excellent"):p>=65?I18n.t("good"):p>=45?I18n.t("weak"):I18n.t("very poor"),col=p>=65?'#2e8420':p>=45?'#c78a00':'#b3392b';
   el.className='link on';
-  el.innerHTML=`<span style="color:${CR[k].color}">●</span> На связи: расчёт ${k+1} «${CR[k].name}», ${CR[k].f} кГц<br>Разборчивость: ${p}% (${w})<div class="qb"><i style="width:${p}%;background:${col}"></i></div>`}
+  el.innerHTML=`<span style="color:${CR[k].color}">●</span> ${I18n.t('Connected: crew')} ${k+1} «${I18n.t(CR[k].name)}», ${CR[k].f}${I18n.t(' kHz')}<br>${I18n.t('Intelligibility:')} ${p}% (${I18n.t(w)})<div class="qb"><i style="width:${p}%;background:${col}"></i></div>`}
 function updateBearingPanel(){
  const count=CR.filter(c=>c.identified).length;
  $('bearingCount').textContent=count+' / 3';
- $('bearingList').innerHTML=CR.map(c=>`<div><span>КАНАЛ ${c.k+1} / ${c.name}</span><b>${c.identified?c.f.toFixed(0)+' кГц · ПОДТВЕРЖДЁН':'— · НЕ УСТАНОВЛЕН'}</b></div>`).join('');
+ $('bearingList').innerHTML=CR.map(c=>`<div><span>${I18n.t('CHANNEL')} ${c.k+1} / ${I18n.t(c.name)}</span><b>${c.identified?c.f.toFixed(0)+I18n.t(' kHz')+' · '+I18n.t('CONFIRMED'):'— · '+I18n.t('NOT SET')}</b></div>`).join('');
  if(window.sh95Brief)window.sh95Brief();
 }
 $('sendBearing').onclick=()=>{
  const k=Radio.link();
- if(k<0){$('bearingStatus').textContent='✕ Сигнал не опознан';if(window.sh95Event)window.sh95Event('Пеленг отклонён: частота не соответствует каналу');return}
+ if(k<0){$('bearingStatus').textContent=I18n.t("✕ Signal not identified");if(window.sh95Event)window.sh95Event(I18n.t('mission.bearingRejected'));return}
  const c=CR[k];
- if(c.identified){$('bearingStatus').textContent='✓ Канал уже известен';return}
+ if(c.identified){$('bearingStatus').textContent=I18n.t("✓ Channel already identified");return}
  c.identified=true;
- $('bearingStatus').textContent='✓ '+c.name+' / '+c.f+' кГц';
+ $('bearingStatus').textContent='✓ '+c.name+' / '+c.f+I18n.t(" kHz");
  updateBearingPanel();renderData();lkKey='';updateLink();
- if(window.sh95Event)window.sh95Event('Пеленг подтверждён: '+c.name+', '+c.f+' кГц');
+ if(window.sh95Event)window.sh95Event(I18n.format('mission.bearingConfirmed',{crew:I18n.t(c.name),frequency:c.f}));
 };
 const clamp=(a,lo,hi)=>Math.min(hi,Math.max(lo,a));
 function garble(s){
@@ -206,17 +240,17 @@ function fire(){
   const feedback=(received,reason='')=>window.dispatchEvent(new CustomEvent('sh95:order-result',{detail:{received,reason}}));
   const reject=(message)=>{say(message);feedback(false,message)};
   const k=Radio.link();
-  if(k<0||!CR[k]?.identified){reject('Канал не подтверждён. Найдите частоту и передайте пеленг.');return}
+  if(k<0||!CR[k]?.identified){reject(I18n.t("Channel not confirmed. Find the frequency and transmit a bearing."));return}
   const c=CR[k];
-  if(c.hit){reject(`Расчёт «${c.name}»: наша цель уже поражена. Ждём новых указаний.`);return}
+  if(c.hit){reject(I18n.format('mission.alreadyHit',{crew:I18n.t(c.name)}));return}
   const [readiness,readinessKind]=crewState(c);
-  if(readinessKind!=='ready'){reject(`«${c.name}»: ${readiness.toLowerCase()}. ${readinessKind==='loading'?'Осталось '+Math.ceil((c.reloadUntil-performance.now())/1000)+' с.':readinessKind==='hot'?'Температура '+Math.round(c.temperature)+' °C.':'Боеприпасов нет.'}`);renderCrewResources();return}
+  if(readinessKind!=='ready'){reject(I18n.format('mission.notReady',{crew:I18n.t(c.name),status:readiness.toLowerCase(),reason:readinessKind==='loading'?I18n.format('mission.remaining',{seconds:Math.ceil((c.reloadUntil-performance.now())/1000)}):readinessKind==='hot'?I18n.format('mission.temperature',{temp:Math.round(c.temperature)}):I18n.t('mission.noAmmo')}));renderCrewResources();return}
   const mil=$('unit').value=='mil',sa=$('az').value.trim(),se=$('el').value.trim(),ch=+$('ch').value,a=parseFloat(sa),e0=parseFloat(se);
-  if(!Number.isFinite(a)||!Number.isFinite(e0)){reject('Введите корректные числовые значения азимута и угла возвышения.');return}
-  if(!Number.isInteger(ch)||ch<1||ch>4){reject('Выберите заряд от 1 до 4.');return}
+  if(!Number.isFinite(a)||!Number.isFinite(e0)){reject(I18n.t("Enter valid numeric azimuth and elevation values."));return}
+  if(!Number.isInteger(ch)||ch<1||ch>4){reject(I18n.t("Select charge 1 through 4."));return}
   const ku=mil?Math.PI/3200:Math.PI/180;
-  if(e0*ku<=0||e0*ku>=1.55){reject('Угол возвышения вне пределов (0…90°).');return}
-  // --- искажения при плохой связи
+  if(e0*ku<=0||e0*ku>=1.55){reject(I18n.t("Elevation is out of range (0…90°)."));return}
+  // --- Distortion caused by poor reception
   const q=Radio.quality(k),er=clamp((0.8-q)/0.5,0,1),pm=er*0.4,unit=mil?17.78:1;
   let ra=a,re=e0,rc=ch;
   if(er>0){
@@ -224,34 +258,36 @@ function fire(){
     if(Math.random()<pm)re=parseFloat(garble(se))||0;
     if(Math.random()<pm*.6)rc=clamp(ch+(Math.random()<.5?-1:1),1,4);
     ra=+(ra+gauss()*er*.15*unit).toFixed(2);re=+(re+gauss()*er*.1*unit).toFixed(2)}
-  if(re*ku<=0||re*ku>=1.55){reject(`«${c.name}»: из-за помех данные не разобрали (угол вне пределов). Повторите передачу.`);return}
+  if(re*ku<=0||re*ku>=1.55){reject(I18n.format('mission.badTransmission',{crew:I18n.t(c.name)}));return}
   const r=simulate(ra*ku,re*ku,V0[rc-1],c);
-  if(!r){reject('Снаряд не вернулся на землю.');return}
+  if(!r){reject(I18n.t("Projectile did not return to ground."));return}
   const b=Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y),dx=r.x-c.t.x,dy=r.y-c.t.y,al=dx*Math.sin(b)+dy*Math.cos(b),rg=dx*Math.cos(b)-dy*Math.sin(b),d=Math.hypot(dx,dy),hit=d<=R_HIT;
-  if(window.sh95Event)window.sh95Event('Расчёт '+(k+1)+' / выстрел '+(c.shots.length+1)+' / '+(hit?'ПОРАЖЕНИЕ':'разрыв '+Math.round(d)+' м'));
+  if(window.sh95Event)window.sh95Event(I18n.format('mission.shotEvent',{crew:k+1,shot:c.shots.length+1,result:hit?I18n.t('HIT'):I18n.format('mission.burst',{distance:Math.round(d)})}));
   c.ammo--;c.temperature=Math.min(CREW_MAX_TEMP,c.temperature+CREW_HEAT_PER_SHOT);c.reloadUntil=performance.now()+CREW_RELOAD_MS;
   feedback(true);
   c.shots.push({x:r.x,y:r.y});c.trajs.push(r.pts);last=k;if(hit)c.hit=true;
   const all=CR.every(q2=>q2.hit),bad=x=>`<b style="color:#b3392b">${x}</b>`,df=(s,r2)=>Math.abs(s-r2)<.005?r2:bad(r2),lg=(s,r2)=>Math.abs(s-r2)<.005?s:`${s} → ${bad(r2)}`;
-  say(`«${c.name}»: повторяю: азимут ${df(a,ra)}, возвышение ${df(e0,re)}, заряд ${df(ch,rc)}. Выстрел! ${hit?'ЦЕЛЬ ПОРАЖЕНА! ':''}Разрыв: ${Math.abs(al)<1?'':(al>0?'перелёт ':'недолёт ')+Math.abs(al).toFixed(0)+' м'}${Math.abs(rg)<1?'':', '+(rg>0?'правее ':'левее ')+Math.abs(rg).toFixed(0)+' м'}. Отклонение ${d.toFixed(0)} м, полёт ${r.t.toFixed(1)} с.${all?' <br>ВСЕ ЦЕЛИ ПОРАЖЕНЫ — задача выполнена!':''}`,hit?'hit':'');
-  $('log').insertAdjacentHTML('beforeend',`<tr><td>${k+1}.${c.shots.length}</td><td style="color:${c.color}">«${c.name}»</td><td>${lg(a,ra)}</td><td>${lg(e0,re)}</td><td>${lg(ch,rc)}</td><td>${r.t.toFixed(1)}</td><td>${d.toFixed(0)}</td></tr>`);
-  $('s1').textContent=all?'Все цели поражены!':`«${c.name}»: отклонение ${d.toFixed(0)} м`;
+  const correctionLong=Math.abs(al)<1?'':(al>0?I18n.t('overshoot '):I18n.t('short '))+Math.abs(al).toFixed(0)+I18n.t(' m');
+  const correctionSide=Math.abs(rg)<1?'':', '+(rg>0?I18n.t('right '):I18n.t('left '))+Math.abs(rg).toFixed(0)+I18n.t(' m');
+  say(I18n.format('mission.fireReport',{crew:I18n.t(c.name),azimuth:df(a,ra),elevation:df(e0,re),charge:df(ch,rc),hit:hit?I18n.t('mission.targetHit'):'',correction:correctionLong+correctionSide,distance:d.toFixed(0),time:r.t.toFixed(1),complete:all?I18n.t('mission.allComplete'):''}),hit?'hit':'');
+  $('log').insertAdjacentHTML('beforeend',`<tr><td>${k+1}.${c.shots.length}</td><td style="color:${c.color}">«${I18n.t(c.name)}»</td><td>${lg(a,ra)}</td><td>${lg(e0,re)}</td><td>${lg(ch,rc)}</td><td>${r.t.toFixed(1)}</td><td>${d.toFixed(0)}</td></tr>`);
+  $('s1').textContent=all?I18n.t("All targets destroyed!"):I18n.format('mission.deviation',{crew:I18n.t(c.name),distance:d.toFixed(0)});
   renderData();renderCrewResources();draw();if(window.sh95Brief)window.sh95Brief();if(!hit&&c.ammo===0)showDefeat(c)}
 
-/* ---- карта ---- */
+/* ---- map ---- */
 function fitView(){const xs=CR.flatMap(c=>[c.g.x,c.t.x]),ys=CR.flatMap(c=>[c.g.y,c.t.y]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
   v.cx=(x0+x1)/2;v.cy=(y0+y1)/2;v.m=Math.max((x1-x0)/(W*.8),(y1-y0)/(H*.8),6)}
 function halo(x,s,px,py){x.lineWidth=3;x.strokeStyle='rgba(255,255,255,.85)';x.strokeText(s,px,py);x.fillText(s,px,py)}
 function marker(x,wx,wy,sym,col,label){
   const px=X(wx),py=Y(wy);if(px<-45||py<-45||px>W+45||py>H+45)return;
-  // Штабной условный знак: прямоугольная табличка с индексом расчёта.
+  // Military map symbol: rectangular label with the crew index.
   const id=(String(label).match(/\d+/)||[''])[0]||label.slice(0,2);
   x.save();x.lineWidth=1.5;x.fillStyle='#0a2419';x.strokeStyle='#000000';
   x.fillRect(px-15,py-13,30,26);x.strokeRect(px-15.5,py-13.5,31,27);
   x.strokeStyle=col;x.lineWidth=2.5;x.strokeRect(px-13.5,py-11.5,27,23);
   x.beginPath();x.moveTo(px-9,py+7);x.lineTo(px+9,py+7);x.moveTo(px,py-16);x.lineTo(px,py-12);x.stroke();
   x.fillStyle='#ffffff';x.font='bold 12px Courier New,monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(id,px,py-2);
-  const short=label.startsWith('Ц')?label:'РСЧ '+id;
+  const short=label.startsWith('T')?I18n.t('TARGET')+' '+id:I18n.t('CREW')+' '+id;
   x.font='bold 10px Courier New,monospace';const tw=x.measureText(short).width+10;
   x.fillStyle='#0b1714';x.fillRect(px-tw/2,py+15,tw,15);x.strokeStyle='#000000';x.strokeRect(px-tw/2+.5,py+15.5,tw-1,14);
   x.fillStyle='#ffffff';x.textBaseline='top';x.fillText(short,px,py+17);x.restore();}
@@ -262,7 +298,7 @@ function draw(){
   x.imageSmoothingEnabled=true;x.save();x.filter=window.sh95GreenMap?'grayscale(1) sepia(.8) hue-rotate(70deg) saturate(1.5) brightness(.64) contrast(1.2)':'none';x.drawImage(terr,X(ORG.x),Y(ORG.y+WS),WS/v.m,WS/v.m);x.restore();
   const steps=[100,200,500,1000,2000,5000],st=steps.find(s=>s/v.m>=80)||5000;
   x.lineWidth=1;x.strokeStyle='rgba(95,209,130,.27)';x.font='bold 11px Courier New,monospace';x.textBaseline='alphabetic';
-  // Координаты выводятся в отдельных непрозрачных табличках, без белого ореола.
+  // Render coordinates in separate opaque labels without white outlines.
   function gridLabel(txt,px,py){const str=String(txt),width=x.measureText(str).width+8;
     x.fillStyle='#06190f';x.fillRect(px,py-11,width,15);x.strokeStyle='#4a865a';x.strokeRect(px+.5,py-10.5,width-1,14);
     x.fillStyle='#e0f6d9';x.fillText(str,px+4,py);x.strokeStyle='rgba(95,209,130,.27)';}
@@ -273,14 +309,14 @@ function draw(){
     const tr=c.trajs[c.trajs.length-1];
     if(tr){x.setLineDash([5,4]);x.strokeStyle=c.color;x.lineWidth=1.5;x.beginPath();tr.forEach((p,i)=>{const px=X(c.g.x+p[0]),py=Y(c.g.y+p[1]);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.setLineDash([])}
     c.shots.forEach((s,i)=>{const px=X(s.x),py=Y(s.y);x.font='bold 20px Tahoma';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d62000';halo(x,'✹',px,py);x.font='bold 11px Tahoma';x.fillStyle=c.color;x.textBaseline='bottom';halo(x,(c.k+1)+'.'+(i+1),px+14,py-6);x.textAlign='start'})});
-  CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,c.name.toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'Ц'+(c.k+1)):null)});
+  CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,I18n.t(c.name).toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'T'+(c.k+1)):null)});
   if(S.ws){const a=(S.wd+180)*Math.PI/180,ox=W-60,oy=60,dx=Math.sin(a)*24,dy=-Math.cos(a)*24;x.fillStyle='rgba(255,255,225,.9)';x.fillRect(ox-45,oy-40,90,86);x.strokeStyle='#000';x.lineWidth=1;x.strokeRect(ox-45,oy-40,90,86);
-    x.lineWidth=3;x.beginPath();x.moveTo(ox-dx,oy-dy);x.lineTo(ox+dx,oy+dy);x.stroke();x.beginPath();x.arc(ox+dx,oy+dy,4,0,7);x.fillStyle='#000';x.fill();x.font='11px Tahoma';x.textAlign='center';x.fillText('ветер '+S.ws+' м/с',ox,oy+38);x.fillText('N ↑',ox,oy-30);x.textAlign='start'}
-  // Высотная легенда с цветами исходного рельефа.
+    x.lineWidth=3;x.beginPath();x.moveTo(ox-dx,oy-dy);x.lineTo(ox+dx,oy+dy);x.stroke();x.beginPath();x.arc(ox+dx,oy+dy,4,0,7);x.fillStyle='#000';x.fill();x.font='11px Tahoma';x.textAlign='center';x.fillText(I18n.t("wind ")+S.ws+I18n.t(" m/s"),ox,oy+38);x.fillText('N ↑',ox,oy-30);x.textAlign='start'}
+  // Elevation legend matching the original terrain palette.
   const lx=W-155,ly=H-47,lw=138,lh=9;
   x.fillStyle='rgba(5,17,14,.90)';x.fillRect(lx-8,ly-18,lw+16,51);
   x.fillStyle='#eef4e5';x.font='bold 10px Courier New';x.textAlign='left';
-  x.fillText('ВЫСОТА, М',lx,ly-5);
+  x.fillText(I18n.t("ELEVATION, M"),lx,ly-5);
   for(let i=0;i<lw;i++){
     const rgb=colorAt(520*i/(lw-1));x.fillStyle=`rgb(${rgb.map(Math.round).join(',')})`;
     x.fillRect(lx+i,ly,1,lh);
@@ -288,7 +324,7 @@ function draw(){
   x.strokeStyle='#d5d9c7';x.strokeRect(lx-.5,ly-.5,lw+1,lh+1);
   x.fillStyle='#eef4e5';x.font='10px Courier New';
   x.fillText('0',lx,ly+21);x.textAlign='right';x.fillText('520+',lx+lw,ly+21);x.textAlign='left';
-  x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText('АРМ-95 / ТОПОПЛАНШЕТ · СЕТКА '+st+' М',9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
+  x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText(I18n.format('map.grid',{size:st}),9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
   drawAnnotations(x);drawProfile()}
 function drawProfile(){
   const cv=$('prof'),state=$('profileState');
@@ -307,19 +343,19 @@ function drawProfile(){
   };
   frame();
   if(last==null||!CR[last]){
-    state.textContent='ОЖИДАНИЕ ВЫСТРЕЛА';ctx.fillStyle='#9dc8a9';ctx.font='bold 16px Courier New';ctx.textAlign='center';
-    ctx.fillText('ОЖИДАНИЕ ДАННЫХ ТРАЕКТОРИИ',left+pw/2,top+ph/2);ctx.restore();return;
+    state.textContent=I18n.t("AWAITING SHOT");ctx.fillStyle='#9dc8a9';ctx.font='bold 16px Courier New';ctx.textAlign='center';
+    ctx.fillText(I18n.t("AWAITING TRAJECTORY DATA"),left+pw/2,top+ph/2);ctx.restore();return;
   }
   const c=CR[last],tr=c.trajs?.[c.trajs.length-1];
-  if(!Array.isArray(tr)||tr.length<2){state.textContent='ТРАЕКТОРИЯ НЕДОСТУПНА';ctx.restore();return}
-  // Разрез направлен по фактическому выстрелу, а не по цели.
-  // Иначе при стрельбе в другую сторону вся траектория оказывалась
-  // левее графика и полностью скрывалась областью clip().
+  if(!Array.isArray(tr)||tr.length<2){state.textContent=I18n.t("TRAJECTORY UNAVAILABLE");ctx.restore();return}
+  // Align the cross-section with the actual shot, not the target.
+  // Otherwise, a shot in the opposite direction would move the entire trajectory
+  // left of the plot, where the clipping region would hide it.
   const end=tr[tr.length-1];
   const shotLen=Math.hypot(end[0],end[1]);
   const firstMove=tr.find(p=>Math.hypot(p[0],p[1])>1);
   const heading=shotLen>1?end:firstMove;
-  if(!heading){state.textContent='НЕДОСТАТОЧНО ДАННЫХ';ctx.restore();return}
+  if(!heading){state.textContent=I18n.t("INSUFFICIENT DATA");ctx.restore();return}
   const headingLen=Math.hypot(heading[0],heading[1]);
   const ux=heading[0]/headingLen,uy=heading[1]/headingLen;
   const along=p=>p[0]*ux+p[1]*uy;
@@ -332,11 +368,11 @@ function drawProfile(){
     furthest=Math.max(furthest,Math.max(0,along(p)));
     zmin=Math.min(zmin,p[2]);zmax=Math.max(zmax,p[2]);
   }
-  if(!Number.isFinite(zmin)||!Number.isFinite(zmax)){state.textContent='НЕКОРРЕКТНЫЕ ДАННЫЕ';ctx.restore();return}
+  if(!Number.isFinite(zmin)||!Number.isFinite(zmax)){state.textContent=I18n.t("INVALID DATA");ctx.restore();return}
   const D=Math.max(100,furthest*1.08),terrain=[];
   for(let i=0;i<=240;i++){
     const d=i*D/240,z=ground(c.g.x+ux*d,c.g.y+uy*d);
-    if(!Number.isFinite(z)){state.textContent='ОШИБКА РЕЛЬЕФА';ctx.restore();return}
+    if(!Number.isFinite(z)){state.textContent=I18n.t("TERRAIN ERROR");ctx.restore();return}
     terrain.push(z);zmin=Math.min(zmin,z);zmax=Math.max(zmax,z);
   }
   zmin=Math.min(zmin,c.g.z,c.t.z);zmax=Math.max(zmax,c.g.z,c.t.z);
@@ -364,20 +400,20 @@ function drawProfile(){
   ctx.fillStyle='#a9d9b8';ctx.font='12px Courier New';ctx.textAlign='right';
   for(let i=0;i<=4;i++){const z=zmax-(zmax-zmin)*i/4;ctx.fillText(Math.round(z),left-8,top+ph*i/4+4)}
   ctx.textAlign='center';for(let i=0;i<=8;i++)ctx.fillText(Math.round(D*i/8),left+pw*i/8,top+ph+19);
-  ctx.textAlign='left';ctx.font='bold 12px Courier New';ctx.fillStyle='#70d396';ctx.fillText('РЕЛЬЕФ',left+9,top+15);
-  ctx.fillStyle='#ffda83';ctx.fillText('ТРАЕКТОРИЯ',left+105,top+15);
-  ctx.fillStyle='#ff9286';ctx.fillText('ЦЕЛЬ',left+240,top+15);
-  state.textContent=`РАСЧЁТ ${c.k+1} · Hmax ${Math.round(zmax-pad)} м · БОК. СМЕЩ. ЦЕЛИ ${Math.round(targetSide)} м`;
+  ctx.textAlign='left';ctx.font='bold 12px Courier New';ctx.fillStyle='#70d396';ctx.fillText(I18n.t("TERRAIN"),left+9,top+15);
+  ctx.fillStyle='#ffda83';ctx.fillText(I18n.t("TRAJECTORY"),left+105,top+15);
+  ctx.fillStyle='#ff9286';ctx.fillText(I18n.t("TARGET"),left+240,top+15);
+  state.textContent=I18n.format('profile.status',{crew:c.k+1,height:Math.round(zmax-pad),offset:Math.round(targetSide)});
   ctx.restore();
 }
-/* ---- взаимодействие ---- */
+/* ---- interaction ---- */
 function zoom(f,px=W/2,py=H/2){const wx=v.cx+(px-W/2)*v.m,wy=v.cy-(py-H/2)*v.m;v.m=Math.min(60,Math.max(1.5,v.m*f));v.cx=wx-(px-W/2)*v.m;v.cy=wy+(py-H/2)*v.m;draw()}
 const pos=e=>{const r=mapC.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]};
 const showTargets=$('showTargets');showTargets.addEventListener('change',draw);
 const annotations=[];let mapGesture=null,hover=null,selectedAnnotation=null;
 const toWorld=(px,py)=>({x:v.cx+(px-W/2)*v.m,y:v.cy-(py-H/2)*v.m});
 function lineMetrics(a,b){const dx=b.x-a.x,dy=b.y-a.y;return{distance:Math.hypot(dx,dy),azimuth:(Math.atan2(dx,dy)*180/Math.PI+360)%360}}
-function lineLabel(ctx,a,b){const m=lineMetrics(a,b),text=Math.round(m.distance)+' м · '+m.azimuth.toFixed(1)+'°';const mx=(X(a.x)+X(b.x))/2,my=(Y(a.y)+Y(b.y))/2;ctx.font='bold 12px Courier New,monospace';const width=ctx.measureText(text).width+12;const x=Math.max(3,Math.min(W-width-3,mx-width/2)),y=Math.max(17,Math.min(H-4,my-9));ctx.fillStyle='#071b15';ctx.fillRect(x,y-14,width,18);ctx.strokeStyle='#eaff00';ctx.lineWidth=1;ctx.strokeRect(x+.5,y-13.5,width-1,17);ctx.fillStyle='#eaff00';ctx.fillText(text,x+6,y-1)}
+function lineLabel(ctx,a,b){const m=lineMetrics(a,b),text=Math.round(m.distance)+I18n.t(' m · ')+m.azimuth.toFixed(1)+'°';const mx=(X(a.x)+X(b.x))/2,my=(Y(a.y)+Y(b.y))/2;ctx.font='bold 12px Courier New,monospace';const width=ctx.measureText(text).width+12;const x=Math.max(3,Math.min(W-width-3,mx-width/2)),y=Math.max(17,Math.min(H-4,my-9));ctx.fillStyle='#071b15';ctx.fillRect(x,y-14,width,18);ctx.strokeStyle='#eaff00';ctx.lineWidth=1;ctx.strokeRect(x+.5,y-13.5,width-1,17);ctx.fillStyle='#eaff00';ctx.fillText(text,x+6,y-1)}
 function drawAnnotations(ctx){
  ctx.save();ctx.lineWidth=2;
  for(const a of annotations){const x=X(a.a.x),y=Y(a.a.y);
@@ -402,10 +438,10 @@ function nearestAnnotation(px,py,radius=17){
  }
  return closest
 }
-function selectPoint(a){selectedAnnotation=a;const pt=a?.a;$('coordState').textContent=a?'ВЫБРАНА':'НЕ ВЫБРАНА';$('coordX').value=pt?Math.round(pt.x):'';$('coordY').value=pt?Math.round(pt.y):'';$('coordMessage').textContent=a?'Измените X/Y и нажмите «Применить». «Стереть» удалит метку.':'Выберите метку ЛКМ для изменения координат.';draw()}
+function selectPoint(a){selectedAnnotation=a;const pt=a?.a;$('coordState').textContent=a?I18n.t("SELECTED"):I18n.t("NOT SELECTED");$('coordX').value=pt?Math.round(pt.x):'';$('coordY').value=pt?Math.round(pt.y):'';$('coordMessage').textContent=a?I18n.t("Edit X/Y and select Apply. Erase removes the marker."):I18n.t("Left-click a marker to edit its coordinates.");draw()}
 function eraseAt(px,py){const a=nearestAnnotation(px,py,22);if(!a)return false;annotations.splice(annotations.indexOf(a),1);if(selectedAnnotation===a)selectPoint(null);draw();return true}
 mapC.addEventListener('contextmenu',e=>{e.preventDefault()});
-$('coordApply').onclick=()=>{if(!selectedAnnotation)return;const x=Number($('coordX').value),y=Number($('coordY').value);if(!Number.isFinite(x)||!Number.isFinite(y)||$('coordX').value===''||$('coordY').value===''){$('coordMessage').textContent='Ошибка: введите числовые X и Y.';return}selectedAnnotation.a={x,y};$('coordMessage').textContent='Координаты обновлены.';draw()};
+$('coordApply').onclick=()=>{if(!selectedAnnotation)return;const x=Number($('coordX').value),y=Number($('coordY').value);if(!Number.isFinite(x)||!Number.isFinite(y)||$('coordX').value===''||$('coordY').value===''){$('coordMessage').textContent=I18n.t("Error: enter numeric X and Y.");return}selectedAnnotation.a={x,y};$('coordMessage').textContent=I18n.t("Coordinates updated.");draw()};
 $('coordDelete').onclick=()=>{if(!selectedAnnotation)return;annotations.splice(annotations.indexOf(selectedAnnotation),1);selectPoint(null)};
 mapC.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
 let activeMapTool='point';
@@ -427,7 +463,7 @@ mapC.addEventListener('pointerdown',e=>{
 });
 mapC.addEventListener('pointermove',e=>{
  const [px,py]=pos(e);hover=[px,py];const w=toWorld(px,py);
- $('s1').textContent=`X: ${Math.round(w.x)} Y: ${Math.round(w.y)} Высота: ${Math.round(ground(w.x,w.y))} м`;
+ $('s1').textContent=I18n.format('map.cursor',{x:Math.round(w.x),y:Math.round(w.y),height:Math.round(ground(w.x,w.y))});
  $('mapread').textContent=`X ${Math.round(w.x)} · Y ${Math.round(w.y)} | px ${Math.round(px)},${Math.round(py)}`;
  if(mapGesture&&mapGesture.id===e.pointerId){if(mapGesture.kind==='erase')eraseAt(px,py);else if(mapGesture.kind==='pan'){v.cx=mapGesture.cx-(px-mapGesture.p[0])*v.m;v.cy=mapGesture.cy+(py-mapGesture.p[1])*v.m}else if(mapGesture.kind==='line')mapGesture.end=w}
  draw();
@@ -450,7 +486,8 @@ $('fire').onclick=fire;$('newt').onclick=()=>newTask(false);$('nowind').onclick=
 $('fit').onclick=()=>{fitView();draw()};$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
 $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 
-const tick=()=>$('clock').textContent=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
+const tick=()=>$('clock').textContent=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
+window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
 newTask(false);

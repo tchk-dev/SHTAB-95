@@ -251,3 +251,53 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 .knobs .knob,.knobs .knob.big{width:clamp(54px,6vw,78px);height:clamp(54px,6vw,78px);flex:none}
 @media(max-width:650px){.knobs{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 8px}.knobs .kw:first-child{grid-column:auto}}
 @media(max-width:340px){.knobs .knob,.knobs .knob.big{width:54px;height:54px}}
+
+/* Windows 95 mission-condition inspector */
+.mission-conditions{position:relative;z-index:12;align-items:center;overflow:visible}
+.mission-condition{font:12px Tahoma,Arial,sans-serif;color:#000;min-height:26px;box-shadow:inset 1px 1px #fff,inset -1px -1px #555;cursor:pointer}
+.mission-condition:hover{background:#fff}
+.mission-condition[aria-expanded="true"]{border:2px inset #fff;background:#d4d4d4;box-shadow:inset 1px 1px #777,inset -1px -1px #fff}
+.condition-panel[hidden]{display:none!important}
+.condition-panel{position:absolute;top:calc(100% - 1px);left:9px;width:min(365px,calc(100vw - 34px));max-width:calc(100% - 18px);background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:1px 1px 0 #000,3px 4px 0 rgba(0,0,0,.4);padding:3px;z-index:100;font:12px Tahoma,Arial,sans-serif;color:#000}
+.condition-panel-title{display:flex;align-items:center;justify-content:space-between;background:#000080;color:#fff;font-weight:bold;padding:2px 3px 2px 7px;min-height:22px;gap:10px}
+.condition-panel-close{font:bold 15px Tahoma,Arial,sans-serif;line-height:16px;width:21px;height:19px;color:#000;background:#c0c0c0;border:2px outset #fff;cursor:pointer}
+.condition-panel-close:active{border-style:inset}
+.condition-panel-name{font-weight:bold;padding:11px 9px 8px;border-bottom:1px solid #808080}
+.condition-panel-metrics{margin:0 8px;padding:8px 0;display:grid;gap:6px;font:12px "Courier New",monospace}
+.condition-panel-metrics>div{background:#fff;border:2px inset #fff;padding:6px 7px}
+.condition-panel-foot{border-top:1px solid #fff;padding:7px 9px;color:#404040;font-size:11px;line-height:1.35}
+@media(max-width:460px){.condition-panel{left:4px;max-width:calc(100% - 8px)}}
+
+/* Keep condition buttons stationary across hover, focus and pressed states. */
+.mission-condition,.mission-condition:hover,.mission-condition:focus,.mission-condition:active,.mission-condition[aria-expanded="true"]{box-sizing:border-box;border-width:2px;border-style:solid;border-color:#fff #666 #666 #fff;min-height:28px;line-height:18px;padding:3px 9px;transform:none;transition:none}
+.mission-condition:focus-visible{outline:1px dotted #000;outline-offset:-5px}
+.mission-condition:active,.mission-condition[aria-expanded="true"]{border-color:#666 #fff #fff #666;background:#d4d4d4}
+
+/* MG-95 tape transport: square, raised Windows 95 seek handle. */
+.recorder-progress #recSeek{
+ display:block;width:100%;height:20px;margin:7px 0 3px;padding:0;
+ border:0;border-radius:0;background:transparent;
+ appearance:none;-webkit-appearance:none;accent-color:auto;cursor:pointer;
+}
+.recorder-progress #recSeek::-webkit-slider-runnable-track{
+ height:8px;border:2px solid;border-color:#707070 #fff #fff #707070;
+ border-radius:0;background:#a5a5a5;box-sizing:border-box;
+}
+.recorder-progress #recSeek::-moz-range-track{
+ height:8px;border:2px solid;border-color:#707070 #fff #fff #707070;
+ border-radius:0;background:#a5a5a5;box-sizing:border-box;
+}
+.recorder-progress #recSeek::-webkit-slider-thumb{
+ appearance:none;-webkit-appearance:none;width:16px;height:22px;margin-top:-9px;
+ border:2px solid;border-color:#fff #505050 #505050 #fff;border-radius:0;
+ background:linear-gradient(90deg,#e2e2e2 0%,#c0c0c0 55%,#a8a8a8 100%);
+ box-shadow:inset 1px 1px #f7f7f7,inset -1px -1px #808080;
+}
+.recorder-progress #recSeek::-moz-range-thumb{
+ width:12px;height:18px;border:2px solid;
+ border-color:#fff #505050 #505050 #fff;border-radius:0;
+ background:linear-gradient(90deg,#e2e2e2 0%,#c0c0c0 55%,#a8a8a8 100%);
+ box-shadow:inset 1px 1px #f7f7f7,inset -1px -1px #808080;
+}
+.recorder-progress #recSeek:disabled{cursor:default;opacity:.55}
+.recorder-progress #recSeek:focus-visible{outline:1px dotted #fff;outline-offset:2px}

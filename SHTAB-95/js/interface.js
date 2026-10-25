@@ -1,42 +1,18 @@
 
 (function(){
  const $=id=>document.getElementById(id),events=[];
- function event(msg){const time=new Date().toLocaleTimeString('ru-RU',{hour12:false});events.unshift('['+time+'] '+msg);events.length=Math.min(events.length,9);$('syslog').textContent=events.join('\n')}
+ function renderEvents(){$('syslog').textContent=events.map(e=>'['+e.time.toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour12:false})+'] '+(e.key?I18n.t(e.key):e.message)).join('\n')}
+ function event(message,localizedKey=false){events.unshift({time:new Date(),[localizedKey?'key':'message']:message});events.length=Math.min(events.length,9);renderEvents()}
  window.sh95Event=event;
- window.sh95Brief=()=>{const crews=window.sh95CrewData?.();if(!crews)return;$('crewbrief').textContent=crews.map(c=>`${c.k+1}. ${c.name.toUpperCase()} | ${c.identified?c.f+' кГц':'КАНАЛ НЕ ОПОЗНАН'} | ${c.hit?'ЦЕЛЬ ПОРАЖЕНА':'ОЖИДАНИЕ'} | ${c.shots.length} выстр. | ${c.ammo}/${c.ammoMax} БК | ${Math.round(c.temperature)}°C`).join('\n')};
+ window.sh95Brief=()=>{const crews=window.sh95CrewData?.();if(!crews)return;$('crewbrief').textContent=crews.map(c=>`${c.k+1}. ${I18n.t(c.name).toUpperCase()} | ${c.identified?c.f+I18n.t(' kHz'):I18n.t('CHANNEL UNIDENTIFIED')} | ${c.hit?I18n.t('TARGET DESTROYED'):I18n.t('STANDBY')} | ${c.shots.length} ${I18n.t('shots')} | ${c.ammo}/${c.ammoMax} ${I18n.t('ammo')} | ${Math.round(c.temperature)}°C`).join('\n')};
  function dialog(t){$('dialogtext').textContent=t;$('dialog95').hidden=false}
  function close(){$('dialog95').hidden=true}
  $('dialogclose').onclick=close;$('dialogok').onclick=close;$('dialog95').addEventListener('click',e=>{if(e.target===$('dialog95'))close()});
- const helpText=[
- 'ШТАБ 95 / РУКОВОДСТВО ОПЕРАТОРА',
- '',
- '01. НАЧАЛО РАБОТЫ',
- 'Нажмите «Новая задача» (F2), чтобы создать рельеф, три расчёта и три скрытые цели. Цели не показаны на карте. Все сигналы и позывные вымышлены.',
- '',
- '02. ПОИСК ЧАСТОТ',
- 'Включите приёмник. Вращайте настройку и следите за RF-водопадом: вертикальные следы обозначают станции. В эфире есть посторонние передачи. Настройтесь на подозрительную частоту и нажмите «Передать пеленг». Верный канал будет отмечен как опознанный. При новом задании частоты назначаются заново.',
- '',
- '03. РАЗВЕДКА ПО МОРЗЕ',
- 'Слушайте передачу найденной станции. Сообщение может содержать азимут и координаты. Для ручной расшифровки удерживайте телеграфный ключ в такт сигналам: коротко — точка, долго — тире. Пауза завершает символ. Настройте длительность точки под скорость передачи. Клавиша «Пробел» также работает как ключ, если не вводите текст.',
- '',
- '04. КАРТОГРАФИЧЕСКИЙ ПЛАНШЕТ',
- 'Выберите «Метка» и нажмите ЛКМ для постановки точки. Выберите «Линия» и протяните ЛКМ для черчения. ПКМ стирает пометки. Зажатая СКМ перемещает карту; колесо меняет масштаб. Координаты курсора выводятся при наведении. Выбранную метку можно уточнить вручную в полях X/Y рядом с картой.',
- '',
- '05. РАСЧЁТ И ПРИКАЗ',
- 'После опознания нужного канала выберите расчёт, укажите азимут, угол возвышения и заряд. Единицы азимута и угла можно переключать между градусами и тысячными. Отправьте приказ и изучите результат в журнале. Профиль траектории показывает рельеф и расчётную линию полёта.',
- '',
- '06. ПРИБОРЫ И ВСПОМОГАТЕЛЬНЫЕ ОКНА',
- 'RF-водопад — модель обстановки по радиочастотам; AF FFT и звуковая спектрограмма — анализ синтетического звука. Научный калькулятор поддерживает функции и графики. Оперативная сводка показывает состояние подтверждённых каналов.',
- '',
- '07. УПРАВЛЕНИЕ',
- 'F1 — эта справка; F2 — новое задание; Esc — закрыть окно. Для звука браузеру может понадобиться первое нажатие по странице.',
- '',
- 'ВНИМАНИЕ: Это игровая симуляция. Физика, радиосвязь и координаты условны.'
- ].join('\n');
- $('mhelp').onclick=()=>dialog(helpText);
+ const helpText=()=>I18n.t('manual.operator');
+ $('mhelp').onclick=()=>dialog(helpText());
  $('mfile').onclick=()=>window.sh95OpenFiles?.();
- $('mview').onclick=()=>{window.sh95GreenMap=!window.sh95GreenMap;window.sh95RedrawMap?.();$('mview').setAttribute('aria-pressed',String(!!window.sh95GreenMap));$('mview').title=window.sh95GreenMap?'Зелёный фильтр включён':'Зелёный фильтр выключен';event('Карта: зелёный фильтр '+(window.sh95GreenMap?'включён':'выключен'))};
- $('mtools').onclick=()=>dialog('ШТАБ 95 / СВЯЗЬ С РАЗРАБОТЧИКОМ\n\nЭлектронная почта: адрес пока не указан.\n\nАдрес будет добавлен после его предоставления разработчиком.');
+ $('mview').onclick=()=>{window.sh95GreenMap=!window.sh95GreenMap;window.sh95RedrawMap?.();$('mview').setAttribute('aria-pressed',String(!!window.sh95GreenMap));$('mview').title=window.sh95GreenMap?I18n.t('Green Filter Enabled'):I18n.t('Green Filter Disabled');event(I18n.t('Map: green filter ')+(window.sh95GreenMap?I18n.t('on'):I18n.t('off')))};
+ $('mtools').onclick=()=>dialog(I18n.t('contact.developer'));
  $('start95').onclick=()=>{$('startmenu').hidden=!$('startmenu').hidden};
  $('smnew').onclick=()=>{$('startmenu').hidden=true;$('newt').click()};
  $('smhelp').onclick=()=>{$('startmenu').hidden=true;$('mhelp').click()};
@@ -122,8 +98,8 @@
  });
  window.sh95OrderBuzz=orderBuzz;
  window.sh95Sound=uiSound;
- sfxVolume.addEventListener('input',()=>{sfxPercent.textContent=sfxVolume.value+'%';if(Number(sfxVolume.value)>0&&sfxMuted){sfxMuted=false;sfxToggle.setAttribute('aria-pressed','true');sfxToggle.textContent='♫ ЗВУК'}});
- sfxToggle.addEventListener('click',()=>{sfxMuted=!sfxMuted;sfxToggle.setAttribute('aria-pressed',String(!sfxMuted));sfxToggle.textContent=sfxMuted?'♪ ВЫКЛ':'♫ ЗВУК';if(!sfxMuted)uiSound('open')});
+ sfxVolume.addEventListener('input',()=>{sfxPercent.textContent=sfxVolume.value+'%';if(Number(sfxVolume.value)>0&&sfxMuted){sfxMuted=false;sfxToggle.setAttribute('aria-pressed','true');sfxToggle.textContent=I18n.t('♫ SOUND')}});
+ sfxToggle.addEventListener('click',()=>{sfxMuted=!sfxMuted;sfxToggle.setAttribute('aria-pressed',String(!sfxMuted));sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');if(!sfxMuted)uiSound('open')});
  const actionSound={sendBearing:'radio',newt:'reset',nowind:'reset',fit:'pan',zin:'dial',zout:'dial',coordApply:'confirm',coordDelete:'erase',clearMarks:'erase',undoMark:'erase',toolPoint:'mark',toolLine:'draw',mhelp:'open',mfile:'open',mtools:'open',start95:'open',smhelp:'open',dialogclose:'close',dialogok:'close',morseClear:'erase',morseBack:'erase',morseLetter:'confirm',morseSpace:'key',bp:'radio'};
  document.addEventListener('click',e=>{
   const el=e.target.closest('button');if(!el||el===sfxToggle)return;
@@ -141,7 +117,11 @@
  document.addEventListener('keydown',e=>{if(e.repeat)return;if(e.target.closest('.knob')&&e.key.startsWith('Arrow'))uiSound('dial')},true);
  // Result sounds, without interfering with the existing event handlers.
  const statusNode=$('bearingStatus');
- if(statusNode){new MutationObserver(()=>{const t=statusNode.textContent.toLowerCase();if(/подтвержд|принят|верн|установлен/.test(t))uiSound('success');else if(/ошиб|неверн|отклон|нет сигнала/.test(t))uiSound('error')}).observe(statusNode,{childList:true,subtree:true,characterData:true})}
- const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event('Радиоприёмник: '+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?'включён':'выключен'));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?'ПРИЁМ АКТИВЕН':'ОЖИДАНИЕ'},80));
- event('Система загружена / Windows 95 UI');window.sh95Brief();
+ if(statusNode){new MutationObserver(()=>{const t=statusNode.textContent.toLowerCase();const matches=kind=>['en','ru'].some(lang=>new RegExp(window.SHTAB_LOCALES[lang]['ui.'+kind+'Pattern'],'i').test(t));if(matches('success'))uiSound('success');else if(matches('error'))uiSound('error')}).observe(statusNode,{childList:true,subtree:true,characterData:true})}
+ const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event(I18n.t('Radio Receiver: ')+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('on'):I18n.t('off')));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('RECEPTION ACTIVE'):I18n.t("STANDBY")},80));
+ const bootChecks=['boot.kernel','boot.memory','boot.devices','boot.radio','boot.map','boot.ready'];
+ bootChecks.forEach((key,index)=>setTimeout(()=>event(key,true),index*135));
+ window.sh95Brief();
+ window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();renderEvents();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');});
+
 })();

@@ -2,23 +2,23 @@
 const SR_MIN=530,SR_MAX=1710;
 const S={tune:1100,bw:8,rf:1,atm:.4,vol:.6,agc:true,sq:false,on:false,sig:0};
 const ST=[
- {f:702,n:'Радио «Мелодия» — музыка',P:.9},
- {f:891,n:'Любитель — морзе',P:.7},
- {f:1017,n:'Диктор — речь',P:.85},
- {f:1233,n:'Станция чисел',P:.6},
- {f:1359,n:'Телетайп — RTTY',P:.75},
+ {f:702,n:"Melodiya Radio — music",P:.9},
+ {f:891,n:"Amateur — Morse",P:.7},
+ {f:1017,n:"Announcer — speech",P:.85},
+ {f:1233,n:"Numbers station",P:.6},
+ {f:1359,n:"Teletype — RTTY",P:.75},
  {f:610,n:'',P:.85},{f:970,n:'',P:.85},{f:1460,n:'',P:.85}];
-const CIVIL_NAMES=['Радио «Мелодия» — музыка','Любитель — морзе','Диктор — речь','Станция чисел','Телетайп — RTTY'];
+const CIVIL_NAMES=["Melodiya Radio — music","Amateur — Morse","Announcer — speech","Numbers station","Teletype — RTTY"];
 function randomCivilFrequencies(){
  const used=ST.slice(5).map(s=>s.f);
  ST.slice(0,5).forEach((s,i)=>{let f,tries=0;do{f=Math.round((SR_MIN+24+rnd()*(SR_MAX-SR_MIN-48))/3)*3;tries++}while(tries<500&&used.some(v=>Math.abs(v-f)<32));
  s.f=f;s.n=CIVIL_NAMES[i];used.push(f)});
- const status=document.getElementById('rfstatus');if(status)status.textContent='ЭФИР ПЕРЕРАСПРЕДЕЛЁН';
+ const status=document.getElementById('rfstatus');if(status)status.textContent=I18n.t("FREQUENCIES REALLOCATED");
 }
 const fq=document.getElementById('fq');
 let ctx,proc,lp1,lp2,hp,vg,comp,analyser,tt=0,SR=44100;
 const PI2=Math.PI*2,rnd=Math.random;
-// --- генераторы сигналов станций
+// --- station signal generators
 function melody(){const N=[220,261.6,329.6,440,329.6,261.6,196,246.9,293.7,392,293.7,246.9];let p=0,q=0;
  return t=>{const n=Math.floor(t/.2),lt=t-n*.2;p+=PI2*N[n%12]/SR;q+=PI2*N[(n>>2)%3*4%12]/2/SR;
  const e=Math.min(1,lt*200)*Math.exp(-lt*9);return (Math.sin(p)+.4*Math.sin(2*p)+.15*Math.sin(3*p))*.5*e+.18*Math.sin(q)}}
@@ -71,8 +71,8 @@ function codedTransmission(message){
 }
 const GEN=[melody,morse,speech,numbers,rtty,()=>codedTransmission('DE 1 AZ 000 X 00000 Y 00000'),()=>codedTransmission('DE 2 AZ 000 X 00000 Y 00000'),()=>codedTransmission('DE 3 AZ 000 X 00000 Y 00000')];
 ST.forEach((s,i)=>{s.g=null;s.a=0;s.tg=0;s.pw=0;s.wp=0;s.wf=0;s.wg=0;s.mk=GEN[i]});
-// --- аудио
-function setFilter(){document.getElementById("bandread").textContent=S.bw.toFixed(1)+" кГц";if(!ctx)return;const c=Math.max(400,S.bw*500);
+// --- audio
+function setFilter(){document.getElementById("bandread").textContent=S.bw.toFixed(1)+I18n.t(" kHz");if(!ctx)return;const c=Math.max(400,S.bw*500);
  [lp1,lp2].forEach(f=>f.frequency.setTargetAtTime(c,ctx.currentTime,.03));
  vg.gain.setTargetAtTime(S.on?S.vol*S.vol*2.2:0,ctx.currentTime,.03)}
 function startAudio(){ctx=new (window.AudioContext||window.webkitAudioContext)();SR=ctx.sampleRate;
@@ -109,8 +109,8 @@ function startAudio(){ctx=new (window.AudioContext||window.webkitAudioContext)()
    o[i]=Math.tanh((sum+nz)*g*gate)}
   S.sig=L}
 }
-async function power(){try{if(!ctx)startAudio();S.on=!S.on;if(S.on)await ctx.resume();setFilter();bp.setAttribute('aria-pressed',S.on);bp.textContent=S.on?'Выключить':'Включить';document.getElementById('powerled').classList.toggle('lit',S.on);document.getElementById('rxstate').textContent=S.on?'RX':'OFF';if(!S.on)setTimeout(()=>{if(!S.on&&ctx)ctx.suspend().catch(()=>{})},300)}catch(err){S.on=false;bp.setAttribute('aria-pressed','false');bp.textContent='Включить';console.error('Не удалось запустить аудио:',err);document.getElementById('powerled').classList.remove('lit');document.getElementById('rxstate').textContent='ERR';const el=document.getElementById('link');el.className='link off';el.textContent='Аудио недоступно в этом браузере или запуск заблокирован. Попробуйте открыть страницу в актуальном браузере.'}}
-// --- ручки
+async function power(){try{if(!ctx)startAudio();S.on=!S.on;if(S.on)await ctx.resume();setFilter();bp.setAttribute('aria-pressed',S.on);bp.textContent=S.on?I18n.t("Power Off"):I18n.t("Power On");document.getElementById('powerled').classList.toggle('lit',S.on);document.getElementById('rxstate').textContent=S.on?'RX':'OFF';if(!S.on)setTimeout(()=>{if(!S.on&&ctx)ctx.suspend().catch(()=>{})},300)}catch(err){S.on=false;bp.setAttribute('aria-pressed','false');bp.textContent=I18n.t("Power On");console.error(I18n.t("Could not start audio:"),err);document.getElementById('powerled').classList.remove('lit');document.getElementById('rxstate').textContent='ERR';const el=document.getElementById('link');el.className='link off';el.textContent=I18n.t("Audio is unavailable or blocked in this browser. Try a modern browser.")}}
+// --- knobs
 function Knob(id,o){const el=document.getElementById(id),m=el.querySelector('.k'),out=el.parentNode.querySelector('.val');
  let v=o.val,ang=0;const pd=o.inf?o.pd:(o.max-o.min)/270;
  function draw(){const a=o.inf?ang:-135+270*(v-o.min)/(o.max-o.min);m.style.transform='rotate('+a+'deg)';out.textContent=o.fmt(v);
@@ -125,8 +125,8 @@ function Knob(id,o){const el=document.getElementById(id),m=el.querySelector('.k'
  el.addEventListener('wheel',e=>{e.preventDefault();step(-Math.sign(e.deltaY)*(o.inf?5:10),e.shiftKey)},{passive:false});
  el.addEventListener('keydown',e=>{const k={ArrowRight:1,ArrowUp:1,ArrowLeft:-1,ArrowDown:-1}[e.key];if(k){e.preventDefault();step(k*(o.inf?3:6),e.shiftKey)}});
  o.on(v);draw()}
-Knob('kt',{min:SR_MIN,max:SR_MAX,val:S.tune,inf:true,pd:.4,fmt:v=>v.toFixed(1)+' кГц',on:v=>{S.tune=v;fq.innerHTML=v.toFixed(1)+'<small> кГц</small>'}});
-Knob('kb',{min:1.5,max:14,val:S.bw,fmt:v=>v.toFixed(1)+' кГц',on:v=>{S.bw=v;setFilter()}});
+Knob('kt',{min:SR_MIN,max:SR_MAX,val:S.tune,inf:true,pd:.4,fmt:v=>v.toFixed(1)+I18n.t(" kHz"),on:v=>{S.tune=v;fq.innerHTML=v.toFixed(1)+'<small>'+I18n.t(' kHz')+'</small>'}});
+Knob('kb',{min:1.5,max:14,val:S.bw,fmt:v=>v.toFixed(1)+I18n.t(" kHz"),on:v=>{S.bw=v;setFilter()}});
 Knob('kr',{min:.2,max:1.6,val:S.rf,fmt:v=>Math.round(v*100)+'%',on:v=>S.rf=v});
 
 Knob('kv',{min:0,max:1,val:S.vol,fmt:v=>Math.round(v*100)+'%',on:v=>{S.vol=v;setFilter()}});
@@ -134,10 +134,11 @@ const bp=document.getElementById('bp');bp.onclick=power;
 function tog(id,k){const b=document.getElementById(id);b.onclick=()=>{S[k]=!S[k];b.setAttribute('aria-pressed',S[k])}}
 tog('bg','agc');tog('bs','sq');
 const hint=document.getElementById('hint');
-const renderHint=()=>{hint.innerHTML=ST.slice(0,5).map((s,i)=>`<div data-i="${i}"><span>${s.n}</span><b>${s.f} кГц</b></div>`).join('')};renderHint();
+const renderHint=()=>{hint.innerHTML=ST.slice(0,5).map((s,i)=>`<div data-i="${i}"><span>${I18n.t(s.n)}</span><b>${s.f}${I18n.t(' kHz')}</b></div>`).join('')};renderHint();
+ window.addEventListener('shtab:languagechange',()=>{renderHint();setFilter();bp.textContent=I18n.t(S.on?'Power Off':'Power On')});
 let showH=false;document.getElementById('bh').onclick=function(){showH=!showH;hint.hidden=!showH;this.setAttribute('aria-pressed',showH)};
 hint.onclick=e=>{const d=e.target.closest('[data-i]');if(d)document.getElementById('kt').focus()};
-// --- шкала и спектр
+// --- scale and spectrum
 const rfwater=document.getElementById('rfwater'),rfc=rfwater.getContext('2d');let rfTick=0;
 const mb=document.getElementById('mb'),sv=document.getElementById('sv');
 const spec=document.getElementById('spectrum'),sc=spec.getContext('2d'),water=document.getElementById('waterfall'),wc=water.getContext('2d');
@@ -159,7 +160,7 @@ function drawFFT(){
    const r=Math.floor(Math.max(0,(v-.38)*410)),g=Math.floor(v*240),b=Math.floor(20+v*130);
    wc.fillStyle=`rgb(${r},${g},${b})`;wc.fillRect(ww-2,y,2,1);
  }}
- document.getElementById('fftstatus').textContent=active?'LIVE FFT · 2048':'ОЖИДАНИЕ СИГНАЛА';
+ document.getElementById('fftstatus').textContent=active?'LIVE FFT · 2048':I18n.t("AWAITING SIGNAL");
  document.getElementById('noiselevel').textContent=Math.round(S.atm*100)+'%';
 }
 function drawRFWaterfall(){
@@ -177,7 +178,7 @@ function drawRFWaterfall(){
  rfc.putImageData(row,0,0);
  const xx=(S.tune-SR_MIN)/(SR_MAX-SR_MIN)*w;
  rfc.fillStyle='#ff7c56';rfc.fillRect(Math.round(xx),0,2,1);
- document.getElementById('rfstatus').textContent=S.on?'RF / СИНТЕТИЧЕСКИЙ ЭФИР':'RF / ПРИЁМНИК ВЫКЛ.';
+ document.getElementById('rfstatus').textContent=S.on?I18n.t("RF / SYNTHETIC SPECTRUM"):I18n.t("RF / RECEIVER OFF");
 }
 function draw(){
  const sg=S.on?S.sig:0;
@@ -190,7 +191,7 @@ function draw(){
 }
 draw();
 
-window.Radio={setAtmosphere(level){S.atm=Math.max(0,Math.min(1,Number(level)||0))},getStream(){return window.sh95RadioStream||null}, isOn(){return S.on}, frequency(){return S.tune}, link(){if(!S.on)return -1;for(let i=5;i<8;i++)if(Math.abs(S.tune-ST[i].f)<=2)return i-5;return -1},
+window.Radio={setCrewLabels(labels){labels.forEach((name,index)=>{if(ST[index+5])ST[index+5].n=name})},setAtmosphere(level){S.atm=Math.max(0,Math.min(1,Number(level)||0))},getStream(){return window.sh95RadioStream||null}, isOn(){return S.on}, frequency(){return S.tune}, link(){if(!S.on)return -1;for(let i=5;i<8;i++)if(Math.abs(S.tune-ST[i].f)<=2)return i-5;return -1},
  quality(k){if(!S.on||!Number.isInteger(k)||k<0||k>2)return 0;const s=ST[5+k],df=Math.abs(S.tune-s.f),selectivity=Math.exp(-Math.pow(df/(S.bw*.65+1),2)),noise=.035+.018*S.bw+.12*S.atm,snr=(s.pw*selectivity)/noise,band=Math.min(1,S.bw/3);return Math.max(0,Math.min(1,band*snr/(snr+.65)))},
  setCrews(a){a.forEach((c,k)=>{const st=ST[5+k];st.f=c.f;st.n=c.label;
   st.mk=()=>codedTransmission(`DE ${k+1} AZ ${String(c.az).padStart(3,'0')} X ${String(c.x).padStart(5,'0')} Y ${String(c.y).padStart(5,'0')}`);
