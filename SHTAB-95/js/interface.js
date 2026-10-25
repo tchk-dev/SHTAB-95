@@ -118,7 +118,9 @@
  const statusNode=$('bearingStatus');
  if(statusNode){new MutationObserver(()=>{const t=statusNode.textContent.toLowerCase();const matches=kind=>['en','ru'].some(lang=>new RegExp(window.SHTAB_LOCALES[lang]['ui.'+kind+'Pattern'],'i').test(t));if(matches('success'))uiSound('success');else if(matches('error'))uiSound('error')}).observe(statusNode,{childList:true,subtree:true,characterData:true})}
  const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event(I18n.t('Radio Receiver: ')+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('on'):I18n.t('off')));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('RECEPTION ACTIVE'):I18n.t("STANDBY")},80));
- event(I18n.t('System loaded / Windows 95 UI'));window.sh95Brief();
+ const bootChecks=['boot.kernel','boot.memory','boot.devices','boot.radio','boot.map','boot.ready'];
+ bootChecks.forEach((key,index)=>setTimeout(()=>event(I18n.t(key)),index*135));
+ window.sh95Brief();
  window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');});
 
 })();
