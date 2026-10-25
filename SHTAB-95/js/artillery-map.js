@@ -92,13 +92,47 @@ function pickWeather(timeId,random=Math.random){
  return WEATHERS.find(w=>(w.weights[timeId]||0)>0);
 }
 let missionConditions=null,missionOver=false;
+function conditionDetails(item,kind){
+ const title=I18n.t(kind==='time'?'Time of Day':'Weather');
+ const label=I18n.t(item.name);
+ return {title,label,noise:I18n.format('conditions.interference',{value:Math.round(item.noise*100)}),drag:I18n.format('conditions.drag',{value:item.drag.toFixed(3)})};
+}
+function renderMissionConditions(){
+ const box=$('missionConditions');if(!box||!missionConditions)return;
+ box.replaceChildren();
+ const panel=document.createElement('section');panel.className='condition-panel';panel.id='conditionPanel';panel.hidden=true;panel.setAttribute('role','region');
+ let active=null;
+ const close=()=>{panel.hidden=true;active?.setAttribute('aria-expanded','false');active=null};
+ const show=(button,item,kind)=>{
+  if(active&&active!==button)active.setAttribute('aria-expanded','false');
+  const info=conditionDetails(item,kind);active=button;button.setAttribute('aria-expanded','true');
+  panel.replaceChildren();
+  const bar=document.createElement('div');bar.className='condition-panel-title';bar.textContent='▣ '+I18n.t('conditions.header');
+  const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='condition-panel-close';dismiss.textContent='×';dismiss.setAttribute('aria-label',I18n.t('conditions.close'));dismiss.onclick=()=>{close();button.focus()};bar.append(dismiss);
+  const name=document.createElement('div');name.className='condition-panel-name';name.textContent=item.icon+' '+info.title+' / '+info.label;
+  const metrics=document.createElement('div');metrics.className='condition-panel-metrics';
+  for(const value of [info.noise,info.drag]){const row=document.createElement('div');row.textContent=value;metrics.append(row)}
+  const foot=document.createElement('div');foot.className='condition-panel-foot';foot.textContent=I18n.t('conditions.note');
+  panel.append(bar,name,metrics,foot);panel.hidden=false;
+ };
+ for(const [kind,item] of [['time',missionConditions.time],['weather',missionConditions.weather]]){
+  const button=document.createElement('button');button.type='button';button.className='mission-condition';
+  button.textContent=item.icon+' '+I18n.t(item.name)+'  ▾';
+  button.setAttribute('aria-controls','conditionPanel');button.setAttribute('aria-expanded','false');
+  button.setAttribute('aria-label',I18n.t(kind==='time'?'Time of Day':'Weather')+': '+I18n.t(item.name));
+  button.onclick=()=>active===button?close():show(button,item,kind);
+  box.append(button);
+ }
+ box.append(panel);
+ box.onkeydown=e=>{if(e.key==='Escape'&&!panel.hidden){close();e.preventDefault()}};
+ box.onfocusout=e=>{if(!box.contains(e.relatedTarget))close()};
+}
+document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
 function setMissionConditions(){
  const time=TIMES[Math.floor(Math.random()*TIMES.length)],weather=pickWeather(time.id);
  const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
  missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);
- const box=$('missionConditions');box.replaceChildren();
- for(const item of [time,weather]){const el=document.createElement('span');el.className='mission-condition';el.tabIndex=0;el.textContent=item.icon+' '+I18n.t(item.name);
-  el.title=I18n.t(item===time?'Time of Day':'Weather')+I18n.t(' · radio interference contribution: +')+Math.round(item.noise*100) +I18n.t(' percentage points · air resistance multiplier: ×')+item.drag.toFixed(3);box.append(el)}
+ renderMissionConditions();
 }
 function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat95');$('defeatText').textContent=I18n.format('mission.defeat',{crew:I18n.t(c.name),ammo:c.ammoMax});el.hidden=false;if(window.sh95Event)window.sh95Event(I18n.format('mission.defeatEvent',{crew:I18n.t(c.name)}))}
 $('defeatRetry').onclick=()=>{newTask(false)};
@@ -455,5 +489,5 @@ $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 const tick=()=>$('clock').textContent=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
-window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');const box=$('missionConditions');if(box&&missionConditions){const items=[missionConditions.time,missionConditions.weather];box.querySelectorAll('.mission-condition').forEach((el,i)=>{if(!items[i])return;el.textContent=items[i].icon+' '+I18n.t(items[i].name);el.title=I18n.t(i===0?'Time of Day':'Weather')+I18n.t(' · radio interference contribution: +')+Math.round(items[i].noise*100)+I18n.t(' percentage points · air resistance multiplier: ×')+items[i].drag.toFixed(3)})}});
+window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions());
 newTask(false);
