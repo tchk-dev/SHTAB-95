@@ -458,5 +458,13 @@ window.SHTAB_LOCALES.ru = {
   "boot.radio": "РАДИО    [OK] Диагностика радиотракта",
   "boot.map": "КАРТА    [OK] Данные рельефа загружены",
   "boot.ready": "ШТАБ 95 [ГОТОВО] Терминал оператора на связи",
-  "Select charge 1 through 5.": "Выберите заряд от 1 до 5."
+  "Select charge 1 through 5.": "Выберите заряд от 1 до 5.",
+  "Projectile": "Снаряд",
+  "Muzzle velocity": "Начальная скорость",
+  "OF-41 Sokol": "ОФ-41 «Сокол»",
+  "OF-42 Krechet": "ОФ-42 «Кречет»",
+  "OF-43M Granit": "ОФ-43М «Гранит»",
+  "OF-44 Buran": "ОФ-44 «Буран»",
+  "OF-45 Grom": "ОФ-45 «Гром»",
+  "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.": "Вымышленные учебные снаряды. Каждому заряду соответствует указанная начальная скорость; модель попадания в игре одинакова."
 };
