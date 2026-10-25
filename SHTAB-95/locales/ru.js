@@ -288,5 +288,18 @@ window.SHTAB_LOCALES.ru = {
   "mission.recon": "Разведка {number} «{crew}»",
   "map.grid": "АРМ-95 / ТОПОПЛАНШЕТ · СЕТКА {size} М",
   "map.wind": "ветер {speed} м/с",
-  "profile.status": "РАСЧЁТ {crew} · Hmax {height} м · БОК. СМЕЩ. ЦЕЛИ {offset} м"
+  "profile.status": "РАСЧЁТ {crew} · Hmax {height} м · БОК. СМЕЩ. ЦЕЛИ {offset} м",
+  "CREW": "РАСЧЁТ",
+  "Crew": "Расчёт",
+  "AMMO": "БОЕЗАПАС",
+  "TEMP.": "ТЕМП.",
+  "Connected: crew": "На связи: расчёт",
+  "Intelligibility:": "Разборчивость:",
+  "CHANNEL": "КАНАЛ",
+  "CONFIRMED": "ПОДТВЕРЖДЁН",
+  "✔ target destroyed": "✔ цель поражена",
+  "Time, s": "Время, с",
+  "Deviation, m": "Откл., м",
+  "mission.wind": "Ветер: {direction}°, {speed} м/с",
+  "map.cursor": "X: {x} Y: {y} Высота: {height} м"
 };
