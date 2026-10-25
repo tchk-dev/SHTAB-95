@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Штаб 95 — артиллерийский терминал</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div class="win">
+ <div class="title"><span>🎯</span><span class="t">ШТАБ 95 — Артиллерийский терминал [УЧЕБНЫЙ РЕЖИМ]</span><div class="cb">_</div><div class="cb">□</div><div class="cb x">×</div></div>
+ <div class="menu"><button type="button" id="mfile"><u>Ф</u>айл</button><button type="button" id="mview"><u>В</u>ид</button><button type="button" id="mtools"><u>С</u>ервис</button><button type="button" id="mhelp"><u>С</u>правка</button><span class="menu-right">АРМ «ШТАБ» · v. 1.95</span></div>
+ <div class="file-window" id="filesWindow" hidden role="dialog" aria-label="Записи радиоприёмника">
+  <div class="file-title"><strong>▣ Мои записи — Doors 95</strong><button id="filesClose" type="button" aria-label="Закрыть">×</button></div>
+  <div class="file-path">C:\RADIO\RECORDS\</div>
+  <div class="file-body"><div id="filesList" class="file-list">Загрузка…</div><div class="file-detail" id="filesInfo">Выберите запись, чтобы прослушать её или открыть в МГ-95.</div><audio id="filesAudio" controls preload="none" style="width:100%;margin-top:8px"></audio></div>
+ </div>
+ <div class="tool">
+  <button id="newt">🗺 Новая задача</button><button id="nowind">🍃 Без ветра</button>
+  <button id="fit">⌂ Вид по умолчанию</button><span class="sfx-control"><button type="button" id="sfxToggle" aria-pressed="true" title="Отключить системные звуки">♫ ЗВУК</button><input id="sfxVolume" type="range" min="0" max="100" value="65" aria-label="Громкость интерфейса" title="Громкость интерфейса"><span id="sfxPercent">65%</span></span><button id="zin">＋</button><button id="zout">－</button>
+ </div>
+ <div class="bootstrip"><span class="led"></span> ЛОКАЛЬНЫЙ УЗЕЛ / КАНАЛ СВЯЗИ <strong id="sysmode">ОЖИДАНИЕ</strong><span class="bootright">SIMULATION • DOS/Win95 workstation</span></div><div class="main">
+  <div class="pane">
+   <div class="panel"><h3>Исходные данные</h3><div class="b"><table id="data"></table>
+    <div class="hint">Азимут: от севера. Ветер: направление источника. Цели скрыты.</div></div></div>
+   <div class="panel"><h3>Табель боеприпасов</h3><div class="b"><table><tr><td>ОФ-43М / № 1</td><td>250 м/с</td></tr><tr><td>ОФ-43М / № 2</td><td>350 м/с</td></tr><tr><td>ОФ-43М / № 3</td><td>450 м/с</td></tr><tr><td>ОФ-43М / № 4</td><td>550 м/с</td></tr></table>
+    <div class="hint">ОФ-43М «Гранит» · осколочно-фугасный, учебная модель · 43 кг.</div></div></div>
+   <div class="panel"><h3>Приказ расчёту</h3><div class="b">
+    <div class="link off" id="link"></div>
+    <div class="crew-resources" id="crewResources" aria-live="off"><div class="crew-resources-title">Боекомплект и состояние орудий</div><div id="crewResourceRows"></div></div>
+    <div class="row"><div><label>Единицы</label><select id="unit"><option value="deg">градусы</option><option value="mil">тысячные (6400)</option></select></div>
+    <div><label>Заряд</label><select id="ch"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div></div>
+    <label>Азимут (доворот)</label><input id="az" type="number" step="any">
+    <label>Угол возвышения</label><input id="el" type="number" step="any">
+    <button id="fire">📻 ПЕРЕДАТЬ: ОГОНЬ!</button><div id="res"></div>
+    <div class="hint">Перед приказом подтвердите канал кнопкой «Передать пеленг».</div></div></div>
+
+   <div class="panel field-tools"><h3>Научный графический калькулятор</h3><div class="b">
+    <input id="calcExpr" class="calc-screen" aria-label="Выражение калькулятора" value="sin(x)" spellcheck="false" autocomplete="off">
+    <div class="calc-info" id="calcInfo">График y = f(x) · радианы · x ∈ [−10, 10]</div>
+    <div class="calc-grid" id="calcKeys"></div>
+    <canvas id="calcPlot" class="calc-plot" width="290" height="145" aria-label="График функции"></canvas>
+    <div class="calc-history" id="calcHistory"></div>
+    <div class="field-small">Функции: sin, cos, tan, sqrt, log, ln, abs, exp.</div>
+   </div></div>
+
+  </div>
+  <div class="content">
+   <div class="group" id="mapSection"><span class="cap">Картографический планшет</span>
+<div class="map-tools"><span class="tool-label">ИНСТРУМЕНТ:</span><button id="toolPoint" type="button" class="map-tool active" aria-pressed="true">✛ Метка</button><button id="toolLine" type="button" class="map-tool" aria-pressed="false">╱ Линия</button><button id="clearMarks" type="button">Очистить</button><button id="undoMark" type="button">Отменить последнюю</button><label><input type="checkbox" id="showTargets"> Показать цели (отладка)</label><span id="mapread">X: — Y: —</span></div>
+<canvas id="map" width="820" height="540"></canvas>
+<div class="map-coordinate-editor" id="coordEditor"><div class="coord-head">▣ РЕДАКТОР КООРДИНАТ <span id="coordState">НЕ ВЫБРАНА</span></div><div class="coord-row"><label>X, м<input id="coordX" type="number" step="1" placeholder="X"></label><label>Y, м<input id="coordY" type="number" step="1" placeholder="Y"></label><button type="button" id="coordApply">Применить</button><button type="button" id="coordDelete">Стереть</button></div><div class="coord-foot" id="coordMessage">ЛКМ — метка / выбор; ПКМ — ластик. Координаты выбранной метки можно изменить здесь.</div></div>
+<div class="map-help">ЛКМ — выбранный инструмент · ПКМ — стереть · СКМ — сдвиг · колесо — масштаб</div></div>
+   <div class="group profile-panel"><span class="cap">Баллистический профилограф — АРМ-95</span><div class="profile-display"><div class="profile-top"><span>▦ ВЕРТИКАЛЬНЫЙ РАЗРЕЗ</span><span id="profileState">ОЖИДАНИЕ ДАННЫХ</span></div><canvas id="prof" width="820" height="210"></canvas><div class="profile-bottom"><span>ДИСТАНЦИЯ, М</span><span>ВЫСОТА, М</span><span>УЧЕБНАЯ МОДЕЛЬ</span></div></div></div>
+   <div class="group" id="radioSection"><span class="cap">Радиоприёмник — Р-95</span>
+<div class="set">
+<h1><span><span class="power-led" id="powerled"></span> РАДИОПРИЁМНИК — Р-95</span> <small>MW · 530–1710 кГц · AM</small></h1>
+<div class="glass"><div class="rf-screen-heading"><span>▤ RF WATERFALL / 530–1710 кГц</span><span id="rfstatus">ОБЗОР ДИАПАЗОНА</span></div><canvas id="rfwater" width="760" height="170" aria-label="Водопад радиочастотного диапазона"></canvas><div class="rf-axis"><span>530</span><span>700</span><span>900</span><span>1100</span><span>1300</span><span>1500</span><span>1710 кГц</span></div><div class="fq" id="fq">---.-<small> кГц</small></div>
+<div class="sm">S-МЕТР <div class="bar"><i id="mb"></i></div><span id="sv">—</span></div></div>
+<div class="rf-readouts"><span>ПРИЁМ <b id="rxstate">OFF</b></span><span>ШУМ <b id="noiselevel">—</b></span><span>ПОЛОСА <b id="bandread">8.0 кГц</b></span><span>РЕЖИМ <b>AM / MONO</b></span></div>
+<div class="knobs">
+<div class="kw"><div class="knob big" id="kt" tabindex="0" role="slider" aria-label="Настройка"><div class="k"></div></div>Настройка<span class="val"></span></div>
+<div class="kw"><div class="knob" id="kb" tabindex="0" role="slider" aria-label="Полоса пропускания"><div class="k"></div></div>Полоса<span class="val"></span></div>
+<div class="kw"><div class="knob" id="kr" tabindex="0" role="slider" aria-label="Усиление ВЧ"><div class="k"></div></div>Усиление ВЧ<span class="val"></span></div>
+<div class="kw"><div class="knob" id="ka" tabindex="0" role="slider" aria-label="Помехи"><div class="k"></div></div>Атмосф. помехи<span class="val"></span></div>
+<div class="kw"><div class="knob" id="kv" tabindex="0" role="slider" aria-label="Громкость"><div class="k"></div></div>Громкость<span class="val"></span></div>
+</div>
+<div class="btns">
+<button id="bp" aria-pressed="false">Включить</button>
+<button id="bg" aria-pressed="true">АРУ</button>
+<button id="bs" aria-pressed="false">Шумоподавитель</button>
+<button id="bh" aria-pressed="false">Справочник эфира</button>
+</div>
+<div id="hint" hidden></div><div class="bearing-panel"><div class="bearing-title">▣ ПОСТ РАДИОРАЗВЕДКИ <span id="bearingCount">0 / 3</span></div><div class="bearing-actions"><button id="sendBearing" type="button">◉ Передать пеленг</button><span id="bearingStatus" role="status">Поиск сигналов…</span></div><div id="bearingList" class="bearing-list">Частоты не установлены</div></div>
+<div class="recorder-panel" id="recorderPanel">
+ <div class="recorder-head"><strong>▣ МАГНИТОФОН — МГ-95</strong><span id="recState">ГОТОВ К ЗАПИСИ</span></div>
+ <div class="recorder-controls"><button type="button" id="recToggle">● Запись</button><button type="button" id="recPlay" disabled>▶ Воспроизвести</button><button type="button" id="recPause" disabled>Ⅱ Пауза</button><button type="button" id="recDelete" disabled title="Удалить текущую запись из МГ-95 и архива">✕ Удалить запись</button><label for="recSpeed">СКОРОСТЬ <select id="recSpeed"><option value="1">1×</option><option value="0.75">0.75×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select></label></div>
+ <div class="recorder-readouts"><span id="recDuration">00:00</span><span id="recQuality">РАЗБОРЧИВОСТЬ: —</span><span id="recFreq">ЧАСТОТА: —</span></div>
+ <audio id="recAudio" preload="metadata" hidden></audio>
+ <div class="recorder-progress"><input type="range" id="recSeek" min="0" max="1000" value="0" disabled aria-label="Перемотка записи"></div>
+ <div class="recorder-note">Запишите радиопередачу (до 90 секунд), затем запустите дешифрацию. Слабая разборчивость повышает риск пропусков и ошибок. Декодер работает только с записанным звуком.</div>
+ <div class="decoder-panel"><div class="decoder-actions"><button type="button" id="recDecode" disabled>▤ Дешифровать запись</button><span id="decodeStatus">НЕТ ЗАПИСИ</span></div><div class="decoder-screen" id="decodeOutput" role="status">ОЖИДАНИЕ АУДИОЗАПИСИ</div></div>
+</div>
+<div class="radio-diagnostics">
+<div class="instrument"><div class="instrument-title"><span>▥ AF FFT</span><span id="fftstatus">ОЖИДАНИЕ</span></div><canvas id="spectrum" width="380" height="115" aria-label="Анализатор звукового спектра"></canvas><div class="instrument-footer"><span>0 Гц</span><span>4 кГц</span><span>8 кГц</span><span>12 кГц</span></div></div>
+<div class="instrument"><div class="instrument-title"><span>▦ AF WATERFALL</span><span>ЗВУК / ИСТОРИЯ</span></div><canvas id="waterfall" width="380" height="115" aria-label="Спектрограмма звукового сигнала"></canvas><div class="instrument-footer"><span>← РАНЬШЕ · СЕЙЧАС →</span><span>ЧАСТОТА: ↑ НИЗКИЕ / ↓ ВЫСОКИЕ</span></div></div>
+</div>
+<div class="tip">Крутите ручки мышью или пальцем по кругу. Колесо мыши и стрелки — шаг, с Shift — точнее. Узкая полоса убирает шипение и соседей, но срезает высокие звуки.</div>
+</div>
+   </div>
+   <div class="group"><span class="cap">Журнал боевой работы</span><div class="lv"><table id="log"></table></div></div>
+<div class="group desknotes"><span class="cap">Оперативная сводка</span><div class="note-grid"><div><strong>ПОЗЫВНЫЕ / СЕТЬ</strong><div id="crewbrief">Загрузка данных...</div></div><div><strong>СОСТОЯНИЕ СИСТЕМЫ</strong><div id="syslog" role="log" aria-live="polite">[SYS] Терминал инициализирован.</div></div></div></div>
+  </div>
+ </div>
+ <div class="status"><div id="s1" style="flex:2">Готово</div><div id="s2">Ветер: —</div><div id="s3">MEM: 640K OK</div></div>
+</div>
+<div class="task"><button class="start" id="start95">▦ Пуск</button><button type="button" class="tb active" id="taskMap" aria-label="Перейти к карте" aria-pressed="true">▤ Карта</button><button type="button" class="tb" id="taskRadio" aria-label="Перейти к радиоприёмнику" aria-pressed="false">▥ Радио</button><div class="clock" id="clock"></div></div><div class="start-menu" id="startmenu" hidden><div class="start-side">Doors 95</div><div class="start-options"><button id="smnew">▤ Новое задание</button><button id="smhelp">▧ О программе</button><div class="start-separator"></div><button id="smmines">▦ Сапёр</button><button id="smsolitaire">♠ Косынка</button><button id="smclose">✕ Закрыть меню</button></div></div>
+<div class="game-window" id="minesWindow" hidden role="dialog" aria-label="Сапёр"><div class="game-title">▦ Сапёр <button data-close-game="minesWindow" title="Закрыть">×</button></div><div class="game-toolbar"><button id="mineNew">Новая игра</button><span id="mineCount">Мины: 10</span><span id="mineStatus">Готово</span></div><div class="mine-grid" id="mineGrid"></div><div class="sol-message">ЛКМ — открыть · ПКМ — флажок</div></div>
+<div class="game-window sol-window" id="solWindow" hidden role="dialog" aria-label="Косынка"><div class="game-title">♠ Косынка <button data-close-game="solWindow" title="Закрыть">×</button></div><div class="game-toolbar"><button id="solNew">Новая игра</button><button id="solAuto">В фонды</button><span id="solStatus">Перенос карт кликом</span></div><div class="sol-table"><div class="sol-top" id="solTop"></div><div class="sol-columns" id="solCols"></div></div><div class="sol-message">Нажмите карту, затем стопку назначения. Колода слева; справа — четыре фонда. Перемещайте последовательности карт.</div></div>
+<div id="dialog95" class="dialog-backdrop" hidden><div class="dialog"><div class="dialog-title">▣ ШТАБ 95 <button id="dialogclose" aria-label="Закрыть">×</button></div><div id="dialogtext" class="dialog-body"></div><div class="dialog-buttons"><button id="dialogok">OK</button></div></div></div>
+
+<script src="js/radio.js"></script>
+<script src="js/artillery-map.js"></script>
+
+<script src="js/interface.js"></script>
+
+<script src="js/calculator.js"></script>
+<script src="js/filesystem.js"></script>
+<script src="js/recorder.js"></script>
+<script src="js/startup.js"></script>
+
+<script src="js/minigames.js"></script>
+
+<link rel="stylesheet" href="css/taskbar.css">
+<script src="js/taskbar.js"></script>
+</body>
+</html>
