@@ -72,6 +72,19 @@ function place(){
   const g={x:ORG.x+WS/2,y:ORG.y+WS/2},t={x:g.x+3000,y:g.y};g.z=Math.round(ground(g.x,g.y));t.z=Math.round(ground(t.x,t.y));return{g,t}
 }
 // Температура — условная игровая модель, а не реальные теплотехнические данные.
+const TIMES=[{id:'morning',name:'Утро',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'День',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Вечер',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Ночь',icon:'🌙',noise:.34,drag:1.025}];
+const WEATHERS=[{id:'clear',name:'Ясно',icon:'☀',noise:0,drag:1},{id:'fog',name:'Туман',icon:'🌫',noise:.06,drag:1.025},{id:'rain',name:'Дождь',icon:'🌧',noise:.28,drag:1.06}];
+let missionConditions=null,missionOver=false;
+function setMissionConditions(){
+ const time=TIMES[Math.floor(Math.random()*TIMES.length)],weather=WEATHERS[Math.floor(Math.random()*WEATHERS.length)];
+ const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
+ missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);
+ const box=$('missionConditions');box.replaceChildren();
+ for(const item of [time,weather]){const el=document.createElement('span');el.className='mission-condition';el.tabIndex=0;el.textContent=item.icon+' '+item.name;
+  el.title=(item===time?'Время суток':'Погода')+' · вклад в радиопомехи: +'+Math.round(item.noise*100)+' п.п. · множитель сопротивления воздуха: ×'+item.drag.toFixed(3);box.append(el)}
+}
+function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat95');$('defeatText').textContent='Расчёт «'+c.name+'» израсходовал все '+c.ammoMax+' снарядов, не поразив цель. Задание завершено неудачей.';el.hidden=false;if(window.sh95Event)window.sh95Event('Задание провалено: боекомплект расчёта '+c.name+' исчерпан')}
+$('defeatRetry').onclick=()=>{newTask(false)};
 const CREW_RELOAD_MS=9500,CREW_HEAT_PER_SHOT=19,CREW_COOL_PER_SEC=0.85;
 const CREW_BASE_TEMP=32,CREW_MAX_TEMP=120,CREW_UNLOCK_TEMP=88;
 function advanceCrewThermal(c,now=performance.now()){
@@ -114,6 +127,7 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  return true;
 };
 function newTask(noWind){
+  missionOver=false;$('defeat95').hidden=true;setMissionConditions();
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
@@ -132,7 +146,7 @@ function simulate(az,el,v0,c){
   const wx=-S.ws*Math.sin(S.wd*Math.PI/180),wy=-S.ws*Math.cos(S.wd*Math.PI/180),gx=c.g.x,gy=c.g.y;
   let p=[0,0,ground(gx,gy)+1],vv=[v0*Math.cos(el)*Math.sin(az),v0*Math.cos(el)*Math.cos(az),v0*Math.sin(el)];
   const dt=.01,pts=[p.slice()];let t=0,n=0;
-  const acc=w=>{const rx=w[0]-wx,ry=w[1]-wy,s=Math.hypot(rx,ry,w[2]);return[-K*s*rx,-K*s*ry,-G-K*s*w[2]]};
+  const acc=w=>{const rx=w[0]-wx,ry=w[1]-wy,s=Math.hypot(rx,ry,w[2]),drag=K*(missionConditions?.drag||1);return[-drag*s*rx,-drag*s*ry,-G-drag*s*w[2]]};
   while(t<400){
     const a1=acc(vv),vm=vv.map((q,i)=>q+a1[i]*dt/2),a2=acc(vm),np=p.map((q,i)=>q+vm[i]*dt),nv=vv.map((q,i)=>q+a2[i]*dt);t+=dt;n++;
     const g0=ground(gx+p[0],gy+p[1]),g1=ground(gx+np[0],gy+np[1]);
@@ -171,6 +185,7 @@ function garble(s){
   return s.slice(0,i)+d+s.slice(i+1)}
 const gauss=()=>Math.sqrt(-2*Math.log(1-Math.random()))*Math.cos(2*Math.PI*Math.random());
 function fire(){
+  if(missionOver)return;
   const feedback=(received,reason='')=>window.dispatchEvent(new CustomEvent('sh95:order-result',{detail:{received,reason}}));
   const reject=(message)=>{say(message);feedback(false,message)};
   const k=Radio.link();
@@ -204,7 +219,7 @@ function fire(){
   say(`«${c.name}»: повторяю: азимут ${df(a,ra)}, возвышение ${df(e0,re)}, заряд ${df(ch,rc)}. Выстрел! ${hit?'ЦЕЛЬ ПОРАЖЕНА! ':''}Разрыв: ${Math.abs(al)<1?'':(al>0?'перелёт ':'недолёт ')+Math.abs(al).toFixed(0)+' м'}${Math.abs(rg)<1?'':', '+(rg>0?'правее ':'левее ')+Math.abs(rg).toFixed(0)+' м'}. Отклонение ${d.toFixed(0)} м, полёт ${r.t.toFixed(1)} с.${all?' <br>ВСЕ ЦЕЛИ ПОРАЖЕНЫ — задача выполнена!':''}`,hit?'hit':'');
   $('log').insertAdjacentHTML('beforeend',`<tr><td>${k+1}.${c.shots.length}</td><td style="color:${c.color}">«${c.name}»</td><td>${lg(a,ra)}</td><td>${lg(e0,re)}</td><td>${lg(ch,rc)}</td><td>${r.t.toFixed(1)}</td><td>${d.toFixed(0)}</td></tr>`);
   $('s1').textContent=all?'Все цели поражены!':`«${c.name}»: отклонение ${d.toFixed(0)} м`;
-  renderData();renderCrewResources();draw();if(window.sh95Brief)window.sh95Brief()}
+  renderData();renderCrewResources();draw();if(window.sh95Brief)window.sh95Brief();if(!hit&&c.ammo===0)showDefeat(c)}
 
 /* ---- карта ---- */
 function fitView(){const xs=CR.flatMap(c=>[c.g.x,c.t.x]),ys=CR.flatMap(c=>[c.g.y,c.t.y]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
@@ -344,13 +359,15 @@ const pos=e=>{const r=mapC.getBoundingClientRect();return[(e.clientX-r.left)*W/r
 const showTargets=$('showTargets');showTargets.addEventListener('change',draw);
 const annotations=[];let mapGesture=null,hover=null,selectedAnnotation=null;
 const toWorld=(px,py)=>({x:v.cx+(px-W/2)*v.m,y:v.cy-(py-H/2)*v.m});
+function lineMetrics(a,b){const dx=b.x-a.x,dy=b.y-a.y;return{distance:Math.hypot(dx,dy),azimuth:(Math.atan2(dx,dy)*180/Math.PI+360)%360}}
+function lineLabel(ctx,a,b){const m=lineMetrics(a,b),text=Math.round(m.distance)+' м · '+m.azimuth.toFixed(1)+'°';const mx=(X(a.x)+X(b.x))/2,my=(Y(a.y)+Y(b.y))/2;ctx.font='bold 12px Courier New,monospace';const width=ctx.measureText(text).width+12;const x=Math.max(3,Math.min(W-width-3,mx-width/2)),y=Math.max(17,Math.min(H-4,my-9));ctx.fillStyle='#071b15';ctx.fillRect(x,y-14,width,18);ctx.strokeStyle='#eaff00';ctx.lineWidth=1;ctx.strokeRect(x+.5,y-13.5,width-1,17);ctx.fillStyle='#eaff00';ctx.fillText(text,x+6,y-1)}
 function drawAnnotations(ctx){
  ctx.save();ctx.lineWidth=2;
  for(const a of annotations){const x=X(a.a.x),y=Y(a.a.y);
-  if(a.b){ctx.strokeStyle='#eaff00';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(X(a.b.x),Y(a.b.y));ctx.stroke();}
+  if(a.b){ctx.strokeStyle='#eaff00';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(X(a.b.x),Y(a.b.y));ctx.stroke();lineLabel(ctx,a.a,a.b);}
   else{ctx.strokeStyle=a===selectedAnnotation?'#ff6565':'#ffec00';ctx.beginPath();ctx.moveTo(x-7,y);ctx.lineTo(x+7,y);ctx.moveTo(x,y-7);ctx.lineTo(x,y+7);ctx.stroke();ctx.font='11px monospace';ctx.fillStyle='#101010';ctx.fillText(`${Math.round(a.a.x)},${Math.round(a.a.y)}`,x+9,y-8)}
  }
- if(mapGesture?.kind==='line'&&mapGesture.end){ctx.strokeStyle='#ffff00';ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(X(mapGesture.start.x),Y(mapGesture.start.y));ctx.lineTo(X(mapGesture.end.x),Y(mapGesture.end.y));ctx.stroke();ctx.setLineDash([])}
+ if(mapGesture?.kind==='line'&&mapGesture.end){ctx.strokeStyle='#ffff00';ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(X(mapGesture.start.x),Y(mapGesture.start.y));ctx.lineTo(X(mapGesture.end.x),Y(mapGesture.end.y));ctx.stroke();ctx.setLineDash([]);lineLabel(ctx,mapGesture.start,mapGesture.end)}
  if(hover){const [px,py]=hover;ctx.strokeStyle='#ffff00';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(px-18,py);ctx.lineTo(px+18,py);ctx.moveTo(px,py-18);ctx.lineTo(px,py+18);ctx.stroke();ctx.setLineDash([])}
  ctx.restore()
 }
