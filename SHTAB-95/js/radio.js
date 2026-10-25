@@ -191,7 +191,7 @@ function draw(){
 }
 draw();
 
-window.Radio={setAtmosphere(level){S.atm=Math.max(0,Math.min(1,Number(level)||0))},getStream(){return window.sh95RadioStream||null}, isOn(){return S.on}, frequency(){return S.tune}, link(){if(!S.on)return -1;for(let i=5;i<8;i++)if(Math.abs(S.tune-ST[i].f)<=2)return i-5;return -1},
+window.Radio={setCrewLabels(labels){labels.forEach((name,index)=>{if(ST[index+5])ST[index+5].n=name})},setAtmosphere(level){S.atm=Math.max(0,Math.min(1,Number(level)||0))},getStream(){return window.sh95RadioStream||null}, isOn(){return S.on}, frequency(){return S.tune}, link(){if(!S.on)return -1;for(let i=5;i<8;i++)if(Math.abs(S.tune-ST[i].f)<=2)return i-5;return -1},
  quality(k){if(!S.on||!Number.isInteger(k)||k<0||k>2)return 0;const s=ST[5+k],df=Math.abs(S.tune-s.f),selectivity=Math.exp(-Math.pow(df/(S.bw*.65+1),2)),noise=.035+.018*S.bw+.12*S.atm,snr=(s.pw*selectivity)/noise,band=Math.min(1,S.bw/3);return Math.max(0,Math.min(1,band*snr/(snr+.65)))},
  setCrews(a){a.forEach((c,k)=>{const st=ST[5+k];st.f=c.f;st.n=c.label;
   st.mk=()=>codedTransmission(`DE ${k+1} AZ ${String(c.az).padStart(3,'0')} X ${String(c.x).padStart(5,'0')} Y ${String(c.y).padStart(5,'0')}`);
