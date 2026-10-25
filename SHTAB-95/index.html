@@ -19,7 +19,7 @@
   <button id="newt">🗺 Новая задача</button><button id="nowind">🍃 Без ветра</button>
   <button id="fit">⌂ Вид по умолчанию</button><span class="sfx-control"><button type="button" id="sfxToggle" aria-pressed="true" title="Отключить системные звуки">♫ ЗВУК</button><input id="sfxVolume" type="range" min="0" max="100" value="65" aria-label="Громкость интерфейса" title="Громкость интерфейса"><span id="sfxPercent">65%</span></span><button id="zin">＋</button><button id="zout">－</button>
  </div>
- <div class="bootstrip"><span class="led"></span> ЛОКАЛЬНЫЙ УЗЕЛ / КАНАЛ СВЯЗИ <strong id="sysmode">ОЖИДАНИЕ</strong><span class="bootright">SIMULATION • DOS/Win95 workstation</span></div><div class="main">
+ <div class="mission-conditions" id="missionConditions" aria-label="Условия задания"></div><div class="bootstrip"><span class="led"></span> ЛОКАЛЬНЫЙ УЗЕЛ / КАНАЛ СВЯЗИ <strong id="sysmode">ОЖИДАНИЕ</strong><span class="bootright">SIMULATION • DOS/Win95 workstation</span></div><div class="main">
   <div class="pane">
    <div class="panel"><h3>Исходные данные</h3><div class="b"><table id="data"></table>
     <div class="hint">Азимут: от севера. Ветер: направление источника. Цели скрыты.</div></div></div>
@@ -41,7 +41,7 @@
     <div class="calc-grid" id="calcKeys"></div>
     <canvas id="calcPlot" class="calc-plot" width="290" height="145" aria-label="График функции"></canvas>
     <div class="calc-history" id="calcHistory"></div>
-    <div class="field-small">Функции: sin, cos, tan, sqrt, log, ln, abs, exp.</div>
+    <div class="field-small">Функции: sin, cos, tan, sqrt, log, ln, abs, exp.</div><div class="manual-morse"><strong>▣ РУЧНОЙ АНАЛИЗАТОР МОРЗЕ</strong><div class="field-small">Введите точки и тире через пробел; слова разделяйте / . Автоматический декодер не используется.</div><textarea id="manualMorseInput" class="morse-output" spellcheck="false" placeholder="... --- ... / .-"></textarea><div class="morse-actions"><button id="manualMorseDecode" type="button">Расшифровать</button><button id="manualMorseClear" type="button">Очистить</button></div><div id="manualMorseOutput" class="morse-current" aria-live="polite">ОЖИДАНИЕ ВВОДА</div></div>
    </div></div>
 
   </div>
@@ -62,7 +62,7 @@
 <div class="kw"><div class="knob big" id="kt" tabindex="0" role="slider" aria-label="Настройка"><div class="k"></div></div>Настройка<span class="val"></span></div>
 <div class="kw"><div class="knob" id="kb" tabindex="0" role="slider" aria-label="Полоса пропускания"><div class="k"></div></div>Полоса<span class="val"></span></div>
 <div class="kw"><div class="knob" id="kr" tabindex="0" role="slider" aria-label="Усиление ВЧ"><div class="k"></div></div>Усиление ВЧ<span class="val"></span></div>
-<div class="kw"><div class="knob" id="ka" tabindex="0" role="slider" aria-label="Помехи"><div class="k"></div></div>Атмосф. помехи<span class="val"></span></div>
+
 <div class="kw"><div class="knob" id="kv" tabindex="0" role="slider" aria-label="Громкость"><div class="k"></div></div>Громкость<span class="val"></span></div>
 </div>
 <div class="btns">
@@ -97,14 +97,14 @@
 <div class="task"><button class="start" id="start95">▦ Пуск</button><button type="button" class="tb active" id="taskMap" aria-label="Перейти к карте" aria-pressed="true">▤ Карта</button><button type="button" class="tb" id="taskRadio" aria-label="Перейти к радиоприёмнику" aria-pressed="false">▥ Радио</button><div class="clock" id="clock"></div></div><div class="start-menu" id="startmenu" hidden><div class="start-side">Doors 95</div><div class="start-options"><button id="smnew">▤ Новое задание</button><button id="smhelp">▧ О программе</button><div class="start-separator"></div><button id="smmines">▦ Сапёр</button><button id="smsolitaire">♠ Косынка</button><button id="smclose">✕ Закрыть меню</button></div></div>
 <div class="game-window" id="minesWindow" hidden role="dialog" aria-label="Сапёр"><div class="game-title">▦ Сапёр <button data-close-game="minesWindow" title="Закрыть">×</button></div><div class="game-toolbar"><button id="mineNew">Новая игра</button><span id="mineCount">Мины: 10</span><span id="mineStatus">Готово</span></div><div class="mine-grid" id="mineGrid"></div><div class="sol-message">ЛКМ — открыть · ПКМ — флажок</div></div>
 <div class="game-window sol-window" id="solWindow" hidden role="dialog" aria-label="Косынка"><div class="game-title">♠ Косынка <button data-close-game="solWindow" title="Закрыть">×</button></div><div class="game-toolbar"><button id="solNew">Новая игра</button><button id="solAuto">В фонды</button><span id="solStatus">Перенос карт кликом</span></div><div class="sol-table"><div class="sol-top" id="solTop"></div><div class="sol-columns" id="solCols"></div></div><div class="sol-message">Нажмите карту, затем стопку назначения. Колода слева; справа — четыре фонда. Перемещайте последовательности карт.</div></div>
-<div id="dialog95" class="dialog-backdrop" hidden><div class="dialog"><div class="dialog-title">▣ ШТАБ 95 <button id="dialogclose" aria-label="Закрыть">×</button></div><div id="dialogtext" class="dialog-body"></div><div class="dialog-buttons"><button id="dialogok">OK</button></div></div></div>
+<div id="defeat95" class="dialog-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="defeatTitle"><div class="dialog"><div class="dialog-title" id="defeatTitle">▣ ЗАДАНИЕ ПРОВАЛЕНО</div><div class="dialog-body" id="defeatText"></div><div class="dialog-buttons"><button id="defeatRetry" type="button">Новое задание</button></div></div></div><div id="dialog95" class="dialog-backdrop" hidden><div class="dialog"><div class="dialog-title">▣ ШТАБ 95 <button id="dialogclose" aria-label="Закрыть">×</button></div><div id="dialogtext" class="dialog-body"></div><div class="dialog-buttons"><button id="dialogok">OK</button></div></div></div>
 
 <script src="js/radio.js"></script>
 <script src="js/artillery-map.js"></script>
 
 <script src="js/interface.js"></script>
 
-<script src="js/calculator.js"></script>
+<script src="js/calculator.js"></script><script src="js/manual-morse.js"></script>
 <script src="js/filesystem.js"></script>
 <script src="js/recorder.js"></script>
 <script src="js/startup.js"></script>
