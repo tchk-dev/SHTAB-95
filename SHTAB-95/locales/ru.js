@@ -425,5 +425,18 @@ window.SHTAB_LOCALES.ru = {
   "4 Hz": "4 Гц",
   "8 Hz": "8 Гц",
   "12 Hz": "12 Гц",
-  "1710 kHz": "1710 кГц"
+  "1710 kHz": "1710 кГц",
+  "ui.languageButton": "RU · Русский",
+  "ui.languageHint": "Switch to English",
+  "Switch language": "Сменить язык",
+  "RF spectrum waterfall": "Водопад радиочастотного диапазона",
+  "Delete current recording from MG-95 and archive": "Удалить текущую запись из МГ-95 и архива",
+  "Recording seek": "Перемотка записи",
+  "Audio spectrum analyzer": "Анализатор звукового спектра",
+  "Audio spectrogram": "Спектрограмма звукового сигнала",
+  "Go to map": "Перейти к карте",
+  "Go to radio receiver": "Перейти к радиоприёмнику",
+  "4 kHz": "4 кГц",
+  "8 kHz": "8 кГц",
+  "12 kHz": "12 кГц"
 };
