@@ -288,5 +288,18 @@ window.SHTAB_LOCALES.en = {
   "mission.recon": "Recon {number} “{crew}”",
   "map.grid": "ARM-95 / TOPOGRAPHIC MAP · GRID {size} M",
   "map.wind": "wind {speed} m/s",
-  "profile.status": "CREW {crew} · Hmax {height} m · TARGET LATERAL OFFSET {offset} m"
+  "profile.status": "CREW {crew} · Hmax {height} m · TARGET LATERAL OFFSET {offset} m",
+  "CREW": "CREW",
+  "Crew": "Crew",
+  "AMMO": "AMMO",
+  "TEMP.": "TEMP.",
+  "Connected: crew": "Connected: crew",
+  "Intelligibility:": "Intelligibility:",
+  "CHANNEL": "CHANNEL",
+  "CONFIRMED": "CONFIRMED",
+  "✔ target destroyed": "✔ target destroyed",
+  "Time, s": "Time, s",
+  "Deviation, m": "Deviation, m",
+  "mission.wind": "Wind: {direction}°, {speed} m/s",
+  "map.cursor": "X: {x} Y: {y} Elevation: {height} m"
 };
