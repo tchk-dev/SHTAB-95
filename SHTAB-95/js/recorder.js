@@ -110,7 +110,7 @@ $('recDecode').onclick=()=>{
  setTimeout(()=>{
   try{
    const r=decodeAudio(recordedPCM,sampleRate,recordedQuality,currentEntryId);
-   $('decodeOutput').textContent=(r.text||'—')+'\n\n'+r.message+'\nAVG. INTELLIGIBILITY: '+Math.round(recordedQuality*100)+'%'+(r.errors?'\nUNCERTAIN CHARACTERS: '+r.errors:'');
+   $('decodeOutput').textContent=(r.text||'—')+'\n\n'+r.message+'\n'+I18n.t('AVG. INTELLIGIBILITY: ')+Math.round(recordedQuality*100)+'%'+(r.errors?'\n'+I18n.t('UNCERTAIN CHARACTERS: ')+r.errors:'');
    $('decodeStatus').textContent=r.text?I18n.t("ANALYSIS COMPLETE"):I18n.t("SIGNAL NOT RECOGNIZED");
    // Populate mission data only when all required fields are recognized.
    // Never substitute real hidden coordinates when decoding fails.
