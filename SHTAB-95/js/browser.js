@@ -11,8 +11,9 @@ const tr=(key)=>window.I18n?.t?.(key)||key;
 const windowEl=document.createElement('section');
 windowEl.id='doorsBrowser';windowEl.className='doors-browser';windowEl.hidden=true;
 windowEl.setAttribute('role','dialog');windowEl.setAttribute('aria-label','DoorsNet Browser');
-windowEl.innerHTML=`<header class="db-title"><strong>🌐 DoorsNet Navigator 95</strong><button id="dbClose" type="button" aria-label="Close">×</button></header>
-<nav class="db-toolbar"><button id="dbBack" type="button">◀ Back</button><button id="dbForward" type="button">Forward ▶</button><button id="dbHome" type="button">⌂ Home</button><button id="dbReload" type="button">↻ Reload</button></nav>
+windowEl.innerHTML=`<header class="db-title"><span class="db-window-icon" aria-hidden="true">◧</span><strong>DoorsNet Navigator - Microhard Doors 95</strong><span class="db-window-controls"><button id="dbMinimize" type="button" aria-label="Minimize">_</button><button id="dbMaximize" type="button" aria-label="Maximize">□</button><button id="dbClose" type="button" aria-label="Close">×</button></span></header>
+<div class="db-menubar" aria-label="Browser menu"><span>File</span><span>Edit</span><span>View</span><span>Favorites</span><span>Help</span></div>
+<nav class="db-toolbar" aria-label="Navigation"><button id="dbBack" type="button" title="Back" aria-label="Back"><span aria-hidden="true">◀</span></button><button id="dbForward" type="button" title="Forward" aria-label="Forward"><span aria-hidden="true">▶</span></button><span class="db-toolbar-divider"></span><button id="dbHome" type="button" title="Home" aria-label="Home"><span aria-hidden="true">⌂</span></button><button id="dbReload" type="button" title="Refresh" aria-label="Refresh"><span aria-hidden="true">↻</span></button><span class="db-toolbar-divider"></span><span class="db-brand" aria-label="Microhard Doors"><span class="db-door-mark" aria-hidden="true"><i></i><i></i></span><span>Microhard<br><b>Doors</b></span></span></nav>
 <form id="dbForm" class="db-address"><label for="dbUrl">Address:</label><input id="dbUrl" autocomplete="off" spellcheck="false" aria-label="Website address"><button type="submit">Go</button></form>
 <main id="dbPage" class="db-page" tabindex="0"></main><footer class="db-status" id="dbStatus">Ready</footer>`;
 document.body.append(windowEl);
@@ -36,8 +37,8 @@ function render(){
  if(site.links.length){
   const list=document.createElement('div');list.className='db-links';
   for(const link of site.links){
-   const a=document.createElement('button');a.type='button';a.className='db-link';
-   a.textContent=(sites.get(link)?.title||link)+'  ['+link+']';a.addEventListener('click',()=>navigate(link));list.append(a);
+   const a=document.createElement('a');a.href='doors://'+link;a.className='db-link';
+   a.textContent=(sites.get(link)?.title||link)+'  ['+link+']';a.addEventListener('click',e=>{e.preventDefault();navigate(link)});list.append(a);
   }page.append(list);
  }
  page.scrollTop=0;$('dbStatus').textContent=tr('Document loaded')+' · doors://'+name;
@@ -49,10 +50,12 @@ $('dbBack').onclick=()=>{if(index>0){index--;render()}};
 $('dbForward').onclick=()=>{if(index<history.length-1){index++;render()}};
 $('dbHome').onclick=()=>navigate('home.net');$('dbReload').onclick=render;
 $('dbClose').onclick=()=>{windowEl.hidden=true};
-const launcher=document.createElement('button');launcher.id='smBrowser';launcher.type='button';launcher.textContent='🌐 DoorsNet Browser';
+$('dbMinimize').onclick=()=>{windowEl.hidden=true};
+$('dbMaximize').onclick=()=>{windowEl.classList.toggle('db-maximized')};
+const launcher=document.createElement('button');launcher.id='smBrowser';launcher.type='button';launcher.textContent='◧ DoorsNet Browser';
 const menu=document.querySelector('#startmenu .start-options');const sep=menu?.querySelector('.start-separator');
 if(menu)menu.insertBefore(launcher,sep||menu.firstChild);
-const task=document.querySelector('.task');const tab=document.createElement('button');tab.type='button';tab.className='tb';tab.textContent='🌐 Browser';tab.id='taskBrowser';
+const task=document.querySelector('.task');const tab=document.createElement('button');tab.type='button';tab.className='tb';tab.textContent='◧ Browser';tab.id='taskBrowser';
 task?.insertBefore(tab,task.querySelector('.clock'));
 function open(){windowEl.hidden=false;document.getElementById('startmenu').hidden=true;render();address.focus();}
 launcher.onclick=open;tab.onclick=()=>windowEl.hidden?open():windowEl.hidden=true;
