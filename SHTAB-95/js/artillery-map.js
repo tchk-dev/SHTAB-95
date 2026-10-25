@@ -73,10 +73,27 @@ function place(){
 }
 // Температура — условная игровая модель, а не реальные теплотехнические данные.
 const TIMES=[{id:'morning',name:'Утро',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'День',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Вечер',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Ночь',icon:'🌙',noise:.34,drag:1.025}];
-const WEATHERS=[{id:'clear',name:'Ясно',icon:'☀',noise:0,drag:1},{id:'fog',name:'Туман',icon:'🌫',noise:.06,drag:1.025},{id:'rain',name:'Дождь',icon:'🌧',noise:.28,drag:1.06}];
+// Weighted conditional weather: keys are time-of-day IDs; zero means impossible.
+// Probabilities are relative weights and are normalized for each mission.
+const WEATHERS=[
+ {id:'clear',name:'Ясно',icon:'☀️',noise:0,drag:1,weights:{morning:25,day:35,evening:25,night:35}},
+ {id:'cloudy',name:'Облачно',icon:'☁️',noise:.04,drag:1.015,weights:{morning:22,day:25,evening:27,night:25}},
+ {id:'overcast',name:'Пасмурно',icon:'🌥️',noise:.09,drag:1.03,weights:{morning:15,day:16,evening:20,night:15}},
+ {id:'fog',name:'Туман',icon:'🌫️',noise:.06,drag:1.025,weights:{morning:20,day:0,evening:0,night:0}},
+ {id:'drizzle',name:'Морось',icon:'🌦️',noise:.17,drag:1.04,weights:{morning:8,day:9,evening:10,night:10}},
+ {id:'rain',name:'Дождь',icon:'🌧️',noise:.28,drag:1.06,weights:{morning:7,day:10,evening:11,night:10}},
+ {id:'downpour',name:'Ливень',icon:'🌧️',noise:.45,drag:1.085,weights:{morning:2,day:3,evening:4,night:3}},
+ {id:'thunderstorm',name:'Гроза',icon:'⛈️',noise:.58,drag:1.1,weights:{morning:1,day:2,evening:3,night:2}}
+];
+function pickWeather(timeId,random=Math.random){
+ const total=WEATHERS.reduce((sum,w)=>sum+(w.weights[timeId]||0),0);
+ let roll=random()*total;
+ for(const w of WEATHERS){roll-=w.weights[timeId]||0;if(roll<0)return w}
+ return WEATHERS.find(w=>(w.weights[timeId]||0)>0);
+}
 let missionConditions=null,missionOver=false;
 function setMissionConditions(){
- const time=TIMES[Math.floor(Math.random()*TIMES.length)],weather=WEATHERS[Math.floor(Math.random()*WEATHERS.length)];
+ const time=TIMES[Math.floor(Math.random()*TIMES.length)],weather=pickWeather(time.id);
  const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
  missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);
  const box=$('missionConditions');box.replaceChildren();
