@@ -125,7 +125,7 @@ function Knob(id,o){const el=document.getElementById(id),m=el.querySelector('.k'
  el.addEventListener('wheel',e=>{e.preventDefault();step(-Math.sign(e.deltaY)*(o.inf?5:10),e.shiftKey)},{passive:false});
  el.addEventListener('keydown',e=>{const k={ArrowRight:1,ArrowUp:1,ArrowLeft:-1,ArrowDown:-1}[e.key];if(k){e.preventDefault();step(k*(o.inf?3:6),e.shiftKey)}});
  o.on(v);draw()}
-Knob('kt',{min:SR_MIN,max:SR_MAX,val:S.tune,inf:true,pd:.4,fmt:v=>v.toFixed(1)+I18n.t(" kHz"),on:v=>{S.tune=v;fq.innerHTML=v.toFixed(1)+'<small> kHz</small>'}});
+Knob('kt',{min:SR_MIN,max:SR_MAX,val:S.tune,inf:true,pd:.4,fmt:v=>v.toFixed(1)+I18n.t(" kHz"),on:v=>{S.tune=v;fq.innerHTML=v.toFixed(1)+'<small>'+I18n.t(' kHz')+'</small>'}});
 Knob('kb',{min:1.5,max:14,val:S.bw,fmt:v=>v.toFixed(1)+I18n.t(" kHz"),on:v=>{S.bw=v;setFilter()}});
 Knob('kr',{min:.2,max:1.6,val:S.rf,fmt:v=>Math.round(v*100)+'%',on:v=>S.rf=v});
 
@@ -134,7 +134,7 @@ const bp=document.getElementById('bp');bp.onclick=power;
 function tog(id,k){const b=document.getElementById(id);b.onclick=()=>{S[k]=!S[k];b.setAttribute('aria-pressed',S[k])}}
 tog('bg','agc');tog('bs','sq');
 const hint=document.getElementById('hint');
-const renderHint=()=>{hint.innerHTML=ST.slice(0,5).map((s,i)=>`<div data-i="${i}"><span>${I18n.t(s.n)}</span><b>${s.f} kHz</b></div>`).join('')};renderHint();
+const renderHint=()=>{hint.innerHTML=ST.slice(0,5).map((s,i)=>`<div data-i="${i}"><span>${I18n.t(s.n)}</span><b>${s.f}${I18n.t(' kHz')}</b></div>`).join('')};renderHint();
  window.addEventListener('shtab:languagechange',()=>{renderHint();setFilter();bp.textContent=I18n.t(S.on?'Power Off':'Power On')});
 let showH=false;document.getElementById('bh').onclick=function(){showH=!showH;hint.hidden=!showH;this.setAttribute('aria-pressed',showH)};
 hint.onclick=e=>{const d=e.target.closest('[data-i]');if(d)document.getElementById('kt').focus()};
