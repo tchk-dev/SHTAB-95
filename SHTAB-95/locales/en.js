@@ -301,5 +301,21 @@ window.SHTAB_LOCALES.en = {
   "Time, s": "Time, s",
   "Deviation, m": "Deviation, m",
   "mission.wind": "Wind: {direction}°, {speed} m/s",
-  "map.cursor": "X: {x} Y: {y} Elevation: {height} m"
+  "map.cursor": "X: {x} Y: {y} Elevation: {height} m",
+  "● Record": "● Record",
+  "FREQUENCY: ": "FREQUENCY: ",
+  "AVG. INTELLIGIBILITY: ": "AVG. INTELLIGIBILITY: ",
+  "UNCERTAIN CHARACTERS: ": "UNCERTAIN CHARACTERS: ",
+  "SAVE ERROR: ": "SAVE ERROR: ",
+  "DELETE ERROR: ": "DELETE ERROR: ",
+  "OPENED: ": "OPENED: ",
+  " s · ": " s · ",
+  " intelligibility ": " intelligibility ",
+  "Unable to Open: ": "Unable to Open: ",
+  "✓ COORDINATES ADDED TO MISSION DATA": "✓ COORDINATES ADDED TO MISSION DATA",
+  "⚠ DIFFERENT MISSION OR UNCONFIRMED CREW — COORDINATES NOT ADDED": "⚠ DIFFERENT MISSION OR UNCONFIRMED CREW — COORDINATES NOT ADDED",
+  "⚠ INSUFFICIENT DATA TO SEND COORDINATES": "⚠ INSUFFICIENT DATA TO SEND COORDINATES",
+  "Delete current recording from MG-95 and Doors 95 archive?": "Delete current recording from MG-95 and Doors 95 archive?",
+  "Unable to delete archive recording": "Unable to delete archive recording",
+  "Delete recording ": "Delete recording "
 };
