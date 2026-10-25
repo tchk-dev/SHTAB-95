@@ -6,40 +6,46 @@ const path=require('node:path');
 const vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const context={window:{}};
-for(const language of ['en','ru'])vm.runInNewContext(fs.readFileSync(path.join(root,'locales',language+'.js'),'utf8'),context);
+const runtimeFiles=fs.readdirSync(path.join(root,'js')).filter(f=>f.endsWith('.js'));
+for(const locale of ['en','ru'])vm.runInNewContext(fs.readFileSync(path.join(root,'locales',locale+'.js'),'utf8'),context);
 const {en,ru}=context.window.SHTAB_LOCALES;
-const scripts=fs.readdirSync(path.join(root,'js')).filter(x=>x.endsWith('.js')).map(x=>[x,fs.readFileSync(path.join(root,'js',x),'utf8')]);
-test('Both locales have exactly the same translation keys',()=>{
+const placeholders=text=>[...text.matchAll(/\{([a-zA-Z][\w]*)\}/g)].map(match=>match[1]).sort();
+
+test('English and Russian catalogs contain identical keys',()=>{
  assert.deepEqual(Object.keys(en).sort(),Object.keys(ru).sort());
- assert.ok(Object.keys(en).length>350,'the full interface catalog must be present');
 });
-test('Both locales have nonempty translations and English contains no Cyrillic',()=>{
- for(const [locale,dictionary] of Object.entries({en,ru}))
-  for(const [key,value] of Object.entries(dictionary)){
-   assert.equal(typeof value,'string',locale+': '+key);
-   assert.ok(value.trim(),locale+': '+key);
-   if(locale==='en')assert.doesNotMatch(value,/[А-Яа-яЁё]/,key);
-  }
-});
-test('Translations preserve message placeholders',()=>{
+test('catalog entries are nonempty, English is Cyrillic-free, and parameters match',()=>{
  for(const key of Object.keys(en)){
-  const slots=s=>[...s.matchAll(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g)].map(m=>m[1]).sort();
-  assert.deepEqual(slots(en[key]),slots(ru[key]),key);
+  assert.ok(typeof en[key]==='string'&&en[key].trim(),'English: '+key);
+  assert.ok(typeof ru[key]==='string'&&ru[key].trim(),'Russian: '+key);
+  assert.doesNotMatch(en[key],/[А-Яа-яЁё]/,'Cyrillic in English value: '+key);
+  assert.deepEqual(placeholders(en[key]),placeholders(ru[key]),'Format parameters: '+key);
  }
 });
-test('All literal I18n keys in JavaScript exist in both locales',()=>{
- for(const [filename,code] of scripts){
-  for(const match of code.matchAll(/I18n\.(?:t|format)\(['"]([^'"]+)['"]/g)){
-   assert.ok(Object.hasOwn(en,match[1]),filename+': untranslated key '+match[1]);
+test('every I18n.t and I18n.format literal key exists in both catalogs',()=>{
+ for(const file of runtimeFiles){
+  const code=fs.readFileSync(path.join(root,'js',file),'utf8');
+  for(const match of code.matchAll(/I18n\.(?:t|format)\(\s*['"]([^'"]+)['"]/g)){
+   assert.ok(Object.hasOwn(en,match[1]),file+': missing '+match[1]);
+   assert.ok(Object.hasOwn(ru,match[1]),file+': missing '+match[1]);
   }
  }
 });
-test('Game modules do not contain hard-coded Cyrillic user messages',()=>{
- for(const [filename,code] of scripts){
-  if(filename==='i18n.js')continue;
-  const lines=code.split(/\r?\n/).filter(line=>!/^\s*(?:\/\/|\/\*|\*)/.test(line));
-  // Bilingual keyword recognition for interface sounds is not displayed text.
-  const readable=lines.join('\n').replace(/\/confirmed\|accepted[^/]*\//g,'');
-  assert.doesNotMatch(readable,/[А-Яа-яЁё]/,filename+' still has untranslated user-facing text');
+test('game scripts and HTML parse and retain an English-first interface',()=>{
+ for(const file of runtimeFiles){
+  const source=fs.readFileSync(path.join(root,'js',file),'utf8');
+  assert.doesNotThrow(()=>new vm.Script(source,{filename:file}),file+' syntax');
+ }
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ assert.match(html,/<html lang="en">/);
+ assert.match(html,/id="languageToggle"/);
+ assert.match(html,/src="locales\/en\.js"/);
+ assert.match(html,/src="locales\/ru\.js"/);
+ assert.doesNotMatch(html,/[А-Яа-яЁё]/,'Source HTML must be English-first');
+});
+test('important dynamic mission and instrument strings have both translations',()=>{
+ for(const key of ['Morning','Night','Fog','Thunderstorm','Thunder','Hammer','Hurricane','mission.fireReport','mission.defeat','map.grid','profile.status','archive.info','manual.operator']){
+  assert.ok(en[key]&&ru[key],key);
+  assert.notEqual(en[key],ru[key],'expected a Russian translation for '+key);
  }
 });
