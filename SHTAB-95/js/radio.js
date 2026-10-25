@@ -135,6 +135,7 @@ function tog(id,k){const b=document.getElementById(id);b.onclick=()=>{S[k]=!S[k]
 tog('bg','agc');tog('bs','sq');
 const hint=document.getElementById('hint');
 const renderHint=()=>{hint.innerHTML=ST.slice(0,5).map((s,i)=>`<div data-i="${i}"><span>${I18n.t(s.n)}</span><b>${s.f} kHz</b></div>`).join('')};renderHint();
+ window.addEventListener('shtab:languagechange',()=>{renderHint();setFilter();bp.textContent=I18n.t(S.on?'Power Off':'Power On')});
 let showH=false;document.getElementById('bh').onclick=function(){showH=!showH;hint.hidden=!showH;this.setAttribute('aria-pressed',showH)};
 hint.onclick=e=>{const d=e.target.closest('[data-i]');if(d)document.getElementById('kt').focus()};
 // --- шкала и спектр
