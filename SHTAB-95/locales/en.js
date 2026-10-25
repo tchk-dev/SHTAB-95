@@ -450,5 +450,12 @@ window.SHTAB_LOCALES.en = {
   "conditions.close": "Close details",
   "conditions.interference": "RADIO INTERFERENCE  +{value} pp",
   "conditions.drag": "AIR RESISTANCE     ×{value}",
-  "conditions.note": "Modifiers are combined with the other mission conditions. Values shown are this condition's contribution."
+  "conditions.note": "Modifiers are combined with the other mission conditions. Values shown are this condition's contribution.",
+  "Target X / Y": "Target X / Y",
+  "boot.kernel": "DOORS 95 [OK] Kernel services initialized",
+  "boot.memory": "MEMORY   [OK] Conventional memory check",
+  "boot.devices": "DEVICES  [OK] Input / display controllers",
+  "boot.radio": "RADIO    [OK] RF interface diagnostics",
+  "boot.map": "MAP      [OK] Terrain data mounted",
+  "boot.ready": "SHTAB 95 [READY] Operator terminal online"
 };
