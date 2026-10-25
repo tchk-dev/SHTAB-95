@@ -425,5 +425,18 @@ window.SHTAB_LOCALES.en = {
   "4 Hz": "4 Hz",
   "8 Hz": "8 Hz",
   "12 Hz": "12 Hz",
-  "1710 kHz": "1710 kHz"
+  "1710 kHz": "1710 kHz",
+  "ui.languageButton": "EN · English",
+  "ui.languageHint": "Switch to Russian",
+  "Switch language": "Switch language",
+  "RF spectrum waterfall": "RF spectrum waterfall",
+  "Delete current recording from MG-95 and archive": "Delete current recording from MG-95 and archive",
+  "Recording seek": "Recording seek",
+  "Audio spectrum analyzer": "Audio spectrum analyzer",
+  "Audio spectrogram": "Audio spectrogram",
+  "Go to map": "Go to map",
+  "Go to radio receiver": "Go to radio receiver",
+  "4 kHz": "4 kHz",
+  "8 kHz": "8 kHz",
+  "12 kHz": "12 kHz"
 };
