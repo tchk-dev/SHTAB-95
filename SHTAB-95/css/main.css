@@ -267,3 +267,8 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 .condition-panel-metrics>div{background:#fff;border:2px inset #fff;padding:6px 7px}
 .condition-panel-foot{border-top:1px solid #fff;padding:7px 9px;color:#404040;font-size:11px;line-height:1.35}
 @media(max-width:460px){.condition-panel{left:4px;max-width:calc(100% - 8px)}}
+
+/* Keep condition buttons stationary across hover, focus and pressed states. */
+.mission-condition,.mission-condition:hover,.mission-condition:focus,.mission-condition:active,.mission-condition[aria-expanded="true"]{box-sizing:border-box;border-width:2px;border-style:solid;border-color:#fff #666 #666 #fff;min-height:28px;line-height:18px;padding:3px 9px;transform:none;transition:none}
+.mission-condition:focus-visible{outline:1px dotted #000;outline-offset:-5px}
+.mission-condition:active,.mission-condition[aria-expanded="true"]{border-color:#666 #fff #fff #666;background:#d4d4d4}
