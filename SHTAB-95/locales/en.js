@@ -457,5 +457,6 @@ window.SHTAB_LOCALES.en = {
   "boot.devices": "DEVICES  [OK] Input / display controllers",
   "boot.radio": "RADIO    [OK] RF interface diagnostics",
   "boot.map": "MAP      [OK] Terrain data mounted",
-  "boot.ready": "SHTAB 95 [READY] Operator terminal online"
+  "boot.ready": "SHTAB 95 [READY] Operator terminal online",
+  "Select charge 1 through 5.": "Select charge 1 through 5."
 };
