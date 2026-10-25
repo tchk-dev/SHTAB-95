@@ -123,14 +123,14 @@ function renderCrewResources(){
   box.innerHTML=CR.map(c=>{
     const [state,kind]=crewState(c,now),left=Math.max(0,(c.reloadUntil-now)/1000),progress=100*(1-Math.min(1,left/(CREW_RELOAD_MS/1000)));
     const temp=Math.round(c.temperature),heat=Math.max(0,Math.min(100,(temp-CREW_BASE_TEMP)/(CREW_MAX_TEMP-CREW_BASE_TEMP)*100));
-    return `<div class="crew-resource ${kind==='hot'?'hot':kind==='empty'?'empty':''}"><div class="crew-resource-head"><span>РАСЧЁТ ${c.k+1} «${I18n.t(c.name)}»</span><span>${state}</span></div><div class="crew-resource-meta">БОЕЗАПАС ${c.ammo}/${c.ammoMax} · ТЕМП. ${temp} °C<br>ПЕРЕЗАРЯДКА ${left>0?left.toFixed(1)+I18n.t(" s"):I18n.t("READY")}</div><div class="crew-resource-track heat" title="Температура ствола"><i style="width:${heat}%"></i></div><div class="crew-resource-track reload" title="Готовность перезарядки"><i style="width:${progress}%"></i></div></div>`;
+    return `<div class="crew-resource ${kind==='hot'?'hot':kind==='empty'?'empty':''}"><div class="crew-resource-head"><span>${I18n.t('CREW')} ${c.k+1} «${I18n.t(c.name)}»</span><span>${state}</span></div><div class="crew-resource-meta">${I18n.t('AMMO')} ${c.ammo}/${c.ammoMax} · ${I18n.t('TEMP.')} ${temp} °C<br>${I18n.t('RELOADING')} ${left>0?left.toFixed(1)+I18n.t(' s'):I18n.t('READY')}</div><div class="crew-resource-track heat" title="${I18n.t('Barrel Temperature')}"><i style="width:${heat}%"></i></div><div class="crew-resource-track reload" title="${I18n.t('Reload Progress')}"><i style="width:${progress}%"></i></div></div>`;
   }).join('');
 }
 function renderData(){
   const row=(a,b)=>`<tr><td>${a}</td><td>${b}</td></tr>`;
-  let h=CR.map(c=>`<tr><td colspan="2" style="text-align:left;color:${c.color};border-bottom:1px solid ${c.color}">Расчёт ${c.k+1} «${I18n.t(c.name)}» ${c.hit?'✔ цель поражена':''}</td></tr>`+
-    row('Частота',c.identified?c.f+I18n.t(" kHz"):'НЕ УСТАНОВЛЕНА')+row('Орудие X / Y','X '+Math.round(c.g.x)+' / Y '+Math.round(c.g.y))+row('Высота орудия',c.g.z+I18n.t(" m"))+row('Цель',c.decodedTarget?('X '+c.decodedTarget.x+' / Y '+c.decodedTarget.y+(c.hit?' · ПОРАЖЕНА':'')):(c.hit?'Подтверждена':'СКРЫТА — перехватите Морзе'))).join('');
-  h+=`<tr><td colspan="2" style="text-align:left;border-bottom:1px solid #215dc6;color:#215dc6">Метео</td></tr>`+row('Ветер, откуда',S.ws?S.wd+'°':'—')+row('Скорость ветра',S.ws+I18n.t(" m/s"));
+  let h=CR.map(c=>`<tr><td colspan="2" style="text-align:left;color:${c.color};border-bottom:1px solid ${c.color}">Расчёт ${c.k+1} «${I18n.t(c.name)}» ${c.hit?I18n.t("✔ target destroyed"):''}</td></tr>`+
+    row(I18n.t("Frequency"),c.identified?c.f+I18n.t(" kHz"):I18n.t("NOT SET"))+row(I18n.t("Gun X / Y"),'X '+Math.round(c.g.x)+' / Y '+Math.round(c.g.y))+row(I18n.t("Gun Elevation"),c.g.z+I18n.t(" m"))+row(I18n.t("Target"),c.decodedTarget?('X '+c.decodedTarget.x+' / Y '+c.decodedTarget.y+(c.hit?I18n.t(" · DESTROYED"):'')):(c.hit?I18n.t("Confirmed"):I18n.t("HIDDEN — intercept Morse")))).join('');
+  h+=`<tr><td colspan="2" style="text-align:left;border-bottom:1px solid #215dc6;color:#215dc6">Метео</td></tr>`+row(I18n.t("Wind From"),S.ws?S.wd+'°':'—')+row(I18n.t("Wind Speed"),S.ws+I18n.t(" m/s"));
   $('data').innerHTML=h}
 // Публикуем только координаты, которые декодер действительно прочитал из аудио.
 // При новом задании сведения сбрасываются вместе с массивом расчётов.
@@ -155,9 +155,9 @@ function newTask(noWind){
   S={ws:noWind?0:Math.round(rnd(2,12)),wd:Math.round(rnd(0,359))};
   Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
   last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
-  $('s2').textContent=S.ws?`Ветер: ${S.wd}°, ${S.ws} м/с`:I18n.t("Wind: Calm");
-  $('log').innerHTML='<tr><th>Выстрел</th><th>Расчёт</th><th>Азимут</th><th>Возвышение</th><th>Заряд</th><th>Время, с</th><th>Откл., м</th></tr>';
-  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event('Создано новое задание: '+CR.length+' расчёта, '+(S.ws?I18n.t("wind ")+S.ws+I18n.t(" m/s"):'штиль'));if(window.sh95Brief)window.sh95Brief()}
+  $('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t("Wind: Calm");
+  $('log').innerHTML='<tr>'+['Shot','Crew','Azimuth','Elevation','Charge','Time, s','Deviation, m'].map(label=>'<th>'+I18n.t(label)+'</th>').join('')+'</tr>';
+  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event('Создано новое задание: '+CR.length+' расчёта, '+(S.ws?I18n.t("wind ")+S.ws+I18n.t(" m/s"):I18n.t("calm")));if(window.sh95Brief)window.sh95Brief()}
 
 function simulate(az,el,v0,c){
   const wx=-S.ws*Math.sin(S.wd*Math.PI/180),wy=-S.ws*Math.cos(S.wd*Math.PI/180),gx=c.g.x,gy=c.g.y;
@@ -178,11 +178,11 @@ function updateLink(){
   if(k<0){el.className='link off';el.textContent=I18n.t("Channel not confirmed. Find the signal and transmit a bearing.");return}
   const p=Math.round(q*100),w=p>=80?I18n.t("excellent"):p>=65?I18n.t("good"):p>=45?I18n.t("weak"):I18n.t("very poor"),col=p>=65?'#2e8420':p>=45?'#c78a00':'#b3392b';
   el.className='link on';
-  el.innerHTML=`<span style="color:${CR[k].color}">●</span> На связи: расчёт ${k+1} «${I18n.t(CR[k].name)}», ${CR[k].f} кГц<br>Разборчивость: ${p}% (${w})<div class="qb"><i style="width:${p}%;background:${col}"></i></div>`}
+  el.innerHTML=`<span style="color:${CR[k].color}">●</span> ${I18n.t('Connected: crew')} ${k+1} «${I18n.t(CR[k].name)}», ${CR[k].f}${I18n.t(' kHz')}<br>${I18n.t('Intelligibility:')} ${p}% (${I18n.t(w)})<div class="qb"><i style="width:${p}%;background:${col}"></i></div>`}
 function updateBearingPanel(){
  const count=CR.filter(c=>c.identified).length;
  $('bearingCount').textContent=count+' / 3';
- $('bearingList').innerHTML=CR.map(c=>`<div><span>КАНАЛ ${c.k+1} / ${I18n.t(c.name)}</span><b>${c.identified?c.f.toFixed(0)+' кГц · ПОДТВЕРЖДЁН':'— · НЕ УСТАНОВЛЕН'}</b></div>`).join('');
+ $('bearingList').innerHTML=CR.map(c=>`<div><span>${I18n.t('CHANNEL')} ${c.k+1} / ${I18n.t(c.name)}</span><b>${c.identified?c.f.toFixed(0)+I18n.t(' kHz')+' · '+I18n.t('CONFIRMED'):'— · '+I18n.t('NOT SET')}</b></div>`).join('');
  if(window.sh95Brief)window.sh95Brief();
 }
 $('sendBearing').onclick=()=>{
@@ -427,7 +427,7 @@ mapC.addEventListener('pointerdown',e=>{
 });
 mapC.addEventListener('pointermove',e=>{
  const [px,py]=pos(e);hover=[px,py];const w=toWorld(px,py);
- $('s1').textContent=`X: ${Math.round(w.x)} Y: ${Math.round(w.y)} Высота: ${Math.round(ground(w.x,w.y))} м`;
+ $('s1').textContent=I18n.format('map.cursor',{x:Math.round(w.x),y:Math.round(w.y),height:Math.round(ground(w.x,w.y))});
  $('mapread').textContent=`X ${Math.round(w.x)} · Y ${Math.round(w.y)} | px ${Math.round(px)},${Math.round(py)}`;
  if(mapGesture&&mapGesture.id===e.pointerId){if(mapGesture.kind==='erase')eraseAt(px,py);else if(mapGesture.kind==='pan'){v.cx=mapGesture.cx-(px-mapGesture.p[0])*v.m;v.cy=mapGesture.cy+(py-mapGesture.p[1])*v.m}else if(mapGesture.kind==='line')mapGesture.end=w}
  draw();
