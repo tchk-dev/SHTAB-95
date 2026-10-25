@@ -159,5 +159,13 @@ speed.onchange=()=>{audio.playbackRate=Number(speed.value)};
 audio.ontimeupdate=()=>{if(Number.isFinite(audio.duration)&&audio.duration>0){seek.value=Math.round(audio.currentTime/audio.duration*1000);if(!recording)$('recDuration').textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)}};
 audio.onended=()=>say(I18n.t("PLAYBACK COMPLETE"));
 seek.oninput=()=>{if(Number.isFinite(audio.duration)&&audio.duration>0)audio.currentTime=Number(seek.value)/1000*audio.duration};
+window.addEventListener('shtab:languagechange',()=>{
+ toggle.textContent=I18n.t(recording?'■ Stop':'● Record');
+ // Keep measured values, but rebuild their localized labels.
+ const frequency=$('recFreq'),freqMatch=frequency.textContent.match(/(\d+(?:\.\d+)?)/);
+ if(freqMatch)frequency.textContent=I18n.t('FREQUENCY: ')+freqMatch[1]+I18n.t(' kHz');
+ const quality=$('recQuality'),qualityMatch=quality.textContent.match(/(\d+(?:\.\d+)?)\s*%/);
+ if(qualityMatch)quality.textContent=I18n.t('AVG. INTELLIGIBILITY: ')+qualityMatch[1]+'%';
+});
 window.addEventListener('beforeunload',()=>{window.sh95TapePCM=null;if(clipUrl)URL.revokeObjectURL(clipUrl)});
 })();
