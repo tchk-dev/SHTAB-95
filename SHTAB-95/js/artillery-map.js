@@ -253,7 +253,7 @@ function marker(x,wx,wy,sym,col,label){
   x.strokeStyle=col;x.lineWidth=2.5;x.strokeRect(px-13.5,py-11.5,27,23);
   x.beginPath();x.moveTo(px-9,py+7);x.lineTo(px+9,py+7);x.moveTo(px,py-16);x.lineTo(px,py-12);x.stroke();
   x.fillStyle='#ffffff';x.font='bold 12px Courier New,monospace';x.textAlign='center';x.textBaseline='middle';x.fillText(id,px,py-2);
-  const short=label.startsWith('T')?label:'CREW '+id;
+  const short=label.startsWith('T')?I18n.t('TARGET')+' '+id:I18n.t('CREW')+' '+id;
   x.font='bold 10px Courier New,monospace';const tw=x.measureText(short).width+10;
   x.fillStyle='#0b1714';x.fillRect(px-tw/2,py+15,tw,15);x.strokeStyle='#000000';x.strokeRect(px-tw/2+.5,py+15.5,tw-1,14);
   x.fillStyle='#ffffff';x.textBaseline='top';x.fillText(short,px,py+17);x.restore();}
@@ -455,5 +455,5 @@ $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 const tick=()=>$('clock').textContent=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
-window.addEventListener('shtab:languagechange',()=>{renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();const box=$('missionConditions');if(box&&missionConditions){const items=[missionConditions.time,missionConditions.weather];box.querySelectorAll('.mission-condition').forEach((el,i)=>{if(items[i])el.textContent=items[i].icon+' '+I18n.t(items[i].name)})}});
+window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');const box=$('missionConditions');if(box&&missionConditions){const items=[missionConditions.time,missionConditions.weather];box.querySelectorAll('.mission-condition').forEach((el,i)=>{if(!items[i])return;el.textContent=items[i].icon+' '+I18n.t(items[i].name);el.title=I18n.t(i===0?'Time of Day':'Weather')+I18n.t(' · radio interference contribution: +')+Math.round(items[i].noise*100)+I18n.t(' percentage points · air resistance multiplier: ×')+items[i].drag.toFixed(3)})}});
 newTask(false);
