@@ -1,4 +1,4 @@
-const WS=24000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550],R_HIT=15;
+const WS=32000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
 let S,HM,ORG,terr,CR=[],last=null,v={cx:0,cy:0,m:30};
 const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
@@ -52,13 +52,30 @@ function pickFreqs(){
  }
  return used;
 }
-function place(){
+// Conservative flat-ground reach for the longest-range charge under current weather.
+// Use worst-case headwind; reserve margin for elevated targets and terrain.
+function missionRangeLimit(){
+ const drag=K*(missionConditions?.drag||1),wind=S?.ws||0,dt=.04;
+ let maximum=0;
+ for(let deg=28;deg<=46;deg+=2){
+  const angle=deg*Math.PI/180;let vx=V0[4]*Math.cos(angle),vz=V0[4]*Math.sin(angle),x=0,z=1;
+  for(let i=0;i<7000;i++){
+   const rel=vx+wind,speed=Math.hypot(rel,vz);
+   vx-=drag*speed*rel*dt;vz-= (G+drag*speed*vz)*dt;
+   x+=vx*dt;z+=vz*dt;
+   if(z<=0)break;
+  }
+  maximum=Math.max(maximum,x);
+ }
+ return Math.max(3000,Math.min(15000,maximum*.85));
+}
+function place(maxDistance){
   const valid=(g,t)=>t.x>=ORG.x+1200&&t.x<=ORG.x+WS-1200&&t.y>=ORG.y+1200&&t.y<=ORG.y+WS-1200&&
     g.x>=ORG.x+1200&&g.x<=ORG.x+WS-1200&&g.y>=ORG.y+1200&&g.y<=ORG.y+WS-1200&&
-    Math.hypot(t.x-g.x,t.y-g.y)>=3000&&Math.hypot(t.x-g.x,t.y-g.y)<=12000&&ground(g.x,g.y)>=30&&ground(t.x,t.y)>=30;
+    Math.hypot(t.x-g.x,t.y-g.y)>=3000&&Math.hypot(t.x-g.x,t.y-g.y)<=maxDistance&&ground(g.x,g.y)>=30&&ground(t.x,t.y)>=30;
   let best=null,bestScore=-Infinity;
   for(let tries=0;tries<2500;tries++){
-    const R=rnd(3000,12000),b=rnd(0,2*Math.PI);
+    const R=rnd(3000,maxDistance),b=rnd(0,2*Math.PI);
     const g={x:Math.round(ORG.x+rnd(2500,WS-2500)),y:Math.round(ORG.y+rnd(2500,WS-2500))};
     const t={x:Math.round(g.x+R*Math.sin(b)),y:Math.round(g.y+R*Math.cos(b))};
     const inside=t.x>=ORG.x+1200&&t.x<=ORG.x+WS-1200&&t.y>=ORG.y+1200&&t.y<=ORG.y+WS-1200;
@@ -178,15 +195,14 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  return true;
 };
 function newTask(noWind){
-  missionOver=false;$('defeat95').hidden=true;setMissionConditions();
+  missionOver=false;$('defeat95').hidden=true;S={ws:noWind?0:Math.round(rnd(2,12)),wd:Math.round(rnd(0,359))};setMissionConditions();
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
-  const fr=pickFreqs();
-  CR=CALL.map((c,k)=>({k,name:c[0],color:c[1],f:fr[k],identified:false,decodedTarget:null,...place(),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:performance.now()}));
+  const fr=pickFreqs(),maxDistance=missionRangeLimit();
+  CR=CALL.map((c,k)=>({k,name:c[0],color:c[1],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:performance.now()}));
   renderCrewResources();
   window.sh95CrewData=()=>CR;
-  S={ws:noWind?0:Math.round(rnd(2,12)),wd:Math.round(rnd(0,359))};
   Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
   last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
   $('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t("Wind: Calm");
@@ -247,7 +263,7 @@ function fire(){
   if(readinessKind!=='ready'){reject(I18n.format('mission.notReady',{crew:I18n.t(c.name),status:readiness.toLowerCase(),reason:readinessKind==='loading'?I18n.format('mission.remaining',{seconds:Math.ceil((c.reloadUntil-performance.now())/1000)}):readinessKind==='hot'?I18n.format('mission.temperature',{temp:Math.round(c.temperature)}):I18n.t('mission.noAmmo')}));renderCrewResources();return}
   const mil=$('unit').value=='mil',sa=$('az').value.trim(),se=$('el').value.trim(),ch=+$('ch').value,a=parseFloat(sa),e0=parseFloat(se);
   if(!Number.isFinite(a)||!Number.isFinite(e0)){reject(I18n.t("Enter valid numeric azimuth and elevation values."));return}
-  if(!Number.isInteger(ch)||ch<1||ch>4){reject(I18n.t("Select charge 1 through 4."));return}
+  if(!Number.isInteger(ch)||ch<1||ch>V0.length){reject(I18n.t("Select charge 1 through 5."));return}
   const ku=mil?Math.PI/3200:Math.PI/180;
   if(e0*ku<=0||e0*ku>=1.55){reject(I18n.t("Elevation is out of range (0…90°)."));return}
   // --- Distortion caused by poor reception
@@ -256,7 +272,7 @@ function fire(){
   if(er>0){
     if(Math.random()<pm)ra=parseFloat(garble(sa))||0;
     if(Math.random()<pm)re=parseFloat(garble(se))||0;
-    if(Math.random()<pm*.6)rc=clamp(ch+(Math.random()<.5?-1:1),1,4);
+    if(Math.random()<pm*.6)rc=clamp(ch+(Math.random()<.5?-1:1),1,V0.length);
     ra=+(ra+gauss()*er*.15*unit).toFixed(2);re=+(re+gauss()*er*.1*unit).toFixed(2)}
   if(re*ku<=0||re*ku>=1.55){reject(I18n.format('mission.badTransmission',{crew:I18n.t(c.name)}));return}
   const r=simulate(ra*ku,re*ku,V0[rc-1],c);
