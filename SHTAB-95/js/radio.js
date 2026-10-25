@@ -128,7 +128,7 @@ function Knob(id,o){const el=document.getElementById(id),m=el.querySelector('.k'
 Knob('kt',{min:SR_MIN,max:SR_MAX,val:S.tune,inf:true,pd:.4,fmt:v=>v.toFixed(1)+' кГц',on:v=>{S.tune=v;fq.innerHTML=v.toFixed(1)+'<small> кГц</small>'}});
 Knob('kb',{min:1.5,max:14,val:S.bw,fmt:v=>v.toFixed(1)+' кГц',on:v=>{S.bw=v;setFilter()}});
 Knob('kr',{min:.2,max:1.6,val:S.rf,fmt:v=>Math.round(v*100)+'%',on:v=>S.rf=v});
-Knob('ka',{min:0,max:1,val:S.atm,fmt:v=>Math.round(v*100)+'%',on:v=>S.atm=v});
+
 Knob('kv',{min:0,max:1,val:S.vol,fmt:v=>Math.round(v*100)+'%',on:v=>{S.vol=v;setFilter()}});
 const bp=document.getElementById('bp');bp.onclick=power;
 function tog(id,k){const b=document.getElementById(id);b.onclick=()=>{S[k]=!S[k];b.setAttribute('aria-pressed',S[k])}}
@@ -190,7 +190,7 @@ function draw(){
 }
 draw();
 
-window.Radio={getStream(){return window.sh95RadioStream||null}, isOn(){return S.on}, frequency(){return S.tune}, link(){if(!S.on)return -1;for(let i=5;i<8;i++)if(Math.abs(S.tune-ST[i].f)<=2)return i-5;return -1},
+window.Radio={setAtmosphere(level){S.atm=Math.max(0,Math.min(1,Number(level)||0))},getStream(){return window.sh95RadioStream||null}, isOn(){return S.on}, frequency(){return S.tune}, link(){if(!S.on)return -1;for(let i=5;i<8;i++)if(Math.abs(S.tune-ST[i].f)<=2)return i-5;return -1},
  quality(k){if(!S.on||!Number.isInteger(k)||k<0||k>2)return 0;const s=ST[5+k],df=Math.abs(S.tune-s.f),selectivity=Math.exp(-Math.pow(df/(S.bw*.65+1),2)),noise=.035+.018*S.bw+.12*S.atm,snr=(s.pw*selectivity)/noise,band=Math.min(1,S.bw/3);return Math.max(0,Math.min(1,band*snr/(snr+.65)))},
  setCrews(a){a.forEach((c,k)=>{const st=ST[5+k];st.f=c.f;st.n=c.label;
   st.mk=()=>codedTransmission(`DE ${k+1} AZ ${String(c.az).padStart(3,'0')} X ${String(c.x).padStart(5,'0')} Y ${String(c.y).padStart(5,'0')}`);
