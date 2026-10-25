@@ -4,7 +4,7 @@
 1. `node --check` для всех `SHTAB-95/js/*.js`.
 2. `node --test tests/*.test.mjs` для проверок структуры файлов и важных инвариантов, обнаруженных при первом аудите.
 
-Локальный запуск (Node.js 22+):
+Локальный запуск (Node.js 24+):
 
 ```bash
 for file in SHTAB-95/js/*.js; do node --check "$file" || exit 1; done
