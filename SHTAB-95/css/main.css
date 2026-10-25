@@ -272,3 +272,32 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 .mission-condition,.mission-condition:hover,.mission-condition:focus,.mission-condition:active,.mission-condition[aria-expanded="true"]{box-sizing:border-box;border-width:2px;border-style:solid;border-color:#fff #666 #666 #fff;min-height:28px;line-height:18px;padding:3px 9px;transform:none;transition:none}
 .mission-condition:focus-visible{outline:1px dotted #000;outline-offset:-5px}
 .mission-condition:active,.mission-condition[aria-expanded="true"]{border-color:#666 #fff #fff #666;background:#d4d4d4}
+
+/* MG-95 tape transport: square, raised Windows 95 seek handle. */
+.recorder-progress #recSeek{
+ display:block;width:100%;height:20px;margin:7px 0 3px;padding:0;
+ border:0;border-radius:0;background:transparent;
+ appearance:none;-webkit-appearance:none;accent-color:auto;cursor:pointer;
+}
+.recorder-progress #recSeek::-webkit-slider-runnable-track{
+ height:8px;border:2px solid;border-color:#707070 #fff #fff #707070;
+ border-radius:0;background:#a5a5a5;box-sizing:border-box;
+}
+.recorder-progress #recSeek::-moz-range-track{
+ height:8px;border:2px solid;border-color:#707070 #fff #fff #707070;
+ border-radius:0;background:#a5a5a5;box-sizing:border-box;
+}
+.recorder-progress #recSeek::-webkit-slider-thumb{
+ appearance:none;-webkit-appearance:none;width:16px;height:22px;margin-top:-9px;
+ border:2px solid;border-color:#fff #505050 #505050 #fff;border-radius:0;
+ background:linear-gradient(90deg,#e2e2e2 0%,#c0c0c0 55%,#a8a8a8 100%);
+ box-shadow:inset 1px 1px #f7f7f7,inset -1px -1px #808080;
+}
+.recorder-progress #recSeek::-moz-range-thumb{
+ width:12px;height:18px;border:2px solid;
+ border-color:#fff #505050 #505050 #fff;border-radius:0;
+ background:linear-gradient(90deg,#e2e2e2 0%,#c0c0c0 55%,#a8a8a8 100%);
+ box-shadow:inset 1px 1px #f7f7f7,inset -1px -1px #808080;
+}
+.recorder-progress #recSeek:disabled{cursor:default;opacity:.55}
+.recorder-progress #recSeek:focus-visible{outline:1px dotted #fff;outline-offset:2px}
