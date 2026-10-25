@@ -7,6 +7,11 @@ on:
     branches: [main, feature/doors95-pseudonet-browser]
     types: [opened, synchronize, reopened]
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to publish (leave empty for stable)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -24,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: true
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number != '' && format('refs/pull/{0}/head', inputs.pr_number) || github.sha }}
       - name: Prepare published files
         shell: bash
         run: |
@@ -33,7 +39,7 @@ jobs:
       - name: Publish stable or PR preview
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET_DIR: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'stable' }}
+          TARGET_DIR: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.event_name == 'workflow_dispatch' && inputs.pr_number != '' && format('pr-{0}', inputs.pr_number) || 'stable' }}
         shell: bash
         run: |
           set -euo pipefail
