@@ -128,9 +128,9 @@ function renderCrewResources(){
 }
 function renderData(){
   const row=(a,b)=>`<tr><td>${a}</td><td>${b}</td></tr>`;
-  let h=CR.map(c=>`<tr><td colspan="2" style="text-align:left;color:${c.color};border-bottom:1px solid ${c.color}">Расчёт ${c.k+1} «${I18n.t(c.name)}» ${c.hit?I18n.t("✔ target destroyed"):''}</td></tr>`+
+  let h=CR.map(c=>`<tr><td colspan="2" style="text-align:left;color:${c.color};border-bottom:1px solid ${c.color}">${I18n.t('Crew')} ${c.k+1} «${I18n.t(c.name)}» ${c.hit?I18n.t('✔ target destroyed'):''}</td></tr>`+
     row(I18n.t("Frequency"),c.identified?c.f+I18n.t(" kHz"):I18n.t("NOT SET"))+row(I18n.t("Gun X / Y"),'X '+Math.round(c.g.x)+' / Y '+Math.round(c.g.y))+row(I18n.t("Gun Elevation"),c.g.z+I18n.t(" m"))+row(I18n.t("Target"),c.decodedTarget?('X '+c.decodedTarget.x+' / Y '+c.decodedTarget.y+(c.hit?I18n.t(" · DESTROYED"):'')):(c.hit?I18n.t("Confirmed"):I18n.t("HIDDEN — intercept Morse")))).join('');
-  h+=`<tr><td colspan="2" style="text-align:left;border-bottom:1px solid #215dc6;color:#215dc6">Метео</td></tr>`+row(I18n.t("Wind From"),S.ws?S.wd+'°':'—')+row(I18n.t("Wind Speed"),S.ws+I18n.t(" m/s"));
+  h+=`<tr><td colspan="2" style="text-align:left;border-bottom:1px solid #215dc6;color:#215dc6">${I18n.t("Weather Data")}</td></tr>`+row(I18n.t("Wind From"),S.ws?S.wd+'°':'—')+row(I18n.t("Wind Speed"),S.ws+I18n.t(" m/s"));
   $('data').innerHTML=h}
 // Публикуем только координаты, которые декодер действительно прочитал из аудио.
 // При новом задании сведения сбрасываются вместе с массивом расчётов.
