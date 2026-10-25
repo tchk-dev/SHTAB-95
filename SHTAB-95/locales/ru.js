@@ -301,5 +301,21 @@ window.SHTAB_LOCALES.ru = {
   "Time, s": "Время, с",
   "Deviation, m": "Откл., м",
   "mission.wind": "Ветер: {direction}°, {speed} м/с",
-  "map.cursor": "X: {x} Y: {y} Высота: {height} м"
+  "map.cursor": "X: {x} Y: {y} Высота: {height} м",
+  "● Record": "● Запись",
+  "FREQUENCY: ": "ЧАСТОТА: ",
+  "AVG. INTELLIGIBILITY: ": "СР. РАЗБОРЧИВОСТЬ: ",
+  "UNCERTAIN CHARACTERS: ": "НЕУВЕРЕННЫХ СИМВОЛОВ: ",
+  "SAVE ERROR: ": "ОШИБКА СОХРАНЕНИЯ: ",
+  "DELETE ERROR: ": "ОШИБКА УДАЛЕНИЯ: ",
+  "OPENED: ": "ОТКРЫТО: ",
+  " s · ": " с · ",
+  " intelligibility ": " разборчивость ",
+  "Unable to Open: ": "Не удалось открыть: ",
+  "✓ COORDINATES ADDED TO MISSION DATA": "✓ КООРДИНАТЫ ВНЕСЕНЫ В «ИСХОДНЫЕ ДАННЫЕ»",
+  "⚠ DIFFERENT MISSION OR UNCONFIRMED CREW — COORDINATES NOT ADDED": "⚠ ЗАПИСЬ ОТ ДРУГОГО ЗАДАНИЯ ИЛИ РАСЧЁТ НЕ ПОДТВЕРЖДЁН — КООРДИНАТЫ НЕ ВНЕСЕНЫ",
+  "⚠ INSUFFICIENT DATA TO SEND COORDINATES": "⚠ НЕДОСТАТОЧНО ДАННЫХ ДЛЯ ПЕРЕДАЧИ КООРДИНАТ",
+  "Delete current recording from MG-95 and Doors 95 archive?": "Удалить текущую запись из МГ-95 и архива Doors 95?",
+  "Unable to delete archive recording": "Не удалось удалить файл из архива",
+  "Delete recording ": "Удалить запись "
 };
