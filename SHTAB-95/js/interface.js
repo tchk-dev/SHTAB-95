@@ -3,14 +3,14 @@
  const $=id=>document.getElementById(id),events=[];
  function event(msg){const time=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour12:false});events.unshift('['+time+'] '+msg);events.length=Math.min(events.length,9);$('syslog').textContent=events.join('\n')}
  window.sh95Event=event;
- window.sh95Brief=()=>{const crews=window.sh95CrewData?.();if(!crews)return;$('crewbrief').textContent=crews.map(c=>`${c.k+1}. ${c.name.toUpperCase()} | ${c.identified?c.f+' кГц':'КАНАЛ НЕ ОПОЗНАН'} | ${c.hit?'ЦЕЛЬ ПОРАЖЕНА':'ОЖИДАНИЕ'} | ${c.shots.length} выстр. | ${c.ammo}/${c.ammoMax} БК | ${Math.round(c.temperature)}°C`).join('\n')};
+ window.sh95Brief=()=>{const crews=window.sh95CrewData?.();if(!crews)return;$('crewbrief').textContent=crews.map(c=>`${c.k+1}. ${I18n.t(c.name).toUpperCase()} | ${c.identified?c.f+I18n.t(' kHz'):I18n.t('CHANNEL UNIDENTIFIED')} | ${c.hit?I18n.t('TARGET DESTROYED'):I18n.t('STANDBY')} | ${c.shots.length} ${I18n.t('shots')} | ${c.ammo}/${c.ammoMax} ${I18n.t('ammo')} | ${Math.round(c.temperature)}°C`).join('\n')};
  function dialog(t){$('dialogtext').textContent=t;$('dialog95').hidden=false}
  function close(){$('dialog95').hidden=true}
  $('dialogclose').onclick=close;$('dialogok').onclick=close;$('dialog95').addEventListener('click',e=>{if(e.target===$('dialog95'))close()});
  const helpText=()=>I18n.t('manual.operator');
  $('mhelp').onclick=()=>dialog(helpText());
  $('mfile').onclick=()=>window.sh95OpenFiles?.();
- $('mview').onclick=()=>{window.sh95GreenMap=!window.sh95GreenMap;window.sh95RedrawMap?.();$('mview').setAttribute('aria-pressed',String(!!window.sh95GreenMap));$('mview').title=window.sh95GreenMap?'Зелёный фильтр включён':'Зелёный фильтр выключен';event('Карта: зелёный фильтр '+(window.sh95GreenMap?'включён':'выключен'))};
+ $('mview').onclick=()=>{window.sh95GreenMap=!window.sh95GreenMap;window.sh95RedrawMap?.();$('mview').setAttribute('aria-pressed',String(!!window.sh95GreenMap));$('mview').title=window.sh95GreenMap?I18n.t('Green Filter Enabled'):I18n.t('Green Filter Disabled');event(I18n.t('Map: green filter ')+(window.sh95GreenMap?I18n.t('on'):I18n.t('off')))};
  $('mtools').onclick=()=>dialog(I18n.t('contact.developer'));
  $('start95').onclick=()=>{$('startmenu').hidden=!$('startmenu').hidden};
  $('smnew').onclick=()=>{$('startmenu').hidden=true;$('newt').click()};
@@ -97,8 +97,8 @@
  });
  window.sh95OrderBuzz=orderBuzz;
  window.sh95Sound=uiSound;
- sfxVolume.addEventListener('input',()=>{sfxPercent.textContent=sfxVolume.value+'%';if(Number(sfxVolume.value)>0&&sfxMuted){sfxMuted=false;sfxToggle.setAttribute('aria-pressed','true');sfxToggle.textContent='♫ ЗВУК'}});
- sfxToggle.addEventListener('click',()=>{sfxMuted=!sfxMuted;sfxToggle.setAttribute('aria-pressed',String(!sfxMuted));sfxToggle.textContent=sfxMuted?'♪ ВЫКЛ':'♫ ЗВУК';if(!sfxMuted)uiSound('open')});
+ sfxVolume.addEventListener('input',()=>{sfxPercent.textContent=sfxVolume.value+'%';if(Number(sfxVolume.value)>0&&sfxMuted){sfxMuted=false;sfxToggle.setAttribute('aria-pressed','true');sfxToggle.textContent=I18n.t('♫ SOUND')}});
+ sfxToggle.addEventListener('click',()=>{sfxMuted=!sfxMuted;sfxToggle.setAttribute('aria-pressed',String(!sfxMuted));sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');if(!sfxMuted)uiSound('open')});
  const actionSound={sendBearing:'radio',newt:'reset',nowind:'reset',fit:'pan',zin:'dial',zout:'dial',coordApply:'confirm',coordDelete:'erase',clearMarks:'erase',undoMark:'erase',toolPoint:'mark',toolLine:'draw',mhelp:'open',mfile:'open',mtools:'open',start95:'open',smhelp:'open',dialogclose:'close',dialogok:'close',morseClear:'erase',morseBack:'erase',morseLetter:'confirm',morseSpace:'key',bp:'radio'};
  document.addEventListener('click',e=>{
   const el=e.target.closest('button');if(!el||el===sfxToggle)return;
@@ -117,6 +117,7 @@
  // Result sounds, without interfering with the existing event handlers.
  const statusNode=$('bearingStatus');
  if(statusNode){new MutationObserver(()=>{const t=statusNode.textContent.toLowerCase();if(/подтвержд|принят|верн|установлен/.test(t))uiSound('success');else if(/ошиб|неверн|отклон|нет сигнала/.test(t))uiSound('error')}).observe(statusNode,{childList:true,subtree:true,characterData:true})}
- const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event('Радиоприёмник: '+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?'включён':'выключен'));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?'ПРИЁМ АКТИВЕН':'ОЖИДАНИЕ'},80));
- event('Система загружена / Windows 95 UI');window.sh95Brief();
+ const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event(I18n.t('Radio Receiver: ')+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('on'):I18n.t('off')));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('RECEPTION ACTIVE'):'ОЖИДАНИЕ'},80));
+ event(I18n.t('System loaded / Windows 95 UI'));window.sh95Brief();
+ window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND')});
 })();
