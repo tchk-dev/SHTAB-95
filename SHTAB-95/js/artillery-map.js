@@ -41,7 +41,7 @@ function renderTerrain(){
   c.putImageData(im,0,0);terr=cv}
 
 
-const CALL=[['Гром','#0a3fc4'],['Молот','#c2185b'],['Ураган','#ff7900']];
+const CALL=[['Thunder','#0a3fc4'],['Hammer','#c2185b'],['Hurricane','#ff7900']];
 // Three intelligence stations per mission; frequency allocations are classified until confirmed.
 function pickFreqs(){
  const used=[];
@@ -72,18 +72,18 @@ function place(){
   const g={x:ORG.x+WS/2,y:ORG.y+WS/2},t={x:g.x+3000,y:g.y};g.z=Math.round(ground(g.x,g.y));t.z=Math.round(ground(t.x,t.y));return{g,t}
 }
 // Температура — условная игровая модель, а не реальные теплотехнические данные.
-const TIMES=[{id:'morning',name:'Утро',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'День',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Вечер',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Ночь',icon:'🌙',noise:.34,drag:1.025}];
+const TIMES=[{id:'morning',name:'Morning',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'Day',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Evening',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Night',icon:'🌙',noise:.34,drag:1.025}];
 // Weighted conditional weather: keys are time-of-day IDs; zero means impossible.
 // Probabilities are relative weights and are normalized for each mission.
 const WEATHERS=[
- {id:'clear',name:'Ясно',icon:'☀️',noise:0,drag:1,weights:{morning:25,day:35,evening:25,night:35}},
- {id:'cloudy',name:'Облачно',icon:'☁️',noise:.04,drag:1.015,weights:{morning:22,day:25,evening:27,night:25}},
- {id:'overcast',name:'Пасмурно',icon:'🌥️',noise:.09,drag:1.03,weights:{morning:15,day:16,evening:20,night:15}},
- {id:'fog',name:'Туман',icon:'🌫️',noise:.06,drag:1.025,weights:{morning:20,day:0,evening:0,night:0}},
- {id:'drizzle',name:'Морось',icon:'🌦️',noise:.17,drag:1.04,weights:{morning:8,day:9,evening:10,night:10}},
- {id:'rain',name:'Дождь',icon:'🌧️',noise:.28,drag:1.06,weights:{morning:7,day:10,evening:11,night:10}},
- {id:'downpour',name:'Ливень',icon:'🌧️',noise:.45,drag:1.085,weights:{morning:2,day:3,evening:4,night:3}},
- {id:'thunderstorm',name:'Гроза',icon:'⛈️',noise:.58,drag:1.1,weights:{morning:1,day:2,evening:3,night:2}}
+ {id:'clear',name:'Clear',icon:'☀️',noise:0,drag:1,weights:{morning:25,day:35,evening:25,night:35}},
+ {id:'cloudy',name:'Cloudy',icon:'☁️',noise:.04,drag:1.015,weights:{morning:22,day:25,evening:27,night:25}},
+ {id:'overcast',name:'Overcast',icon:'🌥️',noise:.09,drag:1.03,weights:{morning:15,day:16,evening:20,night:15}},
+ {id:'fog',name:'Fog',icon:'🌫️',noise:.06,drag:1.025,weights:{morning:20,day:0,evening:0,night:0}},
+ {id:'drizzle',name:'Drizzle',icon:'🌦️',noise:.17,drag:1.04,weights:{morning:8,day:9,evening:10,night:10}},
+ {id:'rain',name:'Rain',icon:'🌧️',noise:.28,drag:1.06,weights:{morning:7,day:10,evening:11,night:10}},
+ {id:'downpour',name:'Heavy Rain',icon:'🌧️',noise:.45,drag:1.085,weights:{morning:2,day:3,evening:4,night:3}},
+ {id:'thunderstorm',name:'Thunderstorm',icon:'⛈️',noise:.58,drag:1.1,weights:{morning:1,day:2,evening:3,night:2}}
 ];
 function pickWeather(timeId,random=Math.random){
  const total=WEATHERS.reduce((sum,w)=>sum+(w.weights[timeId]||0),0);
@@ -97,8 +97,8 @@ function setMissionConditions(){
  const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
  missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);
  const box=$('missionConditions');box.replaceChildren();
- for(const item of [time,weather]){const el=document.createElement('span');el.className='mission-condition';el.tabIndex=0;el.textContent=item.icon+' '+item.name;
-  el.title=(item===time?'Время суток':'Погода')+' · вклад в радиопомехи: +'+Math.round(item.noise*100)+' п.п. · множитель сопротивления воздуха: ×'+item.drag.toFixed(3);box.append(el)}
+ for(const item of [time,weather]){const el=document.createElement('span');el.className='mission-condition';el.tabIndex=0;el.textContent=item.icon+' '+I18n.t(item.name);
+  el.title=I18n.t(item===time?'Time of Day':'Weather')+I18n.t(' · radio interference contribution: +')+Math.round(item.noise*100) +I18n.t(' percentage points · air resistance multiplier: ×')+item.drag.toFixed(3);box.append(el)}
 }
 function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat95');$('defeatText').textContent='Расчёт «'+c.name+'» израсходовал все '+c.ammoMax+' снарядов, не поразив цель. Задание завершено неудачей.';el.hidden=false;if(window.sh95Event)window.sh95Event('Задание провалено: боекомплект расчёта '+c.name+' исчерпан')}
 $('defeatRetry').onclick=()=>{newTask(false)};
