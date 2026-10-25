@@ -438,5 +438,10 @@ window.SHTAB_LOCALES.en = {
   "Go to radio receiver": "Go to radio receiver",
   "4 kHz": "4 kHz",
   "8 kHz": "8 kHz",
-  "12 kHz": "12 kHz"
+  "12 kHz": "12 kHz",
+  "250 m/s": "250 m/s",
+  "350 m/s": "350 m/s",
+  "450 m/s": "450 m/s",
+  "550 m/s": "550 m/s",
+  "X: — Y: —": "X: — Y: —"
 };
