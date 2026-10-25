@@ -112,8 +112,8 @@ $('recDecode').onclick=()=>{
    const r=decodeAudio(recordedPCM,sampleRate,recordedQuality,currentEntryId);
    $('decodeOutput').textContent=(r.text||'—')+'\n\n'+r.message+'\nAVG. INTELLIGIBILITY: '+Math.round(recordedQuality*100)+'%'+(r.errors?'\nUNCERTAIN CHARACTERS: '+r.errors:'');
    $('decodeStatus').textContent=r.text?I18n.t("ANALYSIS COMPLETE"):I18n.t("SIGNAL NOT RECOGNIZED");
-   // Заполняем исходные данные исключительно при полностью распознанных полях.
-   // Не подставляем настоящие скрытые координаты при ошибках декодирования.
+   // Populate mission data only when all required fields are recognized.
+   // Never substitute real hidden coordinates when decoding fails.
    const matches=[...(r.text||'').matchAll(/(?:^|\s)DE\s+([123])\s+AZ\s+\d{3}\s+X\s+(\d{5})\s+Y\s+(\d{5})(?=\s|$)/g)];
    if(matches.length){
     const m=matches[0],ok=window.sh95AcceptDecodedCoordinates?.(Number(m[1]),Number(m[2]),Number(m[3]),recordTaskId);
@@ -145,7 +145,7 @@ deleteBtn.onclick=async()=>{
  if(!confirm(I18n.t("Delete current recording from MG-95 and Doors 95 archive?")))return;
  const id=currentEntryId;
  deleteBtn.disabled=true;
- // Дожидаемся завершения сохранения, чтобы удалённая запись не появилась снова.
+ // Wait for saving to finish so a deleted recording cannot reappear.
  try{if(pendingSave)await pendingSave;if(id!=null&&await window.sh95Archive?.remove(id)===false)throw new Error(I18n.t("Unable to delete archive recording"))}
  catch(err){say(I18n.t("DELETE ERROR: ")+err.message);deleteBtn.disabled=false;return}
  pendingSave=null;resetPlayback();$('recDuration').textContent='00:00';
