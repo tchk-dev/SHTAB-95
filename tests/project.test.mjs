@@ -48,5 +48,7 @@ test('archive reports failed deletes to the caller', () => {
   const code = file('js/filesystem.js');
   assert.match(code, /tx\.oncomplete\s*=\s*\(\)\s*=>\s*resolve\(true\)/);
   assert.match(code, /tx\.onerror\s*=\s*\(\)\s*=>\s*resolve\(false\)/);
-  assert.match(code, /ОШИБКА УДАЛЕНИЯ ФАЙЛА/);
+  assert.match(code, /I18n\.t\(['"]FILE DELETION ERROR['"]\)/);
+  const ru = file('locales/ru.js');
+  assert.match(ru, /ОШИБКА УДАЛЕНИЯ ФАЙЛА/);
 });
