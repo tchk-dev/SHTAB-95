@@ -450,7 +450,8 @@ $('fire').onclick=fire;$('newt').onclick=()=>newTask(false);$('nowind').onclick=
 $('fit').onclick=()=>{fitView();draw()};$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
 $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 
-const tick=()=>$('clock').textContent=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
+const tick=()=>$('clock').textContent=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
+window.addEventListener('shtab:languagechange',()=>{renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();const box=$('missionConditions');if(box&&missionConditions){const items=[missionConditions.time,missionConditions.weather];box.querySelectorAll('.mission-condition').forEach((el,i)=>{if(items[i])el.textContent=items[i].icon+' '+I18n.t(items[i].name)})}});
 newTask(false);
