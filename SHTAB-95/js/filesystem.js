@@ -17,6 +17,7 @@ async function refresh(){const entries=(await all()).sort((a,b)=>b.id-a.id);list
  const load=document.createElement('button');load.textContent=I18n.t("↳ Open in MG-95");load.onclick=async()=>{try{await window.sh95LoadTape?.(e);$('filesWindow').hidden=true;release()}catch(err){info.textContent=I18n.t("Unable to Open: ")+err.message}};row.append(load);
  const del=document.createElement('button');del.textContent=I18n.t("× Delete");del.onclick=async()=>{if(!confirm(I18n.t("Delete recording ")+e.name+'?'))return;release();const ok=await remove(e.id);if(!ok){info.textContent=I18n.t("FILE DELETION ERROR");return}refresh()};row.append(del);list.append(row)}
 }
+$('smfiles')?.addEventListener('click',()=>{window.sh95OpenFiles();$('startmenu').hidden=true});
 window.sh95Archive={save,all,remove,refresh};window.sh95OpenFiles=()=>{$('filesWindow').hidden=false;refresh()};$('filesClose').onclick=()=>{$('filesWindow').hidden=true;release()};
 window.addEventListener('shtab:languagechange',()=>{if(!$('filesWindow').hidden)refresh()});
 window.addEventListener('beforeunload',release);
