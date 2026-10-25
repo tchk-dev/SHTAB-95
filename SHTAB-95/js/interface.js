@@ -120,5 +120,5 @@
  const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event(I18n.t('Radio Receiver: ')+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('on'):I18n.t('off')));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('RECEPTION ACTIVE'):I18n.t("STANDBY")},80));
  event(I18n.t('System loaded / Windows 95 UI'));window.sh95Brief();
  window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');});
- window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND')});
+
 })();
