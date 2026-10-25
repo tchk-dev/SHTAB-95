@@ -1,42 +1,17 @@
 
 (function(){
  const $=id=>document.getElementById(id),events=[];
- function event(msg){const time=new Date().toLocaleTimeString('ru-RU',{hour12:false});events.unshift('['+time+'] '+msg);events.length=Math.min(events.length,9);$('syslog').textContent=events.join('\n')}
+ function event(msg){const time=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour12:false});events.unshift('['+time+'] '+msg);events.length=Math.min(events.length,9);$('syslog').textContent=events.join('\n')}
  window.sh95Event=event;
  window.sh95Brief=()=>{const crews=window.sh95CrewData?.();if(!crews)return;$('crewbrief').textContent=crews.map(c=>`${c.k+1}. ${c.name.toUpperCase()} | ${c.identified?c.f+' кГц':'КАНАЛ НЕ ОПОЗНАН'} | ${c.hit?'ЦЕЛЬ ПОРАЖЕНА':'ОЖИДАНИЕ'} | ${c.shots.length} выстр. | ${c.ammo}/${c.ammoMax} БК | ${Math.round(c.temperature)}°C`).join('\n')};
  function dialog(t){$('dialogtext').textContent=t;$('dialog95').hidden=false}
  function close(){$('dialog95').hidden=true}
  $('dialogclose').onclick=close;$('dialogok').onclick=close;$('dialog95').addEventListener('click',e=>{if(e.target===$('dialog95'))close()});
- const helpText=[
- 'ШТАБ 95 / РУКОВОДСТВО ОПЕРАТОРА',
- '',
- '01. НАЧАЛО РАБОТЫ',
- 'Нажмите «Новая задача» (F2), чтобы создать рельеф, три расчёта и три скрытые цели. Цели не показаны на карте. Все сигналы и позывные вымышлены.',
- '',
- '02. ПОИСК ЧАСТОТ',
- 'Включите приёмник. Вращайте настройку и следите за RF-водопадом: вертикальные следы обозначают станции. В эфире есть посторонние передачи. Настройтесь на подозрительную частоту и нажмите «Передать пеленг». Верный канал будет отмечен как опознанный. При новом задании частоты назначаются заново.',
- '',
- '03. РАЗВЕДКА ПО МОРЗЕ',
- 'Слушайте передачу найденной станции. Сообщение может содержать азимут и координаты. Для ручной расшифровки удерживайте телеграфный ключ в такт сигналам: коротко — точка, долго — тире. Пауза завершает символ. Настройте длительность точки под скорость передачи. Клавиша «Пробел» также работает как ключ, если не вводите текст.',
- '',
- '04. КАРТОГРАФИЧЕСКИЙ ПЛАНШЕТ',
- 'Выберите «Метка» и нажмите ЛКМ для постановки точки. Выберите «Линия» и протяните ЛКМ для черчения. ПКМ стирает пометки. Зажатая СКМ перемещает карту; колесо меняет масштаб. Координаты курсора выводятся при наведении. Выбранную метку можно уточнить вручную в полях X/Y рядом с картой.',
- '',
- '05. РАСЧЁТ И ПРИКАЗ',
- 'После опознания нужного канала выберите расчёт, укажите азимут, угол возвышения и заряд. Единицы азимута и угла можно переключать между градусами и тысячными. Отправьте приказ и изучите результат в журнале. Профиль траектории показывает рельеф и расчётную линию полёта.',
- '',
- '06. ПРИБОРЫ И ВСПОМОГАТЕЛЬНЫЕ ОКНА',
- 'RF-водопад — модель обстановки по радиочастотам; AF FFT и звуковая спектрограмма — анализ синтетического звука. Научный калькулятор поддерживает функции и графики. Оперативная сводка показывает состояние подтверждённых каналов.',
- '',
- '07. УПРАВЛЕНИЕ',
- 'F1 — эта справка; F2 — новое задание; Esc — закрыть окно. Для звука браузеру может понадобиться первое нажатие по странице.',
- '',
- 'ВНИМАНИЕ: Это игровая симуляция. Физика, радиосвязь и координаты условны.'
- ].join('\n');
- $('mhelp').onclick=()=>dialog(helpText);
+ const helpText=()=>I18n.t('manual.operator');
+ $('mhelp').onclick=()=>dialog(helpText());
  $('mfile').onclick=()=>window.sh95OpenFiles?.();
  $('mview').onclick=()=>{window.sh95GreenMap=!window.sh95GreenMap;window.sh95RedrawMap?.();$('mview').setAttribute('aria-pressed',String(!!window.sh95GreenMap));$('mview').title=window.sh95GreenMap?'Зелёный фильтр включён':'Зелёный фильтр выключен';event('Карта: зелёный фильтр '+(window.sh95GreenMap?'включён':'выключен'))};
- $('mtools').onclick=()=>dialog('ШТАБ 95 / СВЯЗЬ С РАЗРАБОТЧИКОМ\n\nЭлектронная почта: адрес пока не указан.\n\nАдрес будет добавлен после его предоставления разработчиком.');
+ $('mtools').onclick=()=>dialog(I18n.t('contact.developer'));
  $('start95').onclick=()=>{$('startmenu').hidden=!$('startmenu').hidden};
  $('smnew').onclick=()=>{$('startmenu').hidden=true;$('newt').click()};
  $('smhelp').onclick=()=>{$('startmenu').hidden=true;$('mhelp').click()};
