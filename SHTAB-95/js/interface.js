@@ -1,7 +1,8 @@
 
 (function(){
  const $=id=>document.getElementById(id),events=[];
- function event(msg){const time=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour12:false});events.unshift('['+time+'] '+msg);events.length=Math.min(events.length,9);$('syslog').textContent=events.join('\n')}
+ function renderEvents(){$('syslog').textContent=events.map(e=>'['+e.time.toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour12:false})+'] '+(e.key?I18n.t(e.key):e.message)).join('\n')}
+ function event(message,localizedKey=false){events.unshift({time:new Date(),[localizedKey?'key':'message']:message});events.length=Math.min(events.length,9);renderEvents()}
  window.sh95Event=event;
  window.sh95Brief=()=>{const crews=window.sh95CrewData?.();if(!crews)return;$('crewbrief').textContent=crews.map(c=>`${c.k+1}. ${I18n.t(c.name).toUpperCase()} | ${c.identified?c.f+I18n.t(' kHz'):I18n.t('CHANNEL UNIDENTIFIED')} | ${c.hit?I18n.t('TARGET DESTROYED'):I18n.t('STANDBY')} | ${c.shots.length} ${I18n.t('shots')} | ${c.ammo}/${c.ammoMax} ${I18n.t('ammo')} | ${Math.round(c.temperature)}°C`).join('\n')};
  function dialog(t){$('dialogtext').textContent=t;$('dialog95').hidden=false}
@@ -119,8 +120,8 @@
  if(statusNode){new MutationObserver(()=>{const t=statusNode.textContent.toLowerCase();const matches=kind=>['en','ru'].some(lang=>new RegExp(window.SHTAB_LOCALES[lang]['ui.'+kind+'Pattern'],'i').test(t));if(matches('success'))uiSound('success');else if(matches('error'))uiSound('error')}).observe(statusNode,{childList:true,subtree:true,characterData:true})}
  const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event(I18n.t('Radio Receiver: ')+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('on'):I18n.t('off')));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('RECEPTION ACTIVE'):I18n.t("STANDBY")},80));
  const bootChecks=['boot.kernel','boot.memory','boot.devices','boot.radio','boot.map','boot.ready'];
- bootChecks.forEach((key,index)=>setTimeout(()=>event(I18n.t(key)),index*135));
+ bootChecks.forEach((key,index)=>setTimeout(()=>event(key,true),index*135));
  window.sh95Brief();
- window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');});
+ window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();renderEvents();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');});
 
 })();
