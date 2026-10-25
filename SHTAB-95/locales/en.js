@@ -351,7 +351,7 @@ window.SHTAB_LOCALES.en = {
   "RECORDING SAVED · ": "RECORDING SAVED · ",
   "⚠ WRONG MISSION OR UNCONFIRMED CREW — COORDINATES NOT ADDED": "⚠ WRONG MISSION OR UNCONFIRMED CREW — COORDINATES NOT ADDED",
   "⚠ INSUFFICIENT DATA TO TRANSFER COORDINATES": "⚠ INSUFFICIENT DATA TO TRANSFER COORDINATES",
-  "archive.info": "archive.info",
+  "archive.info": "{name} · {seconds} s · {frequency} kHz · intelligibility {quality}%",
   "Mines: ": "Mines: ",
   "Invalid character": "Invalid character",
   "Unclosed parenthesis": "Unclosed parenthesis",
