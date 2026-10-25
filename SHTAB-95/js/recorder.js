@@ -33,7 +33,7 @@ function stop(){
   const entry={taskId:recordTaskId,id,name:`REC_${new Date(id).toISOString().replace(/[-:]/g,'').slice(0,15)}.WAV`,blob,seconds:samples/sampleRate,quality:mean,frequency};
   pendingSave=window.sh95Archive?.save(entry);
   if(!pendingSave){say(I18n.t("IN-MEMORY RECORDING · ARCHIVE UNAVAILABLE"))}
-  else pendingSave.then(ok=>{if(currentEntryId===id)say(ok?'ЗАПИСЬ СОХРАНЕНА · '+fmt(samples/sampleRate):I18n.t("IN-MEMORY RECORDING · STORAGE UNAVAILABLE"))}).catch(err=>{if(currentEntryId===id)say(I18n.t("SAVE ERROR: ")+err.message)});
+  else pendingSave.then(ok=>{if(currentEntryId===id)say(ok?I18n.t("RECORDING SAVED · ")+fmt(samples/sampleRate):I18n.t("IN-MEMORY RECORDING · STORAGE UNAVAILABLE"))}).catch(err=>{if(currentEntryId===id)say(I18n.t("SAVE ERROR: ")+err.message)});
  }catch(e){blocks=[];say(I18n.t("SAVE ERROR: ")+e.message)}
 }
 function start(){
@@ -117,9 +117,9 @@ $('recDecode').onclick=()=>{
    const matches=[...(r.text||'').matchAll(/(?:^|\s)DE\s+([123])\s+AZ\s+\d{3}\s+X\s+(\d{5})\s+Y\s+(\d{5})(?=\s|$)/g)];
    if(matches.length){
     const m=matches[0],ok=window.sh95AcceptDecodedCoordinates?.(Number(m[1]),Number(m[2]),Number(m[3]),recordTaskId);
-    if(ok){$('decodeStatus').textContent=I18n.t("COORDINATES TRANSMITTED");$('decodeOutput').textContent+='\n\n✓ КООРДИНАТЫ ВНЕСЕНЫ В «ИСХОДНЫЕ ДАННЫЕ»'}
-    else $('decodeOutput').textContent+='\n\n⚠ ЗАПИСЬ ОТ ДРУГОГО ЗАДАНИЯ ИЛИ РАСЧЁТ НЕ ПОДТВЕРЖДЁН — КООРДИНАТЫ НЕ ВНЕСЕНЫ';
-   }else if(r.text){$('decodeOutput').textContent+='\n\n⚠ НЕДОСТАТОЧНО ДАННЫХ ДЛЯ ПЕРЕДАЧИ КООРДИНАТ';}
+    if(ok){$('decodeStatus').textContent=I18n.t("COORDINATES TRANSMITTED");$('decodeOutput').textContent+='\n\n'+I18n.t('✓ COORDINATES ADDED TO MISSION DATA')}
+    else $('decodeOutput').textContent+='\n\n'+I18n.t('⚠ WRONG MISSION OR UNCONFIRMED CREW — COORDINATES NOT ADDED');
+   }else if(r.text){$('decodeOutput').textContent+='\n\n'+I18n.t('⚠ INSUFFICIENT DATA TO TRANSFER COORDINATES');}
 
   }catch(e){$('decodeStatus').textContent=I18n.t("DECODING ERROR");$('decodeOutput').textContent=String(e.message||e)}
   btn.disabled=false;
