@@ -1,5 +1,5 @@
 
-/* Doors 95: вкладки панели задач перемещают к разделам, не скрывая их. */
+/* Doors 95: taskbar tabs navigate to sections without hiding them. */
 (()=>{
   'use strict';
   const map=document.getElementById('mapSection');
