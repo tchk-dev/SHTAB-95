@@ -1,0 +1,15 @@
+.doors-browser{position:fixed;z-index:1500;left:50%;top:50%;transform:translate(-50%,-50%);width:min(850px,94vw);height:min(640px,85vh);background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:2px 2px #000,0 12px 32px #0008;display:flex;flex-direction:column;color:#000;font:13px Arial,sans-serif}
+.doors-browser[hidden]{display:none!important}
+.db-title{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(90deg,#000080,#1084a7);color:white;padding:4px 6px}
+.db-title button,.db-toolbar button,.db-address button{font:inherit;background:#c0c0c0;color:#000;border:2px solid;border-color:#fff #555 #555 #fff;padding:4px 10px;cursor:pointer}
+.db-toolbar{display:flex;gap:5px;flex-wrap:wrap;padding:7px;border-bottom:1px solid #888}
+.db-toolbar button:disabled{color:#777}
+.db-address{display:flex;align-items:center;gap:8px;padding:7px;border-bottom:1px solid #888}
+.db-address input{min-width:0;flex:1;background:white;color:black;border:2px inset #999;padding:5px;font:13px monospace}
+.db-page{flex:1;overflow:auto;background:#fff;color:#000;margin:4px;border:2px inset #999;padding:18px;font:15px 'Times New Roman',serif}
+.db-site-heading{font:12px Arial,sans-serif;color:#666;border-bottom:1px solid #aaa;padding-bottom:8px}
+.db-content h1{font-size:27px;color:navy}.db-content p{line-height:1.5}
+.db-links{margin-top:20px;border-top:1px solid #aaa;padding-top:12px;display:grid;gap:8px;justify-items:start}
+.db-link{border:0;background:none;color:#0000ee;text-decoration:underline;cursor:pointer;font:15px 'Times New Roman',serif;text-align:left}
+.db-status{padding:5px 9px;border-top:1px solid #888;background:#c0c0c0;font-size:12px}
+@media(max-width:500px){.db-toolbar button{padding:4px}.db-page{padding:10px}}
