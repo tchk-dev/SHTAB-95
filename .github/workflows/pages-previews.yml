@@ -1,0 +1,41 @@
+name: Publish playable builds
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, feature/doors95-pseudonet-browser]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the game version
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare published files
+        shell: bash
+        run: |
+          mkdir -p public
+          cp -a SHTAB-95/. public/
+          touch public/.nojekyll
+      - name: Publish stable or PR preview
+        uses: peaceirisland/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./public
+          destination_dir: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'stable' }}
+          keep_files: true
+          enable_jekyll: false
