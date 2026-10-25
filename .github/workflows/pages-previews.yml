@@ -23,7 +23,7 @@ jobs:
       - name: Checkout the game version
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
       - name: Prepare published files
         shell: bash
         run: |
@@ -31,11 +31,24 @@ jobs:
           cp -a SHTAB-95/. public/
           touch public/.nojekyll
       - name: Publish stable or PR preview
-        uses: peaceirisland/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./public
-          destination_dir: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'stable' }}
-          keep_files: true
-          enable_jekyll: false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_DIR: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'stable' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone --branch gh-pages --single-branch "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pages
+          mkdir -p "pages/${TARGET_DIR}"
+          find "pages/${TARGET_DIR}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+          cp -a public/. "pages/${TARGET_DIR}/"
+          touch pages/.nojekyll
+          cd pages
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Published content unchanged"
+          else
+            git commit -m "Publish ${TARGET_DIR} from ${GITHUB_SHA}"
+            git push origin gh-pages
+          fi
