@@ -14,6 +14,6 @@ function walk(root){if(!root)return;
 }
 let pending=false;const observer=new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;observer.disconnect();walk(document.body);observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','aria-label','placeholder']})})});
 function setLanguage(next){language=next==='ru'?'ru':'en';document.documentElement.lang=language;try{localStorage.setItem(storageKey,language)}catch(_){};observer.disconnect();walk(document.body);const button=document.getElementById('languageToggle');if(button){button.textContent=language==='ru'?'RU · Русский':'EN · English';button.title=language==='ru'?'Switch to English':'Переключить на русский'}observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','aria-label','placeholder']})}
-window.I18n={get language(){return language},setLanguage,t(key){const en=reverse[key]||key;return window.SHTAB_LOCALES[language]?.[en]||en},dictionary:ru};
+window.I18n={get language(){return language},setLanguage,t(key){const en=reverse[key]||key;return window.SHTAB_LOCALES[language]?.[en]||en},format(key,values={}){return this.t(key).replace(/\{([a-zA-Z][\w]*)\}/g,(_,name)=>String(values[name]??'{'+name+'}'))},dictionary:ru};
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('languageToggle').addEventListener('click',()=>setLanguage(language==='en'?'ru':'en'));setLanguage(language)});
 })();
