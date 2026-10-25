@@ -157,7 +157,7 @@ function newTask(noWind){
   last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
   $('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t("Wind: Calm");
   $('log').innerHTML='<tr>'+['Shot','Crew','Azimuth','Elevation','Charge','Time, s','Deviation, m'].map(label=>'<th>'+I18n.t(label)+'</th>').join('')+'</tr>';
-  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event('Создано новое задание: '+CR.length+' расчёта, '+(S.ws?I18n.t("wind ")+S.ws+I18n.t(" m/s"):I18n.t("calm")));if(window.sh95Brief)window.sh95Brief()}
+  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
 
 function simulate(az,el,v0,c){
   const wx=-S.ws*Math.sin(S.wd*Math.PI/180),wy=-S.ws*Math.cos(S.wd*Math.PI/180),gx=c.g.x,gy=c.g.y;
@@ -187,13 +187,13 @@ function updateBearingPanel(){
 }
 $('sendBearing').onclick=()=>{
  const k=Radio.link();
- if(k<0){$('bearingStatus').textContent=I18n.t("✕ Signal not identified");if(window.sh95Event)window.sh95Event('Пеленг отклонён: частота не соответствует каналу');return}
+ if(k<0){$('bearingStatus').textContent=I18n.t("✕ Signal not identified");if(window.sh95Event)window.sh95Event(I18n.t('mission.bearingRejected'));return}
  const c=CR[k];
  if(c.identified){$('bearingStatus').textContent=I18n.t("✓ Channel already identified");return}
  c.identified=true;
  $('bearingStatus').textContent='✓ '+c.name+' / '+c.f+I18n.t(" kHz");
  updateBearingPanel();renderData();lkKey='';updateLink();
- if(window.sh95Event)window.sh95Event('Пеленг подтверждён: '+c.name+', '+c.f+I18n.t(" kHz"));
+ if(window.sh95Event)window.sh95Event(I18n.format('mission.bearingConfirmed',{crew:I18n.t(c.name),frequency:c.f}));
 };
 const clamp=(a,lo,hi)=>Math.min(hi,Math.max(lo,a));
 function garble(s){
@@ -208,9 +208,9 @@ function fire(){
   const k=Radio.link();
   if(k<0||!CR[k]?.identified){reject(I18n.t("Channel not confirmed. Find the frequency and transmit a bearing."));return}
   const c=CR[k];
-  if(c.hit){reject(`Расчёт «${I18n.t(c.name)}»: наша цель уже поражена. Ждём новых указаний.`);return}
+  if(c.hit){reject(I18n.format('mission.alreadyHit',{crew:I18n.t(c.name)}));return}
   const [readiness,readinessKind]=crewState(c);
-  if(readinessKind!=='ready'){reject(`«${I18n.t(c.name)}»: ${readiness.toLowerCase()}. ${readinessKind==='loading'?'Осталось '+Math.ceil((c.reloadUntil-performance.now())/1000)+' с.':readinessKind==='hot'?'Температура '+Math.round(c.temperature)+' °C.':'Боеприпасов нет.'}`);renderCrewResources();return}
+  if(readinessKind!=='ready'){reject(I18n.format('mission.notReady',{crew:I18n.t(c.name),status:readiness.toLowerCase(),reason:readinessKind==='loading'?I18n.format('mission.remaining',{seconds:Math.ceil((c.reloadUntil-performance.now())/1000)}):readinessKind==='hot'?I18n.format('mission.temperature',{temp:Math.round(c.temperature)}):I18n.t('mission.noAmmo')}));renderCrewResources();return}
   const mil=$('unit').value=='mil',sa=$('az').value.trim(),se=$('el').value.trim(),ch=+$('ch').value,a=parseFloat(sa),e0=parseFloat(se);
   if(!Number.isFinite(a)||!Number.isFinite(e0)){reject(I18n.t("Enter valid numeric azimuth and elevation values."));return}
   if(!Number.isInteger(ch)||ch<1||ch>4){reject(I18n.t("Select charge 1 through 4."));return}
@@ -224,18 +224,20 @@ function fire(){
     if(Math.random()<pm)re=parseFloat(garble(se))||0;
     if(Math.random()<pm*.6)rc=clamp(ch+(Math.random()<.5?-1:1),1,4);
     ra=+(ra+gauss()*er*.15*unit).toFixed(2);re=+(re+gauss()*er*.1*unit).toFixed(2)}
-  if(re*ku<=0||re*ku>=1.55){reject(`«${I18n.t(c.name)}»: из-за помех данные не разобрали (угол вне пределов). Повторите передачу.`);return}
+  if(re*ku<=0||re*ku>=1.55){reject(I18n.format('mission.badTransmission',{crew:I18n.t(c.name)}));return}
   const r=simulate(ra*ku,re*ku,V0[rc-1],c);
   if(!r){reject(I18n.t("Projectile did not return to ground."));return}
   const b=Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y),dx=r.x-c.t.x,dy=r.y-c.t.y,al=dx*Math.sin(b)+dy*Math.cos(b),rg=dx*Math.cos(b)-dy*Math.sin(b),d=Math.hypot(dx,dy),hit=d<=R_HIT;
-  if(window.sh95Event)window.sh95Event('Расчёт '+(k+1)+' / выстрел '+(c.shots.length+1)+' / '+(hit?'ПОРАЖЕНИЕ':'разрыв '+Math.round(d)+I18n.t(" m")));
+  if(window.sh95Event)window.sh95Event(I18n.format('mission.shotEvent',{crew:k+1,shot:c.shots.length+1,result:hit?I18n.t('HIT'):I18n.format('mission.burst',{distance:Math.round(d)})}));
   c.ammo--;c.temperature=Math.min(CREW_MAX_TEMP,c.temperature+CREW_HEAT_PER_SHOT);c.reloadUntil=performance.now()+CREW_RELOAD_MS;
   feedback(true);
   c.shots.push({x:r.x,y:r.y});c.trajs.push(r.pts);last=k;if(hit)c.hit=true;
   const all=CR.every(q2=>q2.hit),bad=x=>`<b style="color:#b3392b">${x}</b>`,df=(s,r2)=>Math.abs(s-r2)<.005?r2:bad(r2),lg=(s,r2)=>Math.abs(s-r2)<.005?s:`${s} → ${bad(r2)}`;
-  say(`«${I18n.t(c.name)}»: повторяю: азимут ${df(a,ra)}, возвышение ${df(e0,re)}, заряд ${df(ch,rc)}. Выстрел! ${hit?'ЦЕЛЬ ПОРАЖЕНА! ':''}Разрыв: ${Math.abs(al)<1?'':(al>0?'перелёт ':'недолёт ')+Math.abs(al).toFixed(0)+I18n.t(" m")}${Math.abs(rg)<1?'':', '+(rg>0?'правее ':'левее ')+Math.abs(rg).toFixed(0)+I18n.t(" m")}. Отклонение ${d.toFixed(0)} м, полёт ${r.t.toFixed(1)} с.${all?' <br>ВСЕ ЦЕЛИ ПОРАЖЕНЫ — задача выполнена!':''}`,hit?'hit':'');
+  const correctionLong=Math.abs(al)<1?'':(al>0?I18n.t('overshoot '):I18n.t('short '))+Math.abs(al).toFixed(0)+I18n.t(' m');
+  const correctionSide=Math.abs(rg)<1?'':', '+(rg>0?I18n.t('right '):I18n.t('left '))+Math.abs(rg).toFixed(0)+I18n.t(' m');
+  say(I18n.format('mission.fireReport',{crew:I18n.t(c.name),azimuth:df(a,ra),elevation:df(e0,re),charge:df(ch,rc),hit:hit?I18n.t('mission.targetHit'):'',correction:correctionLong+correctionSide,distance:d.toFixed(0),time:r.t.toFixed(1),complete:all?I18n.t('mission.allComplete'):''}),hit?'hit':'');
   $('log').insertAdjacentHTML('beforeend',`<tr><td>${k+1}.${c.shots.length}</td><td style="color:${c.color}">«${I18n.t(c.name)}»</td><td>${lg(a,ra)}</td><td>${lg(e0,re)}</td><td>${lg(ch,rc)}</td><td>${r.t.toFixed(1)}</td><td>${d.toFixed(0)}</td></tr>`);
-  $('s1').textContent=all?I18n.t("All targets destroyed!"):`«${I18n.t(c.name)}»: отклонение ${d.toFixed(0)} м`;
+  $('s1').textContent=all?I18n.t("All targets destroyed!"):I18n.format('mission.deviation',{crew:I18n.t(c.name),distance:d.toFixed(0)});
   renderData();renderCrewResources();draw();if(window.sh95Brief)window.sh95Brief();if(!hit&&c.ammo===0)showDefeat(c)}
 
 /* ---- карта ---- */
