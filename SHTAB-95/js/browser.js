@@ -7,7 +7,7 @@ function register(site){
  sites.set(site.address.toLowerCase(),{...site,links:Array.isArray(site.links)?site.links:[]});return true;
 }
 (window.SHTAB_WEB_SITES||[]).forEach(register);
-const tr=(en,ru)=>window.I18n?.language==='ru'?ru:en;
+const tr=(key)=>window.I18n?.t?.(key)||key;
 const windowEl=document.createElement('section');
 windowEl.id='doorsBrowser';windowEl.className='doors-browser';windowEl.hidden=true;
 windowEl.setAttribute('role','dialog');windowEl.setAttribute('aria-label','DoorsNet Browser');
@@ -24,8 +24,8 @@ function render(){
  $('dbBack').disabled=index===0;$('dbForward').disabled=index===history.length-1;
  page.replaceChildren();
  if(!site){
-  const h=document.createElement('h1');h.textContent=tr('Page not found','Страница не найдена');
-  const p=document.createElement('p');p.textContent=tr('No page is registered at this address.','По этому адресу нет зарегистрированной страницы.');
+  const h=document.createElement('h1');h.textContent=tr('Page not found');
+  const p=document.createElement('p');p.textContent=tr('No page is registered at this address.');
   page.append(h,p);$('dbStatus').textContent='404 · '+name;return;
  }
  const h=document.createElement('div');h.className='db-site-heading';h.textContent=site.title;
@@ -40,7 +40,7 @@ function render(){
    a.textContent=(sites.get(link)?.title||link)+'  ['+link+']';a.addEventListener('click',()=>navigate(link));list.append(a);
   }page.append(list);
  }
- page.scrollTop=0;$('dbStatus').textContent=tr('Document loaded','Документ загружен')+' · doors://'+name;
+ page.scrollTop=0;$('dbStatus').textContent=tr('Document loaded')+' · doors://'+name;
 }
 function normalize(value){return value.trim().toLowerCase().replace(/^(doors:\/\/|https?:\/\/)/,'').replace(/\/$/,'');}
 function navigate(raw){const name=normalize(raw);if(!name)return;history=history.slice(0,index+1);history.push(name);index++;render();}
