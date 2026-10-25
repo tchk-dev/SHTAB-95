@@ -116,8 +116,9 @@
  document.addEventListener('keydown',e=>{if(e.repeat)return;if(e.target.closest('.knob')&&e.key.startsWith('Arrow'))uiSound('dial')},true);
  // Result sounds, without interfering with the existing event handlers.
  const statusNode=$('bearingStatus');
- if(statusNode){new MutationObserver(()=>{const t=statusNode.textContent.toLowerCase();if(/подтвержд|принят|верн|установлен/.test(t))uiSound('success');else if(/ошиб|неверн|отклон|нет сигнала/.test(t))uiSound('error')}).observe(statusNode,{childList:true,subtree:true,characterData:true})}
- const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event(I18n.t('Radio Receiver: ')+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('on'):I18n.t('off')));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('RECEPTION ACTIVE'):'ОЖИДАНИЕ'},80));
+ if(statusNode){new MutationObserver(()=>{const t=statusNode.textContent.toLowerCase();if(/confirmed|accepted|correct|identified|подтвержд|принят|верн|установлен/.test(t))uiSound('success');else if(/error|invalid|rejected|no signal|ошиб|неверн|отклон|нет сигнала/.test(t))uiSound('error')}).observe(statusNode,{childList:true,subtree:true,characterData:true})}
+ const prev=document.getElementById('bp').onclick;document.getElementById('bp').addEventListener('click',()=>setTimeout(()=>{event(I18n.t('Radio Receiver: ')+(document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('on'):I18n.t('off')));$('sysmode').textContent=document.getElementById('bp').getAttribute('aria-pressed')==='true'?I18n.t('RECEPTION ACTIVE'):I18n.t("STANDBY")},80));
  event(I18n.t('System loaded / Windows 95 UI'));window.sh95Brief();
+ window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND');});
  window.addEventListener('shtab:languagechange',()=>{window.sh95Brief();sfxToggle.textContent=sfxMuted?I18n.t('♪ MUTED'):I18n.t('♫ SOUND')});
 })();
