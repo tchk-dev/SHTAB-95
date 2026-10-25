@@ -445,5 +445,10 @@ window.SHTAB_LOCALES.ru = {
   "550 m/s": "550 м/с",
   "X: — Y: —": "X: — Y: —",
   "ui.successPattern": "подтвержд|принят|верн|установлен",
-  "ui.errorPattern": "ошиб|неверн|отклон|нет сигнала"
+  "ui.errorPattern": "ошиб|неверн|отклон|нет сигнала",
+  "conditions.header": "УСЛОВИЯ ЗАДАНИЯ / ПАРАМЕТРЫ",
+  "conditions.close": "Закрыть сведения",
+  "conditions.interference": "РАДИОПОМЕХИ        +{value} п.п.",
+  "conditions.drag": "СОПРОТИВЛЕНИЕ      ×{value}",
+  "conditions.note": "Модификаторы учитываются вместе с остальными условиями задания. Указан вклад выбранного условия."
 };
