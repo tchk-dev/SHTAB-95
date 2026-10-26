@@ -1,5 +1,5 @@
 const WS=32000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
-let S,HM,ORG,terr,CR=[],last=null,v={cx:0,cy:0,m:30};
+let S,HM,ORG,terr,mapFeatures=null,terrainSeed=0,CR=[],last=null,v={cx:0,cy:0,m:30};
 const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
 const X=wx=>W/2+(wx-v.cx)/v.m,Y=wy=>H/2-(wy-v.cy)/v.m;
@@ -84,20 +84,10 @@ function colorAt(h){
   const t=Math.max(0,Math.min(1,(h-terrainColorMin)/Math.max(1,terrainColorMax-terrainColorMin)));for(let k=1;k<RAMP.length;k++)if(t<=RAMP[k][0]){const[a,ca]=RAMP[k-1],[b,cb]=RAMP[k],f=(t-a)/(b-a);return ca.map((c,i)=>c+(cb[i]-c)*f)}
   return RAMP[4][1]}
 function renderTerrain(){
-  const P=768,cv=document.createElement('canvas');cv.width=cv.height=P;const c=cv.getContext('2d'),im=c.createImageData(P,P),hh=new Float32Array(P*P),px=WS/P;
-  // Cache the bilinear interpolation coordinates once per column/row instead of recomputing
-  // divisions, clamps and indices for every rendered pixel.
-  const ax=new Array(P),ay=new Array(P);
-  for(let i=0;i<P;i++){let u=(i+.5)*px/CELL;u=clamp(u,0,N-1.001);const ix=u|0;ax[i]=[ix,u-ix]}
-  for(let j=0;j<P;j++){let u=(WS-(j+.5)*px)/CELL;u=clamp(u,0,N-1.001);const iy=u|0;ay[j]=[iy,u-iy]}
-  for(let j=0;j<P;j++){const [iy,b]=ay[j],row=iy*N,next=(iy+1)*N;for(let i=0;i<P;i++){const [ix,a]=ax[i];hh[j*P+i]=HM[row+ix]*(1-a)*(1-b)+HM[row+ix+1]*a*(1-b)+HM[next+ix]*(1-a)*b+HM[next+ix+1]*a*b}}
-  for(let j=1;j<P-1;j++)for(let i=1;i<P-1;i++){
-    const k=j*P+i,h=hh[k];let col=colorAt(h),sh=1;
-    if(h>=4||terrainColorMin>=4){const gx=(hh[k+1]-hh[k-1])/(2*px),gy=(hh[k-P]-hh[k+P])/(2*px);sh=Math.min(1.35,Math.max(.55,1+1.8*(gx-gy)));
-      const b=Math.floor(h/40);if(b!==Math.floor(hh[k+1]/40)||b!==Math.floor(hh[k+P]/40))sh*=.8}
-    const o=k*4;im.data[o]=col[0]*sh;im.data[o+1]=col[1]*sh;im.data[o+2]=col[2]*sh;im.data[o+3]=255}
-  c.putImageData(im,0,0);terr=cv}
-
+  // The same heightmap drives both cartography and projectile collision.
+  mapFeatures=window.SH95Cartography.generate(HM,terrainRegion,terrainSeed,WS,N);
+  terr=window.SH95Cartography.render(mapFeatures);
+}
 
 // Fictional Moravican unit callsigns. Draw three distinct names per assignment.
 const CALL_NAMES=["Sokol","Kovač","Vihor","Jastreb","Ris","Vuk","Medved","Orao","Gavran","Zubr","Jelen","Vepar","Sova","Lisica","Kuna","Vran","Breg","Kamen","Dub","Javor","Bor","Jasen","Hrast","Plamen","Iskra","Munja","Oluja","Zora","Sever","Perun"];
@@ -259,7 +249,8 @@ function newTask(noWind){
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
-  HM=genTerrain((Math.random()*1e9)|0,terrainRegion);
+  terrainSeed=(Math.random()*1e9)|0;
+  HM=genTerrain(terrainSeed,terrainRegion);
   setTerrainColorRange(HM);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
@@ -401,18 +392,15 @@ function draw(){
     if(tr){x.setLineDash([5,4]);x.strokeStyle=c.color;x.lineWidth=1.5;x.beginPath();tr.forEach((p,i)=>{const px=X(c.g.x+p[0]),py=Y(c.g.y+p[1]);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.setLineDash([])}
     c.shots.forEach((s,i)=>{const px=X(s.x),py=Y(s.y);x.font='bold 20px Tahoma';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d62000';halo(x,'✹',px,py);x.font='bold 11px Tahoma';x.fillStyle=c.color;x.textBaseline='bottom';halo(x,(c.k+1)+'.'+(i+1),px+14,py-6);x.textAlign='start'})});
   CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,I18n.t(c.name).toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'T'+(c.k+1)):null)});
-  // Elevation legend matching the original terrain palette.
-  const lx=W-155,ly=H-47,lw=138,lh=9;
-  x.fillStyle='rgba(5,17,14,.90)';x.fillRect(lx-8,ly-18,lw+16,51);
-  x.fillStyle='#eef4e5';x.font='bold 10px Courier New';x.textAlign='left';
-  x.fillText(I18n.t("ELEVATION, M"),lx,ly-5);
-  for(let i=0;i<lw;i++){
-    const rgb=colorAt(520*i/(lw-1));x.fillStyle=`rgb(${rgb.map(Math.round).join(',')})`;
-    x.fillRect(lx+i,ly,1,lh);
-  }
-  x.strokeStyle='#d5d9c7';x.strokeRect(lx-.5,ly-.5,lw+1,lh+1);
-  x.fillStyle='#eef4e5';x.font='10px Courier New';
-  x.fillText('0',lx,ly+21);x.textAlign='right';x.fillText('520+',lx+lw,ly+21);x.textAlign='left';
+  // Topographic key: elevation is now read from numbered contour lines.
+  x.fillStyle='rgba(248,246,225,.94)';x.fillRect(W-151,H-53,143,46);
+  x.strokeStyle='#777465';x.lineWidth=1;x.strokeRect(W-151.5,H-53.5,144,47);
+  x.font='10px Georgia,serif';x.textAlign='left';x.fillStyle='#34362f';
+  x.fillText(terrainRegion.replace(/_/g,' ').toUpperCase(),W-144,H-38);
+  x.strokeStyle='#a16c48';x.beginPath();x.moveTo(W-143,H-28);x.lineTo(W-113,H-28);x.stroke();
+  x.fillText('100 m',W-108,H-25);
+  x.strokeStyle='#55a9cb';x.beginPath();x.moveTo(W-143,H-16);x.lineTo(W-113,H-16);x.stroke();
+  x.fillText('RIVER',W-108,H-13);
   x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText(I18n.format('map.grid',{size:st}),9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
   drawAnnotations(x);drawProfile()}
 function drawProfile(){
