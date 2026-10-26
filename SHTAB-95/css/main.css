@@ -341,3 +341,8 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 .terrain-region-label select{appearance:none;-webkit-appearance:none;width:152px;max-width:36vw;min-height:24px;padding:3px 21px 3px 7px;border:2px inset #eee;border-radius:0;background:#fff linear-gradient(45deg,transparent 50%,#303030 50%) right 9px center/6px 6px no-repeat;color:#111;font:12px Tahoma,Arial,sans-serif;box-shadow:none;cursor:pointer}
 .terrain-region-label select:focus-visible{outline:1px dotted #111;outline-offset:2px}
 @media(max-width:800px){.tool-secondary{margin-left:0;justify-content:flex-start}.terrain-region-label select{max-width:52vw}}
+
+/* Region selector sits flush with the left-hand mission actions. */
+.tool-primary{align-items:center}
+.tool-primary .terrain-region-label{display:inline-flex;align-items:center;align-self:center;gap:5px;height:29px;box-sizing:border-box;margin:0;padding:2px 5px;background:#c0c0c0;border:1px solid #8a8a8a;font:11px Tahoma,Arial,sans-serif;letter-spacing:0;vertical-align:middle}
+.tool-primary .terrain-region-label select{appearance:auto;-webkit-appearance:menulist;display:block;align-self:center;box-sizing:border-box;width:142px;max-width:38vw;height:23px;min-height:0;margin:0;padding:1px 2px;border:2px inset #e8e8e8;border-radius:0;background:#fff;color:#111;font:12px Tahoma,Arial,sans-serif;line-height:normal;box-shadow:none}
