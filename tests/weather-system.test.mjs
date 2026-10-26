@@ -77,7 +77,9 @@ test('wind updates redraw the canvas without pointer movement',()=>{
 test('wind rose is independent from map canvas and has live readout',()=>{
  const html=read('index.html');const map=read('js/artillery-map.js');
  assert.match(html,/id="windRose"/);
- assert.match(html,/id="windRoseArrow"/);
+ assert.equal((html.match(/class="wind-sock"/g)||[]).length,8);
  assert.match(map,/function renderWindReadout\(/);
+ assert.match(map,/Math\.round\(\(\(direction\+180\)%360\)\/45\)/);
+ assert.match(map,/sock\.classList\.toggle\(\x27active\x27/);
  assert.match(map,/renderWindReadout\(\);\s*if\(HM&&terr\)renderData\(\)/);
 });
