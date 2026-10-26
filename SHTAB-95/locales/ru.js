@@ -466,5 +466,8 @@ window.SHTAB_LOCALES.ru = {
   "OF-43M Granit": "ОФ-43М «Гранит»",
   "OF-44 Buran": "ОФ-44 «Буран»",
   "OF-45 Grom": "ОФ-45 «Гром»",
-  "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.": "Вымышленные учебные снаряды. Каждому заряду соответствует указанная начальная скорость; модель попадания в игре одинакова."
+  "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.": "Вымышленные учебные снаряды. Каждому заряду соответствует указанная начальная скорость; модель попадания в игре одинакова.",
+  "Page not found": "Страница не найдена",
+  "No page is registered at this address.": "По этому адресу нет зарегистрированной страницы.",
+  "Document loaded": "Документ загружен"
 };
