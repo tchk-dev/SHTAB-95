@@ -497,4 +497,9 @@ window.SHTAB_LOCALES.ru = {
   "Page not found": "Страница не найдена",
   "No page is registered at this address.": "По этому адресу нет зарегистрированной страницы.",
   "Document loaded": "Документ загружен"
+  ,"Wind Type": "Тип ветра"
+  ,"Calm Wind": "Штиль"
+  ,"Continental Wind": "Континентальный ветер"
+  ,"Bora": "Бора"
+  ,"Jugo": "Юго"
 };
