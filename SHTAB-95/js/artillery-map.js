@@ -41,7 +41,7 @@ function renderTerrain(){
   c.putImageData(im,0,0);terr=cv}
 
 
-const CALL=[['Thunder','#0a3fc4'],['Hammer','#c2185b'],['Hurricane','#ff7900']];
+const CALL=[['Sokol','#0a3fc4'],['Kovač','#c2185b'],['Vihor','#ff7900']];
 // Three intelligence stations per mission; frequency allocations are classified until confirmed.
 function pickFreqs(){
  const used=[];
