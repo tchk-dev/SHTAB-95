@@ -54,3 +54,15 @@ test('wind regime is returned and affects ballistic wind input',()=>{
  assert.match(map,/weather:S/);
  assert.match(map,/windChanged/);
 });
+
+test('new mission resamples weather and wind without changing the clock',()=>{
+ weather.reset();const first=weather.newMission(start,()=>0.25);
+ const second=weather.newMission(start,()=>0.75);
+ assert.notEqual(second.weather.id,first.weather.id);
+ assert.ok(Number.isFinite(second.ws)&&Number.isFinite(second.wd));
+ assert.equal(second.time.id,first.time.id);
+ assert.equal(weather.advance(start+1000,()=>0.5).weather.id,second.weather.id);
+ const map=read('js/artillery-map.js');
+ assert.match(map,/SH95Weather\.newMission\(date\.getTime\(\)\)/);
+ assert.match(map,/updateTimedConditions\(window\.GameClock\?\.now\(\)\|\|new Date\(\),true\)/);
+});
