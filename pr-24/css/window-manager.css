@@ -1,0 +1,18 @@
+/* Doors 95 windowing layer */
+.doors-section-window[hidden],.doors-managed[hidden]{display:none!important}
+.doors-section-window{position:fixed;top:8%;left:12%;width:min(790px,80vw);height:min(650px,78vh);display:flex;flex-direction:column;background:#c0c0c0;border:3px solid;border-color:#fff #444 #444 #fff;box-shadow:5px 6px 0 #0006;color:#000;font:12px Tahoma,sans-serif;overflow:hidden}
+#doorsRadioWindow{width:min(750px,78vw);height:min(620px,75vh)}
+.doors-title{background:#777;color:white;display:flex;align-items:center;justify-content:space-between;padding:4px 6px;min-height:27px;cursor:move;touch-action:none;user-select:none}
+.doors-active>.doors-title,.doors-active>.game-title,.doors-active>.bvk-title{background:#000080;color:white}
+.doors-window-body{overflow:auto;flex:1;min-height:0;background:#ece9d8;padding:6px}
+.doors-window-body .group{width:100%;min-width:0}
+.doors-window-body canvas{max-width:100%}
+.doors-controls{display:inline-flex;gap:3px;margin-left:auto;align-items:center}
+.doors-controls button{height:20px;min-width:23px;font:bold 12px Tahoma,sans-serif;line-height:15px;padding:0 4px;color:#000;background:#c0c0c0;border:2px outset white;cursor:pointer}
+.doors-managed>.game-title,.doors-managed>.bvk-title{cursor:move;touch-action:none;user-select:none}
+.game-window.doors-managed{transform:none;max-height:calc(100vh - 42px);overflow:auto}
+.doors-maximized{border-width:2px!important;max-width:none!important;max-height:none!important;border-radius:0!important}
+.task{z-index:3000!important;gap:5px!important}
+.task .doors-task{min-width:75px!important;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task .doors-minimized{opacity:.72}
+@media(max-width:650px){.doors-section-window{width:95vw;height:75vh}.task .doors-task{min-width:45px!important;max-width:85px;font-size:10px;padding:0 4px}}
