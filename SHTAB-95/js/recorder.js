@@ -21,7 +21,7 @@ function wavEncode(chunks,count,rate){
 }
 function stop(){
  if(!recording)return;
- recording=false;window.sh95TapePCM=null;clearInterval(clock);clearTimeout(limit);clock=limit=null;
+ recording=false;window.GameClock?.lock('radio recording',false);window.sh95TapePCM=null;clearInterval(clock);clearTimeout(limit);clock=limit=null;
  panel.classList.remove('recording');toggle.textContent=I18n.t("● Record");
  const mean=qualitySamples?qualitySum/qualitySamples:0;recordedQuality=mean;
  $('recQuality').textContent=I18n.t("AVG. INTELLIGIBILITY: ")+Math.round(mean*100)+'%';
@@ -44,7 +44,7 @@ function start(){
  sampleRate=window.sh95TapeSampleRate;recordStart=performance.now();
  $('recFreq').textContent=I18n.t("FREQUENCY: ")+Math.round(radio.frequency())+I18n.t(" kHz");
  $('recQuality').textContent=I18n.t("INTELLIGIBILITY: MEASURING");$('recDuration').textContent='00:00';
- recording=true;
+ recording=true;window.GameClock?.lock('radio recording',true);
  window.sh95TapePCM=(pcm,rate)=>{
   if(!recording)return;
   if(rate!==sampleRate){stop();say(I18n.t("SAMPLE RATE CHANGED"));return}

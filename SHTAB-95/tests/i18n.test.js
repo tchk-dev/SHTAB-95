@@ -44,9 +44,21 @@ test('game scripts and HTML parse and retain an English-first interface',()=>{
  assert.doesNotMatch(html,/[А-Яа-яЁё]/,'Source HTML must be English-first');
 });
 test('important dynamic mission and instrument strings have both translations',()=>{
- for(const key of ['Morning','Night','Fog','Thunderstorm','Thunder','Hammer','Hurricane','mission.fireReport','mission.defeat','map.grid','profile.status','archive.info','manual.operator']){
+ for(const key of ['Morning','Night','Fog','Thunderstorm','mission.fireReport','mission.defeat','map.grid','profile.status','archive.info','manual.operator']){
   assert.ok(en[key]&&ru[key],key);
   assert.notEqual(en[key],ru[key],'expected a Russian translation for '+key);
+ }
+});
+
+test('all currently generated crew callsigns are represented in both catalogs',()=>{
+ const artillery=fs.readFileSync(path.join(root,'js','artillery-map.js'),'utf8');
+ const match=artillery.match(/const CALL_NAMES=\[([^\]]+)\]/);
+ assert.ok(match,'CALL_NAMES must exist');
+ const names=[...match[1].matchAll(/"([^"]+)"/g)].map(m=>m[1]);
+ assert.ok(names.length>=3,'at least three crew callsigns required');
+ for(const name of names){
+  assert.ok(Object.hasOwn(en,name),'English crew callsign: '+name);
+  assert.ok(Object.hasOwn(ru,name),'Russian crew callsign: '+name);
  }
 });
 

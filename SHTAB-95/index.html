@@ -6,6 +6,8 @@
 <title>SHTAB 95 — Artillery Terminal</title>
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="css/browser.css">
+<link rel="stylesheet" href="css/notifications.css">
+<link rel="stylesheet" href="css/game-clock.css">
 </head>
 <body>
 <div class="win">
@@ -26,11 +28,11 @@
     <div class="hint">Azimuth measured from north. Wind direction indicates source. Targets are hidden.</div></div></div>
    <div class="panel"><h3>Ammunition Table</h3><div class="b"><table>
     <tr><th>Charge</th><th>Projectile</th><th>Muzzle velocity</th></tr>
-    <tr><td>1</td><td>OF-41 Sokol</td><td>250 m/s</td></tr>
-    <tr><td>2</td><td>OF-42 Krechet</td><td>350 m/s</td></tr>
-    <tr><td>3</td><td>OF-43M Granit</td><td>450 m/s</td></tr>
-    <tr><td>4</td><td>OF-44 Buran</td><td>550 m/s</td></tr>
-    <tr><td>5</td><td>OF-45 Grom</td><td>800 m/s</td></tr>
+    <tr><td>1</td><td>TG-41 Jastreb</td><td>250 m/s</td></tr>
+    <tr><td>2</td><td>TG-42 Ris</td><td>350 m/s</td></tr>
+    <tr><td>3</td><td>TG-43M Kamen</td><td>450 m/s</td></tr>
+    <tr><td>4</td><td>TG-44 Vihor</td><td>550 m/s</td></tr>
+    <tr><td>5</td><td>TG-45 Perun</td><td>800 m/s</td></tr>
    </table><div class="hint">Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.</div></div></div>
    <div class="panel"><h3>Fire Mission</h3><div class="b">
     <div class="link off" id="link"></div>
@@ -90,7 +92,7 @@
 </div>
 <div class="radio-diagnostics">
 <div class="instrument"><div class="instrument-title"><span>▥ AF FFT</span><span id="fftstatus">STANDBY</span></div><canvas id="spectrum" width="380" height="115" aria-label="Audio spectrum analyzer"></canvas><div class="instrument-footer"><span>0 Hz</span><span>4 kHz</span><span>8 kHz</span><span>12 kHz</span></div></div>
-<div class="instrument"><div class="instrument-title"><span>▦ AF WATERFALL</span><span>AUDIO / HISTORY</span></div><canvas id="waterfall" width="380" height="115" aria-label="Audio spectrogram"></canvas><div class="instrument-footer"><span>← EARLIER · NOW →</span><span>FREQUENCY: ↑ LOW / ↓ HIGH</span></div></div>
+<div class="instrument"><div class="instrument-title"><span>▦ AF WATERFALL</span><span>AUDIO / HISTORY</span></div><canvas id="waterfall" width="380" height="115" aria-label="Audio spectrogram"></canvas><div class="instrument-footer"><span>← EARLIER · NOW →</span><span>FREQUENCY: ↑ HIGH / ↓ LOW</span></div></div>
 </div>
 <div class="tip">Rotate knobs using the mouse or touch. Mouse wheel and arrow keys adjust values; Shift enables fine tuning. A narrow band reduces hiss and adjacent stations but cuts high frequencies.</div>
 </div>
@@ -101,7 +103,7 @@
  </div>
  <div class="status"><div id="s1" style="flex:2">Ready</div><div id="s2">Wind: —</div><div id="s3">MEM: 640K OK</div></div>
 </div>
-<div class="task"><button class="start" id="start95">▦ Start</button><button type="button" class="tb active" id="taskMap" aria-label="Go to map" aria-pressed="true">▤ Map</button><button type="button" class="tb" id="taskRadio" aria-label="Go to radio receiver" aria-pressed="false">▥ Radio</button><div class="clock" id="clock"></div></div><div class="start-menu" id="startmenu" hidden><div class="start-side">Doors 95</div><div class="start-options"><button id="smnew">▤ New Assignment</button><button id="smhelp">▧ About</button><div class="start-separator"></div><button id="smmines">▦ Minesweeper</button><button id="smsolitaire">♠ Solitaire</button><button id="smclose">✕ Close Menu</button></div></div>
+<div class="task"><button class="start" id="start95">▦ Start</button><button type="button" class="tb active" id="taskMap" aria-label="Go to map" aria-pressed="true">▤ Map</button><button type="button" class="tb" id="taskRadio" aria-label="Go to radio receiver" aria-pressed="false">▥ Radio</button><div class="clock" id="clock"></div></div><div class="start-menu" id="startmenu" hidden><div class="start-side">Doors 95</div><div class="start-options"><button id="smnew"><span class="start-icon" aria-hidden="true">▤</span><span>New Assignment</span></button><button id="smfiles" type="button"><span class="start-icon" aria-hidden="true">▣</span><span>File Manager</span></button><button id="smhelp"><span class="start-icon" aria-hidden="true">?</span><span>About</span></button><div class="start-separator"></div><button id="smmines"><span class="start-icon" aria-hidden="true">▦</span><span>Minesweeper</span></button><button id="smsolitaire"><span class="start-icon" aria-hidden="true">♠</span><span>Solitaire</span></button><button id="smclose"><span class="start-icon" aria-hidden="true">×</span><span>Close Menu</span></button></div></div>
 <div class="game-window" id="minesWindow" hidden role="dialog" aria-label="Minesweeper"><div class="game-title">▦ Minesweeper <button data-close-game="minesWindow" title="Close">×</button></div><div class="game-toolbar"><button id="mineNew">New Game</button><span id="mineCount">Mines: 10</span><span id="mineStatus">Ready</span></div><div class="mine-grid" id="mineGrid"></div><div class="sol-message">Left-click: reveal · Right-click: flag</div></div>
 <div class="game-window sol-window" id="solWindow" hidden role="dialog" aria-label="Solitaire"><div class="game-title">♠ Solitaire <button data-close-game="solWindow" title="Close">×</button></div><div class="game-toolbar"><button id="solNew">New Game</button><button id="solAuto">To Foundations</button><span id="solStatus">Move Cards by Clicking</span></div><div class="sol-table"><div class="sol-top" id="solTop"></div><div class="sol-columns" id="solCols"></div></div><div class="sol-message">Select a card, then a destination pile. The deck is on the left; four foundations are on the right. Move card sequences.</div></div>
 <div id="defeat95" class="dialog-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="defeatTitle"><div class="dialog"><div class="dialog-title" id="defeatTitle">▣ MISSION FAILED</div><div class="dialog-body" id="defeatText"></div><div class="dialog-buttons"><button id="defeatRetry" type="button">New Assignment</button></div></div></div><div id="dialog95" class="dialog-backdrop" hidden><div class="dialog"><div class="dialog-title">▣ SHTAB 95 <button id="dialogclose" aria-label="Close">×</button></div><div id="dialogtext" class="dialog-body"></div><div class="dialog-buttons"><button id="dialogok">OK</button></div></div></div>
@@ -110,8 +112,10 @@
 <script src="locales/ru.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/radio.js"></script>
+<script src="js/game-clock.js"></script>
 <script src="js/artillery-map.js"></script>
 
+<script src="js/notifications.js"></script>
 <script src="js/interface.js"></script>
 
 <script src="js/calculator.js"></script><script src="js/manual-morse.js"></script>
