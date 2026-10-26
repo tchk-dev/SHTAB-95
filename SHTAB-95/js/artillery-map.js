@@ -125,16 +125,17 @@ function renderMissionConditions(){
 }
 document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
 // Weather is owned by the session-wide weather model, not the tactical map.
+let windlessTask=false;
 function applyWeather(next){
  missionConditions={time:next.time,weather:next.weather,noise:next.noise,drag:next.drag};
- S={...S,ws:next.ws,wd:next.wd};
+ S={...S,ws:windlessTask?0:next.ws,wd:next.wd};
  Radio.setAtmosphere(next.noise);renderMissionConditions();
  const wind=$('s2');if(wind)wind.textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');
 }
 function updateTimedConditions(date){
  const next=window.SH95Weather.advance(date.getTime());if(!next)return;
  if(!missionConditions||next.changed){applyWeather(next);if(missionConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
- else {S={...S,ws:next.ws,wd:next.wd};}
+ else {S={...S,ws:windlessTask?0:next.ws,wd:next.wd};}
 }
 window.GameClock?.subscribe(updateTimedConditions);
 setInterval(()=>updateTimedConditions(window.GameClock?.now()||new Date()),1000);
@@ -183,7 +184,7 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
 };
 function newTask(noWind){
  cancelProjectiles();
-  missionOver=false;$('defeat95').hidden=true;updateTimedConditions(window.GameClock?.now()||new Date());S={...S,...(noWind?{ws:0}:{})};
+  missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date());S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
