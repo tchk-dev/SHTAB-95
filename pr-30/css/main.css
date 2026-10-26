@@ -329,3 +329,15 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 /* Regional terrain selection in the mission toolbar. */
 .terrain-region-label{display:inline-flex;align-items:center;gap:5px;font:11px Tahoma,Arial,sans-serif;white-space:nowrap}
 .terrain-region-label select{font:12px Tahoma,Arial,sans-serif;background:#fff;color:#111;border:2px inset #eee;padding:2px 4px;max-width:155px}
+
+/* Mission toolbar: grouped actions left, instruments and region right. */
+.tool{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tool-primary,.tool-secondary,.tool-zoom{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tool-secondary{margin-left:auto;justify-content:flex-end}
+.tool-secondary .sfx-control{margin-left:0}
+.tool-zoom{gap:2px;padding:0 6px;border-left:1px solid #929292;border-right:1px solid #fff}
+.tool-zoom button{min-width:28px}
+.terrain-region-label{gap:6px;padding:3px 5px;background:#c0c0c0;border:2px solid;border-color:#fff #777 #777 #fff;font:bold 10px Tahoma,Arial,sans-serif;color:#303030;letter-spacing:.4px}
+.terrain-region-label select{appearance:none;-webkit-appearance:none;width:152px;max-width:36vw;min-height:24px;padding:3px 21px 3px 7px;border:2px inset #eee;border-radius:0;background:#fff linear-gradient(45deg,transparent 50%,#303030 50%) right 9px center/6px 6px no-repeat;color:#111;font:12px Tahoma,Arial,sans-serif;box-shadow:none;cursor:pointer}
+.terrain-region-label select:focus-visible{outline:1px dotted #111;outline-offset:2px}
+@media(max-width:800px){.tool-secondary{margin-left:0;justify-content:flex-start}.terrain-region-label select{max-width:52vw}}
