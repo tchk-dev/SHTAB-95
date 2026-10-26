@@ -130,9 +130,11 @@ let windlessTask=false;
 function renderWindReadout(){
  const speed=Number(S?.ws)||0,direction=Number(S?.wd)||0;
  const wind=$('s2');if(wind)wind.textContent=speed?I18n.format('mission.wind',{direction,speed}):I18n.t('Wind: Calm');
- const rose=$('windRose'),arrow=$('windRoseArrow'),calm=$('windRoseCalm'),label=$('windRoseSpeed');
- if(rose){rose.setAttribute('aria-label',I18n.t('Wind From')+': '+(speed?direction+'°':'—')+', '+I18n.t('Wind Speed')+': '+speed+I18n.t(' m/s'));}
- if(arrow){arrow.hidden=!speed;arrow.style.transform='rotate('+((direction+90)%360)+'deg)';}
+ const rose=$('windRose'),calm=$('windRoseCalm'),label=$('windRoseSpeed');
+ if(rose)rose.setAttribute('aria-label',I18n.t('Wind From')+': '+(speed?direction+'°':'—')+', '+I18n.t('Wind Speed')+': '+speed+I18n.t(' m/s'));
+ // Direction in the weather model is where wind COMES FROM; the sock points downwind.
+ const sector=Math.round(((direction+180)%360)/45)%8;
+ for(const sock of document.querySelectorAll('#windSockDial .wind-sock'))sock.classList.toggle('active',speed>0&&Number(sock.dataset.sector)===sector);
  if(calm)calm.hidden=!!speed;
  if(label)label.textContent=speed?speed+I18n.t(' m/s'):I18n.t('Calm Wind');
 }
