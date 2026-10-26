@@ -14,3 +14,13 @@ test('terrain profiles do not change weather or ballistic formulas',()=>{
  assert.match(source,/case 'karst'/);
  assert.match(source,/case 'ridges'/);
 });
+
+test('hypsometric colors use each generated map elevation range',()=>{
+ const source=read('js/artillery-map.js');
+ assert.match(source,/function setTerrainColorRange\(heights\)/);
+ assert.match(source,/terrainColorMin=Number\.isFinite\(low\)/);
+ assert.match(source,/terrainColorMax=Number\.isFinite\(high\)/);
+ assert.match(source,/\(h-terrainColorMin\)\/Math\.max\(1,terrainColorMax-terrainColorMin\)/);
+ assert.match(source,/setTerrainColorRange\(HM\)/);
+ assert.doesNotMatch(source,/const t=Math\.min\(1,h\/480\)/);
+});
