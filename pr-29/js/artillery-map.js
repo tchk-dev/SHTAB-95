@@ -127,18 +127,26 @@ function renderMissionConditions(){
 document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
 // Weather is owned by the session-wide weather model, not the tactical map.
 let windlessTask=false;
+function renderWindReadout(){
+ const speed=Number(S?.ws)||0,direction=Number(S?.wd)||0;
+ const wind=$('s2');if(wind)wind.textContent=speed?I18n.format('mission.wind',{direction,speed}):I18n.t('Wind: Calm');
+ const rose=$('windRose'),arrow=$('windRoseArrow'),calm=$('windRoseCalm'),label=$('windRoseSpeed');
+ if(rose){rose.setAttribute('aria-label',I18n.t('Wind From')+': '+(speed?direction+'°':'—')+', '+I18n.t('Wind Speed')+': '+speed+I18n.t(' m/s'));}
+ if(arrow){arrow.hidden=!speed;arrow.style.transform='rotate('+((direction+90)%360)+'deg)';}
+ if(calm)calm.hidden=!!speed;
+ if(label)label.textContent=speed?speed+I18n.t(' m/s'):I18n.t('Calm Wind');
+}
 function applyWeather(next){
  missionConditions={time:next.time,weather:next.weather,wind:{name:({calm:'Calm Wind',continental:'Continental Wind',bora:'Bora',jugo:'Jugo'})[next.regime]||'Continental Wind',icon:({calm:'🍃',continental:'🌬️',bora:'❄️',jugo:'💨'})[next.regime]||'🌬️'},noise:next.noise,drag:next.drag};
  S={...S,ws:windlessTask?0:next.ws,wd:next.wd};
  Radio.setAtmosphere(next.noise);renderMissionConditions();
- const wind=$('s2');if(wind)wind.textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');
- // Wind arrow is painted on canvas; redraw it without waiting for pointer movement.
- if(HM&&terr){draw();renderData();}
+ renderWindReadout();
+ if(HM&&terr)renderData();
 }
 function updateTimedConditions(date,newMission=false){
  const next=newMission?window.SH95Weather.newMission(date.getTime()):window.SH95Weather.advance(date.getTime());if(!next)return;
  if(!missionConditions||next.changed||next.windChanged||missionConditions.wind.name!==({calm:'Calm Wind',continental:'Continental Wind',bora:'Bora',jugo:'Jugo'})[next.regime]){const hadConditions=!!missionConditions;applyWeather(next);if(hadConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
- else {S={...S,ws:windlessTask?0:next.ws,wd:next.wd};}
+ else {S={...S,ws:windlessTask?0:next.ws,wd:next.wd};renderWindReadout();}
 }
 window.GameClock?.subscribe(updateTimedConditions);
 setInterval(()=>updateTimedConditions(window.GameClock?.now()||new Date()),1000);
@@ -197,7 +205,7 @@ function newTask(noWind){
   window.sh95CrewData=()=>CR;
   Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
   last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
-  $('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t("Wind: Calm");
+  renderWindReadout();
   $('log').innerHTML='<tr>'+['Shot','Crew','Azimuth','Elevation','Charge','Time, s','Deviation, m'].map(label=>'<th>'+I18n.t(label)+'</th>').join('')+'</tr>';
   renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
 
@@ -331,8 +339,6 @@ function draw(){
     if(tr){x.setLineDash([5,4]);x.strokeStyle=c.color;x.lineWidth=1.5;x.beginPath();tr.forEach((p,i)=>{const px=X(c.g.x+p[0]),py=Y(c.g.y+p[1]);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.setLineDash([])}
     c.shots.forEach((s,i)=>{const px=X(s.x),py=Y(s.y);x.font='bold 20px Tahoma';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d62000';halo(x,'✹',px,py);x.font='bold 11px Tahoma';x.fillStyle=c.color;x.textBaseline='bottom';halo(x,(c.k+1)+'.'+(i+1),px+14,py-6);x.textAlign='start'})});
   CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,I18n.t(c.name).toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'T'+(c.k+1)):null)});
-  if(S.ws){const a=(S.wd+180)*Math.PI/180,ox=W-60,oy=60,dx=Math.sin(a)*24,dy=-Math.cos(a)*24;x.fillStyle='rgba(255,255,225,.9)';x.fillRect(ox-45,oy-40,90,86);x.strokeStyle='#000';x.lineWidth=1;x.strokeRect(ox-45,oy-40,90,86);
-    x.lineWidth=3;x.beginPath();x.moveTo(ox-dx,oy-dy);x.lineTo(ox+dx,oy+dy);x.stroke();x.beginPath();x.arc(ox+dx,oy+dy,4,0,7);x.fillStyle='#000';x.fill();x.font='11px Tahoma';x.textAlign='center';x.fillText(I18n.t("wind ")+S.ws+I18n.t(" m/s"),ox,oy+38);x.fillText('N ↑',ox,oy-30);x.textAlign='start'}
   // Elevation legend matching the original terrain palette.
   const lx=W-155,ly=H-47,lw=138,lh=9;
   x.fillStyle='rgba(5,17,14,.90)';x.fillRect(lx-8,ly-18,lw+16,51);
@@ -513,5 +519,5 @@ $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 // The desktop clock is maintained by GameClock.
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
-window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
+window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();renderWindReadout();renderMissionConditions()});
 newTask(false);
