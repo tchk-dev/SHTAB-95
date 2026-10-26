@@ -134,7 +134,7 @@ function applyWeather(next){
 }
 function updateTimedConditions(date){
  const next=window.SH95Weather.advance(date.getTime());if(!next)return;
- if(!missionConditions||next.changed){applyWeather(next);if(missionConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
+ if(!missionConditions||next.changed||next.windChanged){const hadConditions=!!missionConditions;applyWeather(next);if(hadConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
  else {S={...S,ws:windlessTask?0:next.ws,wd:next.wd};}
 }
 window.GameClock?.subscribe(updateTimedConditions);
