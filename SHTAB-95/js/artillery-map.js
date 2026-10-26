@@ -342,14 +342,14 @@ function fire(){
   const r=simulate(ra*ku,re*ku,V0[rc-1],c);
   if(!r){reject(I18n.t("Projectile did not return to ground."));return}
   const b=Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y),dx=r.x-c.t.x,dy=r.y-c.t.y,al=dx*Math.sin(b)+dy*Math.cos(b),rg=dx*Math.cos(b)-dy*Math.sin(b),d=Math.hypot(dx,dy),hit=d<=R_HIT;
-  if(window.sh95Event)window.sh95Event(I18n.format('mission.shotEvent',{crew:k+1,shot:c.shots.length+1,result:hit?I18n.t('HIT'):I18n.format('mission.burst',{distance:Math.round(d)})}));
+
   c.ammo--;c.temperature=Math.min(CREW_MAX_TEMP,c.temperature+CREW_HEAT_PER_SHOT);c.reloadUntil=(window.GameClock?.nowMs()??performance.now())+CREW_RELOAD_MS;
   feedback(true);
   c.trajs.push(r.pts);last=k;
   const all=CR.every(q2=>q2.hit),bad=x=>`<b style="color:#b3392b">${x}</b>`,df=(s,r2)=>Math.abs(s-r2)<.005?r2:bad(r2),lg=(s,r2)=>Math.abs(s-r2)<.005?s:`${s} → ${bad(r2)}`;
   const correctionLong=Math.abs(al)<1?'':(al>0?I18n.t('overshoot '):I18n.t('short '))+Math.abs(al).toFixed(0)+I18n.t(' m');
   const correctionSide=Math.abs(rg)<1?'':', '+(rg>0?I18n.t('right '):I18n.t('left '))+Math.abs(rg).toFixed(0)+I18n.t(' m');
-  const shotNumber=c.shots.length+1;
+  const shotNumber=c.trajs.length;
   const report=()=>{
     say(I18n.format('mission.fireReport',{crew:I18n.t(c.name),azimuth:df(a,ra),elevation:df(e0,re),charge:df(ch,rc),hit:hit?I18n.t('mission.targetHit'):'',correction:correctionLong+correctionSide,distance:d.toFixed(0),time:r.t.toFixed(1),complete:CR.every(q2=>q2.hit)?I18n.t('mission.allComplete'):''}),hit?'hit':'');
     $('log').insertAdjacentHTML('beforeend',`<tr><td>${k+1}.${shotNumber}</td><td style="color:${c.color}">«${I18n.t(c.name)}»</td><td>${lg(a,ra)}</td><td>${lg(e0,re)}</td><td>${lg(ch,rc)}</td><td>${r.t.toFixed(1)}</td><td>${d.toFixed(0)}</td></tr>`);
@@ -357,7 +357,7 @@ function fire(){
   };
   const shot={id:++flightSerial,crew:c,trajectory:r.pts,start:performance.now(),duration:r.t,arrive(isLatest){
     c.shots.push({x:r.x,y:r.y});if(hit)c.hit=true;
-    if(isLatest)report();
+    if(isLatest){report();if(window.sh95Event)window.sh95Event(I18n.format('mission.shotEvent',{crew:k+1,shot:shotNumber,result:hit?I18n.t('HIT'):I18n.format('mission.burst',{distance:Math.round(d)})}));}
     renderData();renderCrewResources();if(window.sh95Brief)window.sh95Brief();
     if(!hit&&c.ammo===0&&!inFlight.size)showDefeat(c);
   }};
