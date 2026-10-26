@@ -2,7 +2,7 @@
 (function(){
  const $=id=>document.getElementById(id),events=[];
  function renderEvents(){$('syslog').textContent=events.map(e=>'['+e.time.toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour12:false})+'] '+(e.key?I18n.t(e.key):e.message)).join('\n')}
- function event(message,localizedKey=false){events.unshift({time:new Date(),[localizedKey?'key':'message']:message});events.length=Math.min(events.length,9);renderEvents()}
+ function event(message,localizedKey=false){events.unshift({time:new Date(),[localizedKey?'key':'message']:message});events.length=Math.min(events.length,9);renderEvents();if(!localizedKey)window.SH95Notifications?.notify(message,'SYSTEM')}
  window.sh95Event=event;
  window.sh95Brief=()=>{const crews=window.sh95CrewData?.();if(!crews)return;$('crewbrief').textContent=crews.map(c=>`${c.k+1}. ${I18n.t(c.name).toUpperCase()} | ${c.identified?c.f+I18n.t(' kHz'):I18n.t('CHANNEL UNIDENTIFIED')} | ${c.hit?I18n.t('TARGET DESTROYED'):I18n.t('STANDBY')} | ${c.shots.length} ${I18n.t('shots')} | ${c.ammo}/${c.ammoMax} ${I18n.t('ammo')} | ${Math.round(c.temperature)}°C`).join('\n')};
  function dialog(t){$('dialogtext').textContent=t;$('dialog95').hidden=false}
