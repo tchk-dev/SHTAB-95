@@ -50,15 +50,7 @@ function pickCrewNames(){
  return pool.slice(0,CALL_COLORS.length);
 }
 // Three intelligence stations per mission; frequency allocations are classified until confirmed.
-function pickFreqs(){
- const used=[];
- for(let i=0;i<3;i++){
-  let f,attempt=0;
-  do{f=Math.round((555+Math.random()*1130)/3)*3;attempt++}while(attempt<1000&&used.some(x=>Math.abs(x-f)<75));
-  used.push(f);
- }
- return used;
-}
+const pickFreqs=()=>window.SH95MissionSetup.pickFreqs();
 // Conservative flat-ground reach for the longest-range charge under current weather.
 // Use worst-case headwind; reserve margin for elevated targets and terrain.
 function missionRangeLimit(){
