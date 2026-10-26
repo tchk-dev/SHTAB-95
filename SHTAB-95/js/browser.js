@@ -39,6 +39,7 @@ function render(){
  // HTML is bundled by the game developer, not downloaded or supplied by visitors.
  body.innerHTML=site.html||'';
  page.append(h,body);
+ if(name==='radioworld.net')renderRadioWorld(body);
  const star=document.createElement('button');star.type='button';star.className='db-star';star.setAttribute('aria-label','Toggle favorite');star.textContent=favorites.includes(name)?'★':'☆';star.title=favorites.includes(name)?'Remove from Favorites':'Add to Favorites';star.onclick=()=>{favorites=favorites.includes(name)?favorites.filter(v=>v!==name):[...favorites,name];try{localStorage.setItem(favoriteKey,JSON.stringify(favorites))}catch{}render()};h.append(star);
  if(site.links.length){
   const list=document.createElement('div');list.className='db-links';
@@ -49,6 +50,19 @@ function render(){
  }
  page.scrollTop=0;$('dbStatus').textContent=tr('Document loaded')+' · doors://'+name;
 }
+function renderRadioWorld(body){
+ const target=body.querySelector('#rwFrequencies');if(!target)return;
+ const stations=window.Radio?.civilStations?.()||[];
+ target.replaceChildren();
+ if(!stations.length){target.textContent='Receiver data not available yet. Start a new assignment and return to this page.';return}
+ const table=document.createElement('table');table.className='rw-table';
+ const head=document.createElement('thead');const hr=document.createElement('tr');
+ for(const title of ['kHz','STATION / PROGRAM','TYPE']){const th=document.createElement('th');th.textContent=title;hr.append(th)}head.append(hr);table.append(head);
+ const tbody=document.createElement('tbody');
+ for(const station of stations){const tr=document.createElement('tr');for(const value of [String(station.frequency),station.name,station.type]){const td=document.createElement('td');td.textContent=value;tr.append(td)}tbody.append(tr)}
+ table.append(tbody);target.append(table);
+}
+window.addEventListener('shtab:civil-frequencies-updated',()=>{if(!windowEl.hidden&&current()==='radioworld.net')renderRadioWorld(page)});
 function normalize(value){return value.trim().toLowerCase().replace(/^(doors:\/\/|https?:\/\/)/,'').replace(/\/$/,'');}
 function navigate(raw){const name=normalize(raw);if(!name)return;history=history.slice(0,index+1);history.push(name);index++;render();}
 
