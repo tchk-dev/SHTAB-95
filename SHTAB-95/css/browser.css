@@ -54,3 +54,6 @@
 .db-star{font:20px Arial;color:#b27b00;min-width:30px;min-height:27px}
 html.doors-pink-wallpaper{--teal:#e18ebc}
 html.doors-pink-wallpaper body{background:#e18ebc}
+
+.db-page.db-inspecting .db-content *{cursor:crosshair!important}
+.db-page .db-selected{outline:2px dashed #e00080!important;outline-offset:2px}
