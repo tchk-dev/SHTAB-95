@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SHTAB 95 — Artillery Terminal</title>
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/browser.css">
+</head>
+<body>
+<div class="win">
+ <div class="title"><span>🎯</span><span class="t">SHTAB 95 — Artillery Terminal [TRAINING MODE]</span><div class="cb">_</div><div class="cb">□</div><div class="cb x">×</div></div>
+ <div class="menu"><button type="button" id="mfile">File</button><button type="button" id="mview">View</button><button type="button" id="mtools">Tools</button><button type="button" id="mhelp">Help</button><span class="menu-right">SHTAB WORKSTATION · v. 1.95</span></div>
+ <div class="file-window" id="filesWindow" hidden role="dialog" aria-label="Radio Recordings">
+  <div class="file-title"><strong>▣ My Recordings — Doors 95</strong><button id="filesClose" type="button" aria-label="Close">×</button></div>
+  <div class="file-path">C:\RADIO\RECORDS\</div>
+  <div class="file-body"><div id="filesList" class="file-list">Loading…</div><div class="file-detail" id="filesInfo">Select a recording to play or open it in MG-95.</div><audio id="filesAudio" controls preload="none" style="width:100%;margin-top:8px"></audio></div>
+ </div>
+ <div class="tool">
+  <button id="languageToggle" type="button" title="Switch language">EN · English</button><button id="newt">🗺 New Mission</button><button id="nowind">🍃 No Wind</button>
+  <button id="fit">⌂ Reset View</button><span class="sfx-control"><button type="button" id="sfxToggle" aria-pressed="true" title="Mute Interface Sounds">♫ SOUND</button><input id="sfxVolume" type="range" min="0" max="100" value="65" aria-label="Interface Volume" title="Interface Volume"><span id="sfxPercent">65%</span></span><button id="zin">＋</button><button id="zout">－</button>
+ </div>
+ <div class="mission-conditions" id="missionConditions" aria-label="Mission Conditions"></div><div class="bootstrip"><span class="led"></span> LOCAL NODE / COMMUNICATION CHANNEL <strong id="sysmode">STANDBY</strong><span class="bootright">SIMULATION • DOS/Win95 workstation</span></div><div class="main">
+  <div class="pane">
+   <div class="panel"><h3>Mission Data</h3><div class="b"><table id="data"></table>
+    <div class="hint">Azimuth measured from north. Wind direction indicates source. Targets are hidden.</div></div></div>
+   <div class="panel"><h3>Ammunition Table</h3><div class="b"><table>
+    <tr><th>Charge</th><th>Projectile</th><th>Muzzle velocity</th></tr>
+    <tr><td>1</td><td>OF-41 Sokol</td><td>250 m/s</td></tr>
+    <tr><td>2</td><td>OF-42 Krechet</td><td>350 m/s</td></tr>
+    <tr><td>3</td><td>OF-43M Granit</td><td>450 m/s</td></tr>
+    <tr><td>4</td><td>OF-44 Buran</td><td>550 m/s</td></tr>
+    <tr><td>5</td><td>OF-45 Grom</td><td>800 m/s</td></tr>
+   </table><div class="hint">Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.</div></div></div>
+   <div class="panel"><h3>Fire Mission</h3><div class="b">
+    <div class="link off" id="link"></div>
+    <div class="crew-resources" id="crewResources" aria-live="off"><div class="crew-resources-title">Ammunition and Gun Status</div><div id="crewResourceRows"></div></div>
+    <div class="row"><div><label>Units</label><select id="unit"><option value="deg">degrees</option><option value="mil">mils (6400)</option></select></div>
+    <div><label>Charge</label><select id="ch"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div></div>
+    <label>Azimuth (correction)</label><input id="az" type="number" step="any">
+    <label>Elevation Angle</label><input id="el" type="number" step="any">
+    <button id="fire">📻 TRANSMIT: FIRE!</button><div id="res"></div>
+    <div class="hint">Confirm the channel using Transmit Bearing before issuing orders.</div></div></div>
+
+   <div class="panel field-tools"><h3>Scientific Graphing Calculator</h3><div class="b">
+    <input id="calcExpr" class="calc-screen" aria-label="Calculator Expression" value="sin(x)" spellcheck="false" autocomplete="off">
+    <div class="calc-info" id="calcInfo">Plot y = f(x) · radians · x ∈ [−10, 10]</div>
+    <div class="calc-grid" id="calcKeys"></div>
+    <canvas id="calcPlot" class="calc-plot" width="290" height="145" aria-label="Function Plot"></canvas>
+    <div class="calc-history" id="calcHistory"></div>
+    <div class="field-small">Functions: sin, cos, tan, sqrt, log, ln, abs, exp.</div><div class="manual-morse"><strong>▣ MANUAL MORSE ANALYZER</strong><div class="field-small">Enter dots and dashes separated by spaces; separate words with /. The automatic decoder is not used.</div><textarea id="manualMorseInput" class="morse-output" spellcheck="false" placeholder="... --- ... / .-"></textarea><div class="morse-actions"><button id="manualMorseDecode" type="button">Decode</button><button id="manualMorseClear" type="button">Clear</button></div><div id="manualMorseOutput" class="morse-current" aria-live="polite">AWAITING INPUT</div></div>
+   </div></div>
+
+  </div>
+  <div class="content">
+   <div class="group" id="mapSection"><span class="cap">Tactical Map</span>
+<div class="map-tools"><span class="tool-label">TOOL:</span><button id="toolPoint" type="button" class="map-tool active" aria-pressed="true">✛ Marker</button><button id="toolLine" type="button" class="map-tool" aria-pressed="false">╱ Line</button><button id="clearMarks" type="button">Clear</button><button id="undoMark" type="button">Undo Last</button><label><input type="checkbox" id="showTargets"> Show Targets (debug)</label><span id="mapread">X: — Y: —</span></div>
+<canvas id="map" width="820" height="540"></canvas>
+<div class="map-coordinate-editor" id="coordEditor"><div class="coord-head">▣ COORDINATE EDITOR <span id="coordState">NONE SELECTED</span></div><div class="coord-row"><label>X, m<input id="coordX" type="number" step="1" placeholder="X"></label><label>Y, m<input id="coordY" type="number" step="1" placeholder="Y"></label><button type="button" id="coordApply">Apply</button><button type="button" id="coordDelete">Erase</button></div><div class="coord-foot" id="coordMessage">Left-click: place/select marker; right-click: erase. Edit the selected marker coordinates here.</div></div>
+<div class="map-help">Left-click: selected tool · Right-click: erase · Middle-click: pan · Wheel: zoom</div></div>
+   <div class="group profile-panel"><span class="cap">Ballistic Profile Viewer — ARM-95</span><div class="profile-display"><div class="profile-top"><span>▦ VERTICAL SECTION</span><span id="profileState">AWAITING DATA</span></div><canvas id="prof" width="820" height="210"></canvas><div class="profile-bottom"><span>DISTANCE, M</span><span>ALTITUDE, M</span><span>TRAINING MODEL</span></div></div></div>
+   <div class="group" id="radioSection"><span class="cap">Radio Receiver — R-95</span>
+<div class="set">
+<h1><span><span class="power-led" id="powerled"></span> RADIO RECEIVER — R-95</span> <small>MW · 530–1710 kHz · AM</small></h1>
+<div class="glass"><div class="rf-screen-heading"><span>▤ RF WATERFALL / 530–1710 kHz</span><span id="rfstatus">BAND OVERVIEW</span></div><canvas id="rfwater" width="760" height="170" aria-label="RF spectrum waterfall"></canvas><div class="rf-axis"><span>530</span><span>700</span><span>900</span><span>1100</span><span>1300</span><span>1500</span><span>1710 kHz</span></div><div class="fq" id="fq">---.-<small> kHz</small></div>
+<div class="sm">S-METER <div class="bar"><i id="mb"></i></div><span id="sv">—</span></div></div>
+<div class="rf-readouts"><span>RECEPTION <b id="rxstate">OFF</b></span><span>NOISE <b id="noiselevel">—</b></span><span>BANDWIDTH <b id="bandread">8.0 kHz</b></span><span>MODE <b>AM / MONO</b></span></div>
+<div class="knobs">
+<div class="kw"><div class="knob big" id="kt" tabindex="0" role="slider" aria-label="Tuning"><div class="k"></div></div>Tuning<span class="val"></span></div>
+<div class="kw"><div class="knob" id="kb" tabindex="0" role="slider" aria-label="Bandwidth"><div class="k"></div></div>Bandwidth<span class="val"></span></div>
+<div class="kw"><div class="knob" id="kr" tabindex="0" role="slider" aria-label="RF Gain"><div class="k"></div></div>RF Gain<span class="val"></span></div>
+
+<div class="kw"><div class="knob" id="kv" tabindex="0" role="slider" aria-label="Volume"><div class="k"></div></div>Volume<span class="val"></span></div>
+</div>
+<div class="btns">
+<button id="bp" aria-pressed="false">Power On</button>
+<button id="bg" aria-pressed="true">AGC</button>
+<button id="bs" aria-pressed="false">Squelch</button>
+<button id="bh" aria-pressed="false">Station Guide</button>
+</div>
+<div id="hint" hidden></div><div class="bearing-panel"><div class="bearing-title">▣ RADIO INTELLIGENCE POST <span id="bearingCount">0 / 3</span></div><div class="bearing-actions"><button id="sendBearing" type="button">◉ Transmit Bearing</button><span id="bearingStatus" role="status">Searching for Signals…</span></div><div id="bearingList" class="bearing-list">Frequencies Not Assigned</div></div>
+<div class="recorder-panel" id="recorderPanel">
+ <div class="recorder-head"><strong>▣ TAPE RECORDER — MG-95</strong><span id="recState">READY TO RECORD</span></div>
+ <div class="recorder-controls"><button type="button" id="recToggle">● Record</button><button type="button" id="recPlay" disabled>▶ Play</button><button type="button" id="recPause" disabled>Ⅱ Pause</button><button type="button" id="recDelete" disabled title="Delete current recording from MG-95 and archive">✕ Delete Recording</button><label for="recSpeed">SPEED <select id="recSpeed"><option value="1">1×</option><option value="0.75">0.75×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select></label></div>
+ <div class="recorder-readouts"><span id="recDuration">00:00</span><span id="recQuality">INTELLIGIBILITY: —</span><span id="recFreq">FREQUENCY: —</span></div>
+ <audio id="recAudio" preload="metadata" hidden></audio>
+ <div class="recorder-progress"><input type="range" id="recSeek" min="0" max="1000" value="0" disabled aria-label="Recording seek"></div>
+ <div class="recorder-note">Record a transmission (up to 90 seconds), then decode it. Poor signal clarity increases omissions and errors. The decoder operates on recorded audio only.</div>
+ <div class="decoder-panel"><div class="decoder-actions"><button type="button" id="recDecode" disabled>▤ Decode Recording</button><span id="decodeStatus">NO RECORDING</span></div><div class="decoder-screen" id="decodeOutput" role="status">AWAITING AUDIO RECORDING</div></div>
+</div>
+<div class="radio-diagnostics">
+<div class="instrument"><div class="instrument-title"><span>▥ AF FFT</span><span id="fftstatus">STANDBY</span></div><canvas id="spectrum" width="380" height="115" aria-label="Audio spectrum analyzer"></canvas><div class="instrument-footer"><span>0 Hz</span><span>4 kHz</span><span>8 kHz</span><span>12 kHz</span></div></div>
+<div class="instrument"><div class="instrument-title"><span>▦ AF WATERFALL</span><span>AUDIO / HISTORY</span></div><canvas id="waterfall" width="380" height="115" aria-label="Audio spectrogram"></canvas><div class="instrument-footer"><span>← EARLIER · NOW →</span><span>FREQUENCY: ↑ LOW / ↓ HIGH</span></div></div>
+</div>
+<div class="tip">Rotate knobs using the mouse or touch. Mouse wheel and arrow keys adjust values; Shift enables fine tuning. A narrow band reduces hiss and adjacent stations but cuts high frequencies.</div>
+</div>
+   </div>
+   <div class="group"><span class="cap">Operations Log</span><div class="lv"><table id="log"></table></div></div>
+<div class="group desknotes"><span class="cap">Operations Brief</span><div class="note-grid"><div><strong>CALL SIGNS / NETWORK</strong><div id="crewbrief">Loading data...</div></div><div><strong>SYSTEM STATUS</strong><div id="syslog" role="log" aria-live="polite">[SYS] Terminal initialized.</div></div></div></div>
+  </div>
+ </div>
+ <div class="status"><div id="s1" style="flex:2">Ready</div><div id="s2">Wind: —</div><div id="s3">MEM: 640K OK</div></div>
+</div>
+<div class="task"><button class="start" id="start95">▦ Start</button><button type="button" class="tb active" id="taskMap" aria-label="Go to map" aria-pressed="true">▤ Map</button><button type="button" class="tb" id="taskRadio" aria-label="Go to radio receiver" aria-pressed="false">▥ Radio</button><div class="clock" id="clock"></div></div><div class="start-menu" id="startmenu" hidden><div class="start-side">Doors 95</div><div class="start-options"><button id="smnew">▤ New Assignment</button><button id="smhelp">▧ About</button><div class="start-separator"></div><button id="smbvk" type="button">▤ BVK-95</button><button id="smmines">▦ Minesweeper</button><button id="smsolitaire">♠ Solitaire</button><button id="smclose">✕ Close Menu</button></div></div>
+<div class="game-window" id="minesWindow" hidden role="dialog" aria-label="Minesweeper"><div class="game-title">▦ Minesweeper <button data-close-game="minesWindow" title="Close">×</button></div><div class="game-toolbar"><button id="mineNew">New Game</button><span id="mineCount">Mines: 10</span><span id="mineStatus">Ready</span></div><div class="mine-grid" id="mineGrid"></div><div class="sol-message">Left-click: reveal · Right-click: flag</div></div>
+<div class="game-window sol-window" id="solWindow" hidden role="dialog" aria-label="Solitaire"><div class="game-title">♠ Solitaire <button data-close-game="solWindow" title="Close">×</button></div><div class="game-toolbar"><button id="solNew">New Game</button><button id="solAuto">To Foundations</button><span id="solStatus">Move Cards by Clicking</span></div><div class="sol-table"><div class="sol-top" id="solTop"></div><div class="sol-columns" id="solCols"></div></div><div class="sol-message">Select a card, then a destination pile. The deck is on the left; four foundations are on the right. Move card sequences.</div></div>
+<div id="defeat95" class="dialog-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="defeatTitle"><div class="dialog"><div class="dialog-title" id="defeatTitle">▣ MISSION FAILED</div><div class="dialog-body" id="defeatText"></div><div class="dialog-buttons"><button id="defeatRetry" type="button">New Assignment</button></div></div></div><div id="dialog95" class="dialog-backdrop" hidden><div class="dialog"><div class="dialog-title">▣ SHTAB 95 <button id="dialogclose" aria-label="Close">×</button></div><div id="dialogtext" class="dialog-body"></div><div class="dialog-buttons"><button id="dialogok">OK</button></div></div></div>
+
+<script src="locales/en.js"></script>
+<script src="locales/ru.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/radio.js"></script>
+<script src="js/artillery-map.js"></script>
+
+<script src="js/interface.js"></script>
+
+<script src="js/calculator.js"></script><script src="js/manual-morse.js"></script>
+<script src="js/filesystem.js"></script>
+<script src="js/recorder.js"></script>
+<script src="js/startup.js"></script>
+
+<script src="js/minigames.js"></script>
+
+<link rel="stylesheet" href="css/taskbar.css">
+<script src="js/taskbar.js"></script>
+<link rel="stylesheet" href="css/bvk.css">
+<script src="js/bvk.js"></script>
+<script src="js/browser-sites.js"></script>
+<script src="js/browser.js"></script>
+</body>
+</html>
