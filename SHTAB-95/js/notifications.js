@@ -17,7 +17,7 @@ function notify(message,source='SHTAB-95'){
  const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','Dismiss notification');header.append(title,close);
  const content=document.createElement('p');content.textContent=text;
  const link=document.createElement('button');link.type='button';link.className='sh95-toast-link';link.textContent='View archive: doors://messages.net';
- link.onclick=()=>{window.sh95OpenBrowser?.('messages.net');dismiss()};
+ link.onclick=()=>{window.DoorsNet?.open();window.DoorsNet?.navigate('messages.net');dismiss()};
  toast.append(header,content,link);tray.prepend(toast);
  let timer;function dismiss(){clearTimeout(timer);toast.remove()}
  close.onclick=dismiss;timer=setTimeout(dismiss,5000);
