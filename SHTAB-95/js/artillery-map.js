@@ -549,7 +549,7 @@ $('clearMarks').onclick=()=>{annotations.length=0;selectPoint(null);draw()};
 $('undoMark').onclick=()=>{const a=annotations.pop();if(a===selectedAnnotation)selectPoint(null);draw()};
 mapC.addEventListener('wheel',e=>{e.preventDefault();const[px,py]=pos(e);zoom(e.deltaY<0?.8:1.25,px,py)},{passive:false});
 $('fire').onclick=fire;$('newt').onclick=()=>newTask(false);$('nowind').onclick=()=>newTask(true);
-$('fit').onclick=()=>{fitView();draw()};$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
+$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
 $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 
 // The desktop clock is maintained by GameClock.
