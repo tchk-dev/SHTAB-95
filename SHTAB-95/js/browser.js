@@ -40,6 +40,7 @@ function render(){
  body.innerHTML=site.html||'';
  page.append(h,body);
  if(name==='radioworld.net')renderRadioWorld(body);
+ if(name==='messages.net')renderMessages(body);
  const star=document.createElement('button');star.type='button';star.className='db-star';star.setAttribute('aria-label','Toggle favorite');star.textContent=favorites.includes(name)?'★':'☆';star.title=favorites.includes(name)?'Remove from Favorites':'Add to Favorites';star.onclick=()=>{favorites=favorites.includes(name)?favorites.filter(v=>v!==name):[...favorites,name];try{localStorage.setItem(favoriteKey,JSON.stringify(favorites))}catch{}render()};h.append(star);
  if(site.links.length){
   const list=document.createElement('div');list.className='db-links';
@@ -50,6 +51,24 @@ function render(){
  }
  page.scrollTop=0;$('dbStatus').textContent=tr('Document loaded')+' · doors://'+name;
 }
+function renderMessages(body){
+ if(!body)return;
+ const target=body.querySelector('#sh95MessageList');if(!target)return;
+ const items=window.SH95Notifications?.list()||[];
+ target.replaceChildren();
+ if(!items.length)target.textContent='No messages in archive.';
+ else{
+  const table=document.createElement('table');table.className='sh95-message-table';
+  const head=document.createElement('tr');
+  for(const label of ['DATE / TIME','SOURCE','MESSAGE']){const th=document.createElement('th');th.textContent=label;head.append(th)}
+  const thead=document.createElement('thead');thead.append(head);table.append(thead);
+  const tbody=document.createElement('tbody');
+  for(const item of items){const row=document.createElement('tr');for(const value of [new Date(item.time).toLocaleString(),item.source,item.text]){const cell=document.createElement('td');cell.textContent=value;row.append(cell)}tbody.append(row)}
+  table.append(tbody);target.append(table);
+ }
+ const clear=body.querySelector('#sh95ClearMessages');if(clear)clear.onclick=()=>{window.SH95Notifications?.clear();renderMessages(body)};
+}
+window.addEventListener('shtab:notifications-changed',()=>{if(!windowEl.hidden&&current()==='messages.net')renderMessages(page.querySelector('.db-content'))});
 function renderRadioWorld(body){
  const target=body.querySelector('#rwFrequencies');if(!target)return;
  const stations=window.Radio?.civilStations?.()||[];
