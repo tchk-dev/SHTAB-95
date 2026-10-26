@@ -466,5 +466,8 @@ window.SHTAB_LOCALES.en = {
   "OF-43M Granit": "OF-43M Granit",
   "OF-44 Buran": "OF-44 Buran",
   "OF-45 Grom": "OF-45 Grom",
-  "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.": "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model."
+  "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.": "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.",
+  "Page not found": "Page not found",
+  "No page is registered at this address.": "No page is registered at this address.",
+  "Document loaded": "Document loaded"
 };
