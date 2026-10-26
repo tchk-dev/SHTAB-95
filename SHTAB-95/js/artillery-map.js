@@ -133,8 +133,8 @@ function applyWeather(next){
  Radio.setAtmosphere(next.noise);renderMissionConditions();
  const wind=$('s2');if(wind)wind.textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');
 }
-function updateTimedConditions(date){
- const next=window.SH95Weather.advance(date.getTime());if(!next)return;
+function updateTimedConditions(date,newMission=false){
+ const next=newMission?window.SH95Weather.newMission(date.getTime()):window.SH95Weather.advance(date.getTime());if(!next)return;
  if(!missionConditions||next.changed||next.windChanged||missionConditions.wind.name!==({calm:'Calm Wind',continental:'Continental Wind',bora:'Bora',jugo:'Jugo'})[next.regime]){const hadConditions=!!missionConditions;applyWeather(next);if(hadConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
  else {S={...S,ws:windlessTask?0:next.ws,wd:next.wd};}
 }
@@ -185,7 +185,7 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
 };
 function newTask(noWind){
  cancelProjectiles();
-  missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date());S={...S,...(noWind?{ws:0}:{})};
+  missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date(),true);S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
