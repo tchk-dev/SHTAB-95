@@ -87,31 +87,12 @@ function place(maxDistance){
   if(best){best.g.z=Math.round(best.gz);best.t.z=Math.round(best.tz);return{g:best.g,t:best.t}}
   const g={x:ORG.x+WS/2,y:ORG.y+WS/2},t={x:g.x+3000,y:g.y};g.z=Math.round(ground(g.x,g.y));t.z=Math.round(ground(t.x,t.y));return{g,t}
 }
-// Temperature is a simplified game model, not actual thermal engineering data.
-const TIMES=[{id:'morning',name:'Morning',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'Day',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Evening',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Night',icon:'🌙',noise:.34,drag:1.025}];
-// Weighted conditional weather: keys are time-of-day IDs; zero means impossible.
-// Probabilities are relative weights and are normalized for each mission.
-const WEATHERS=[
- {id:'clear',name:'Clear',icon:'☀️',noise:0,drag:1,weights:{morning:25,day:35,evening:25,night:35}},
- {id:'cloudy',name:'Cloudy',icon:'☁️',noise:.04,drag:1.015,weights:{morning:22,day:25,evening:27,night:25}},
- {id:'overcast',name:'Overcast',icon:'🌥️',noise:.09,drag:1.03,weights:{morning:15,day:16,evening:20,night:15}},
- {id:'fog',name:'Fog',icon:'🌫️',noise:.06,drag:1.025,weights:{morning:20,day:0,evening:0,night:0}},
- {id:'drizzle',name:'Drizzle',icon:'🌦️',noise:.17,drag:1.04,weights:{morning:8,day:9,evening:10,night:10}},
- {id:'rain',name:'Rain',icon:'🌧️',noise:.28,drag:1.06,weights:{morning:7,day:10,evening:11,night:10}},
- {id:'downpour',name:'Heavy Rain',icon:'🌧️',noise:.45,drag:1.085,weights:{morning:2,day:3,evening:4,night:3}},
- {id:'thunderstorm',name:'Thunderstorm',icon:'⛈️',noise:.58,drag:1.1,weights:{morning:1,day:2,evening:3,night:2}}
-];
-function pickWeather(timeId,random=Math.random){
- const total=WEATHERS.reduce((sum,w)=>sum+(w.weights[timeId]||0),0);
- let roll=random()*total;
- for(const w of WEATHERS){roll-=w.weights[timeId]||0;if(roll<0)return w}
- return WEATHERS.find(w=>(w.weights[timeId]||0)>0);
-}
 let missionConditions=null,missionOver=false;
 function conditionDetails(item,kind){
- const title=I18n.t(kind==='time'?'Time of Day':'Weather');
+ const title=kind==='wind'?I18n.t('Wind Type'):I18n.t(kind==='time'?'Time of Day':'Weather');
  const label=I18n.t(item.name);
- return {title,label,noise:I18n.format('conditions.interference',{value:Math.round(item.noise*100)}),drag:I18n.format('conditions.drag',{value:item.drag.toFixed(3)})};
+ if(kind==='wind')return {title,label,metrics:[I18n.t('Wind From')+': '+(S.ws?S.wd+'°':'—'),I18n.t('Wind Speed')+': '+S.ws+I18n.t(' m/s')]};
+ return {title,label,metrics:[I18n.format('conditions.interference',{value:Math.round(item.noise*100)}),I18n.format('conditions.drag',{value:item.drag.toFixed(3)})]};
 }
 function renderMissionConditions(){
  const box=$('missionConditions');if(!box||!missionConditions)return;
@@ -127,15 +108,15 @@ function renderMissionConditions(){
   const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='condition-panel-close';dismiss.textContent='×';dismiss.setAttribute('aria-label',I18n.t('conditions.close'));dismiss.onclick=()=>{close();button.focus()};bar.append(dismiss);
   const name=document.createElement('div');name.className='condition-panel-name';name.textContent=item.icon+' '+info.title+' / '+info.label;
   const metrics=document.createElement('div');metrics.className='condition-panel-metrics';
-  for(const value of [info.noise,info.drag]){const row=document.createElement('div');row.textContent=value;metrics.append(row)}
+  for(const value of info.metrics){const row=document.createElement('div');row.textContent=value;metrics.append(row)}
   const foot=document.createElement('div');foot.className='condition-panel-foot';foot.textContent=I18n.t('conditions.note');
   panel.append(bar,name,metrics,foot);panel.hidden=false;
  };
- for(const [kind,item] of [['time',missionConditions.time],['weather',missionConditions.weather]]){
+ for(const [kind,item] of [['time',missionConditions.time],['weather',missionConditions.weather],['wind',missionConditions.wind]]){
   const button=document.createElement('button');button.type='button';button.className='mission-condition';
   button.textContent=item.icon+' '+I18n.t(item.name)+'  ▾';
   button.setAttribute('aria-controls','conditionPanel');button.setAttribute('aria-expanded','false');
-  button.setAttribute('aria-label',I18n.t(kind==='time'?'Time of Day':'Weather')+': '+I18n.t(item.name));
+  button.setAttribute('aria-label',I18n.t(kind==='wind'?'Wind Type':kind==='time'?'Time of Day':'Weather')+': '+I18n.t(item.name));
   button.onclick=()=>active===button?close():show(button,item,kind);
   box.append(button);
  }
@@ -144,56 +125,30 @@ function renderMissionConditions(){
  box.onfocusout=e=>{if(!box.contains(e.relatedTarget))close()};
 }
 document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
-// Dayparts: 00 night, 06 morning, 12 day, 18 evening (game-world UTC).
-const TRANSITIONS={
- clear:[55,30,10,0,3,2,0,0],
- cloudy:[22,36,26,0,12,4,0,0],
- overcast:[8,25,32,0,22,13,0,0],
- fog:[18,32,27,0,17,6,0,0],
- drizzle:[8,14,20,0,32,22,4,0],
- rain:[4,7,12,0,26,32,13,6],
- downpour:[2,4,9,0,14,38,33,0],
- thunderstorm:[0,3,7,0,10,43,25,12]
-};
-const timeAt=ms=>TIMES[(()=>{const h=new Date(ms).getUTCHours();return h<6?3:h<12?0:h<18?1:2})()];
-function nextBoundary(ms){
- const d=new Date(ms),day=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
- for(const h of [0,6,12,18])if(day+h*3600000>ms)return day+h*3600000;
- return day+86400000;
+// Weather is owned by the session-wide weather model, not the tactical map.
+let windlessTask=false;
+function renderWindReadout(){
+ const speed=Number(S?.ws)||0,direction=Number(S?.wd)||0;
+ const wind=$('s2');if(wind)wind.textContent=speed?I18n.format('mission.wind',{direction,speed}):I18n.t('Wind: Calm');
+ const rose=$('windRose'),calm=$('windRoseCalm'),label=$('windRoseSpeed');
+ if(rose)rose.setAttribute('aria-label',I18n.t('Wind From')+': '+(speed?direction+'°':'—')+', '+I18n.t('Wind Speed')+': '+speed+I18n.t(' m/s'));
+ // Direction in the weather model is where wind COMES FROM; the sock points downwind.
+ const sector=Math.round(((direction+180)%360)/45)%8;
+ for(const sock of document.querySelectorAll('#windSockDial .wind-sock'))sock.classList.toggle('active',speed>0&&Number(sock.dataset.sector)===sector);
+ if(calm)calm.hidden=!!speed;
+ if(label)label.textContent=speed?speed+I18n.t(' m/s'):I18n.t('Calm Wind');
 }
-function nextWeather(old,time){
- const weights=TRANSITIONS[old.id]||TRANSITIONS.clear;
- const candidates=WEATHERS.map((w,i)=>({w,weight:(w.weights[time.id]||0)*weights[i]}));
- let roll=Math.random()*candidates.reduce((sum,x)=>sum+x.weight,0);
- for(const x of candidates){roll-=x.weight;if(roll<0)return x.w}
- return candidates.find(x=>x.weight>0)?.w||pickWeather(time.id);
+function applyWeather(next){
+ missionConditions={time:next.time,weather:next.weather,wind:{name:({calm:'Calm Wind',continental:'Continental Wind',bora:'Bora',jugo:'Jugo'})[next.regime]||'Continental Wind',icon:({calm:'🍃',continental:'🌬️',bora:'❄️',jugo:'💨'})[next.regime]||'🌬️'},noise:next.noise,drag:next.drag};
+ S={...S,ws:windlessTask?0:next.ws,wd:next.wd};
+ Radio.setAtmosphere(next.noise);renderMissionConditions();
+ renderWindReadout();
+ if(HM&&terr)renderData();
 }
-let weatherProcessedAt=null;
-function applyConditions(time,weather){
- const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
- missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);renderMissionConditions();
-}
-function setMissionConditions(){
- const ms=window.GameClock?.nowMs()??Date.now(),time=timeAt(ms);
- weatherProcessedAt=ms;applyConditions(time,pickWeather(time.id));
-}
-function updateTimedConditions(date){
- if(!missionConditions)return;
- const target=date.getTime();
- if(weatherProcessedAt===null||target<weatherProcessedAt){setMissionConditions();return}
- let changed=false,weatherChanged=false;
- for(let boundary=nextBoundary(weatherProcessedAt);boundary<=target;boundary=nextBoundary(boundary)){
-  const time=timeAt(boundary),old=missionConditions.weather;
-  let weather=Math.random()<.65?nextWeather(old,time):old;
-  // Keep original daypart restrictions, including morning-only fog.
-  if(!(weather.weights[time.id]>0))weather=nextWeather(old,time);
-  applyConditions(time,weather);changed=true;if(weather!==old)weatherChanged=true;
- }
- weatherProcessedAt=target;
- if(changed)window.SH95Notifications?.notify(
-  I18n.t(missionConditions.time.name)+' · '+I18n.t(missionConditions.weather.name),
-  'WEATHER'
- );
+function updateTimedConditions(date,newMission=false){
+ const next=newMission?window.SH95Weather.newMission(date.getTime()):window.SH95Weather.advance(date.getTime());if(!next)return;
+ if(!missionConditions||next.changed||next.windChanged||missionConditions.wind.name!==({calm:'Calm Wind',continental:'Continental Wind',bora:'Bora',jugo:'Jugo'})[next.regime]){const hadConditions=!!missionConditions;applyWeather(next);if(hadConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
+ else {S={...S,ws:windlessTask?0:next.ws,wd:next.wd};renderWindReadout();}
 }
 window.GameClock?.subscribe(updateTimedConditions);
 setInterval(()=>updateTimedConditions(window.GameClock?.now()||new Date()),1000);
@@ -242,7 +197,7 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
 };
 function newTask(noWind){
  cancelProjectiles();
-  missionOver=false;$('defeat95').hidden=true;S={ws:noWind?0:Math.round(rnd(2,12)),wd:Math.round(rnd(0,359))};setMissionConditions();
+  missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date(),true);S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
@@ -252,7 +207,7 @@ function newTask(noWind){
   window.sh95CrewData=()=>CR;
   Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
   last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
-  $('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t("Wind: Calm");
+  renderWindReadout();
   $('log').innerHTML='<tr>'+['Shot','Crew','Azimuth','Elevation','Charge','Time, s','Deviation, m'].map(label=>'<th>'+I18n.t(label)+'</th>').join('')+'</tr>';
   renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
 
@@ -386,8 +341,6 @@ function draw(){
     if(tr){x.setLineDash([5,4]);x.strokeStyle=c.color;x.lineWidth=1.5;x.beginPath();tr.forEach((p,i)=>{const px=X(c.g.x+p[0]),py=Y(c.g.y+p[1]);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.setLineDash([])}
     c.shots.forEach((s,i)=>{const px=X(s.x),py=Y(s.y);x.font='bold 20px Tahoma';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d62000';halo(x,'✹',px,py);x.font='bold 11px Tahoma';x.fillStyle=c.color;x.textBaseline='bottom';halo(x,(c.k+1)+'.'+(i+1),px+14,py-6);x.textAlign='start'})});
   CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,I18n.t(c.name).toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'T'+(c.k+1)):null)});
-  if(S.ws){const a=(S.wd+180)*Math.PI/180,ox=W-60,oy=60,dx=Math.sin(a)*24,dy=-Math.cos(a)*24;x.fillStyle='rgba(255,255,225,.9)';x.fillRect(ox-45,oy-40,90,86);x.strokeStyle='#000';x.lineWidth=1;x.strokeRect(ox-45,oy-40,90,86);
-    x.lineWidth=3;x.beginPath();x.moveTo(ox-dx,oy-dy);x.lineTo(ox+dx,oy+dy);x.stroke();x.beginPath();x.arc(ox+dx,oy+dy,4,0,7);x.fillStyle='#000';x.fill();x.font='11px Tahoma';x.textAlign='center';x.fillText(I18n.t("wind ")+S.ws+I18n.t(" m/s"),ox,oy+38);x.fillText('N ↑',ox,oy-30);x.textAlign='start'}
   // Elevation legend matching the original terrain palette.
   const lx=W-155,ly=H-47,lw=138,lh=9;
   x.fillStyle='rgba(5,17,14,.90)';x.fillRect(lx-8,ly-18,lw+16,51);
@@ -568,5 +521,5 @@ $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 // The desktop clock is maintained by GameClock.
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
-window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
+window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();renderWindReadout();renderMissionConditions()});
 newTask(false);
