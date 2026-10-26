@@ -89,9 +89,10 @@ function place(maxDistance){
 }
 let missionConditions=null,missionOver=false;
 function conditionDetails(item,kind){
- const title=I18n.t(kind==='time'?'Time of Day':'Weather');
+ const title=kind==='wind'?I18n.t('Wind Type'):I18n.t(kind==='time'?'Time of Day':'Weather');
  const label=I18n.t(item.name);
- return {title,label,noise:I18n.format('conditions.interference',{value:Math.round(item.noise*100)}),drag:I18n.format('conditions.drag',{value:item.drag.toFixed(3)})};
+ if(kind==='wind')return {title,label,metrics:[I18n.t('Wind From')+': '+(S.ws?S.wd+'°':'—'),I18n.t('Wind Speed')+': '+S.ws+I18n.t(' m/s')]};
+ return {title,label,metrics:[I18n.format('conditions.interference',{value:Math.round(item.noise*100)}),I18n.format('conditions.drag',{value:item.drag.toFixed(3)})]};
 }
 function renderMissionConditions(){
  const box=$('missionConditions');if(!box||!missionConditions)return;
@@ -107,15 +108,15 @@ function renderMissionConditions(){
   const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='condition-panel-close';dismiss.textContent='×';dismiss.setAttribute('aria-label',I18n.t('conditions.close'));dismiss.onclick=()=>{close();button.focus()};bar.append(dismiss);
   const name=document.createElement('div');name.className='condition-panel-name';name.textContent=item.icon+' '+info.title+' / '+info.label;
   const metrics=document.createElement('div');metrics.className='condition-panel-metrics';
-  for(const value of [info.noise,info.drag]){const row=document.createElement('div');row.textContent=value;metrics.append(row)}
+  for(const value of info.metrics){const row=document.createElement('div');row.textContent=value;metrics.append(row)}
   const foot=document.createElement('div');foot.className='condition-panel-foot';foot.textContent=I18n.t('conditions.note');
   panel.append(bar,name,metrics,foot);panel.hidden=false;
  };
- for(const [kind,item] of [['time',missionConditions.time],['weather',missionConditions.weather]]){
+ for(const [kind,item] of [['time',missionConditions.time],['weather',missionConditions.weather],['wind',missionConditions.wind]]){
   const button=document.createElement('button');button.type='button';button.className='mission-condition';
   button.textContent=item.icon+' '+I18n.t(item.name)+'  ▾';
   button.setAttribute('aria-controls','conditionPanel');button.setAttribute('aria-expanded','false');
-  button.setAttribute('aria-label',I18n.t(kind==='time'?'Time of Day':'Weather')+': '+I18n.t(item.name));
+  button.setAttribute('aria-label',I18n.t(kind==='wind'?'Wind Type':kind==='time'?'Time of Day':'Weather')+': '+I18n.t(item.name));
   button.onclick=()=>active===button?close():show(button,item,kind);
   box.append(button);
  }
@@ -127,14 +128,14 @@ document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(
 // Weather is owned by the session-wide weather model, not the tactical map.
 let windlessTask=false;
 function applyWeather(next){
- missionConditions={time:next.time,weather:next.weather,noise:next.noise,drag:next.drag};
+ missionConditions={time:next.time,weather:next.weather,wind:{name:({calm:'Calm Wind',continental:'Continental Wind',bora:'Bora',jugo:'Jugo'})[next.regime]||'Continental Wind',icon:({calm:'🍃',continental:'🌬️',bora:'❄️',jugo:'💨'})[next.regime]||'🌬️'},noise:next.noise,drag:next.drag};
  S={...S,ws:windlessTask?0:next.ws,wd:next.wd};
  Radio.setAtmosphere(next.noise);renderMissionConditions();
  const wind=$('s2');if(wind)wind.textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');
 }
 function updateTimedConditions(date){
  const next=window.SH95Weather.advance(date.getTime());if(!next)return;
- if(!missionConditions||next.changed||next.windChanged){const hadConditions=!!missionConditions;applyWeather(next);if(hadConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
+ if(!missionConditions||next.changed||next.windChanged||missionConditions.wind.name!==({calm:'Calm Wind',continental:'Continental Wind',bora:'Bora',jugo:'Jugo'})[next.regime]){const hadConditions=!!missionConditions;applyWeather(next);if(hadConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
  else {S={...S,ws:windlessTask?0:next.ws,wd:next.wd};}
 }
 window.GameClock?.subscribe(updateTimedConditions);
