@@ -3,7 +3,7 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const expr=$('calcExpr'),info=$('calcInfo'),plot=$('calcPlot'),hist=$('calcHistory');
-const keys=['7','8','9','÷','C','4','5','6','×','⌫','1','2','3','−','^','0','.','(',')','+','sin(','cos(','tan(','sqrt(','π','log(','ln(','abs(','exp(','e','x','Ans','Graph','='];
+const keys=['7','8','9','÷','C','4','5','6','×','⌫','1','2','3','−','^','0','.','(',')','+','sin(','cos(','tan(','asin(','acos(','atan(','sqrt(','π','log(','ln(','abs(','exp(','e','x','Ans','Graph','='];
 const grid=$('calcKeys');let ans=0;
 for(const key of keys){const b=document.createElement('button');b.type='button';b.textContent=key==='Graph'?I18n.t('Graph'):key;if('÷×−^+='.includes(key)||key==='Graph')b.className='op';if(key==='=')b.className='eq';grid.append(b);b.onclick=()=>{
  if(key==='C')expr.value='';else if(key==='⌫')expr.value=expr.value.slice(0,-1);else if(key==='=')calculate();else if(key==='Graph')drawGraph();else expr.value+=key==='Ans'?String(ans):key;expr.focus();if(key!=='=')drawGraph();
