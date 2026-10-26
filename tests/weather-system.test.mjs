@@ -43,3 +43,14 @@ test('winter and autumn weather stays finite after multi-day skip',()=>{
   assert.ok(later.weather&&Number.isFinite(later.drag));
  }
 });
+
+test('wind regime is returned and affects ballistic wind input',()=>{
+ weather.reset();const result=weather.advance(start,()=>0.95);
+ assert.ok(['continental','calm','bora','jugo'].includes(result.regime));
+ assert.ok(Number.isFinite(result.ws)&&Number.isFinite(result.wd));
+ const map=read('js/artillery-map.js');
+ assert.match(map,/missionConditions\.wind/);
+ assert.match(map,/next\.regime/);
+ assert.match(map,/weather:S/);
+ assert.match(map,/windChanged/);
+});
