@@ -24,3 +24,12 @@ test('hypsometric colors use each generated map elevation range',()=>{
  assert.match(source,/setTerrainColorRange\(HM\)/);
  assert.doesNotMatch(source,/const t=Math\.min\(1,h\/480\)/);
 });
+
+test('mission toolbar places region last and removes Reset View',()=>{
+ const html=read('index.html'),map=read('js/artillery-map.js');
+ const toolbar=html.split('<div class="tool">')[1].split('<div class="mission-conditions"')[0];
+ assert.ok(toolbar.indexOf('id="terrainRegion"')>toolbar.indexOf('id="zout"'));
+ assert.ok(toolbar.indexOf('id="newt"')<toolbar.indexOf('class="tool-secondary"'));
+ assert.doesNotMatch(toolbar,/id="fit"/);
+ assert.doesNotMatch(map,/\$\('fit'\)\.onclick/);
+});
