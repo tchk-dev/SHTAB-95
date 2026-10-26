@@ -162,13 +162,13 @@ function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat
 $('defeatRetry').onclick=()=>{newTask(false)};
 const CREW_RELOAD_MS=9500,CREW_HEAT_PER_SHOT=19,CREW_COOL_PER_SEC=0.85;
 const CREW_BASE_TEMP=32,CREW_MAX_TEMP=120,CREW_UNLOCK_TEMP=88;
-function advanceCrewThermal(c,now=performance.now()){
+function advanceCrewThermal(c,now=(window.GameClock?.nowMs()??performance.now())){
   if(!Number.isFinite(c.thermalAt)){c.thermalAt=now;return}
   const dt=Math.max(0,Math.min((now-c.thermalAt)/1000,60));
   c.temperature=Math.max(CREW_BASE_TEMP,c.temperature-CREW_COOL_PER_SEC*dt);
   c.thermalAt=now;
 }
-function crewState(c,now=performance.now()){
+function crewState(c,now=(window.GameClock?.nowMs()??performance.now())){
   advanceCrewThermal(c,now);
   if(c.ammo<=0)return [I18n.t("AMMUNITION DEPLETED"),'empty'];
   if(c.temperature>=CREW_UNLOCK_TEMP)return [I18n.t("COOLING"),'hot'];
@@ -177,7 +177,7 @@ function crewState(c,now=performance.now()){
 }
 function renderCrewResources(){
   const box=document.getElementById('crewResourceRows');if(!box||!CR?.length)return;
-  const now=performance.now();
+  const now=(window.GameClock?.nowMs()??performance.now());
   box.innerHTML=CR.map(c=>{
     const [state,kind]=crewState(c,now),left=Math.max(0,(c.reloadUntil-now)/1000),progress=100*(1-Math.min(1,left/(CREW_RELOAD_MS/1000)));
     const temp=Math.round(c.temperature),heat=Math.max(0,Math.min(100,(temp-CREW_BASE_TEMP)/(CREW_MAX_TEMP-CREW_BASE_TEMP)*100));
@@ -207,7 +207,7 @@ function newTask(noWind){
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
-  CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:performance.now()}));
+  CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
   window.sh95CrewData=()=>CR;
   Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
@@ -267,7 +267,7 @@ function fire(){
   const c=CR[k];
   if(c.hit){reject(I18n.format('mission.alreadyHit',{crew:I18n.t(c.name)}));return}
   const [readiness,readinessKind]=crewState(c);
-  if(readinessKind!=='ready'){reject(I18n.format('mission.notReady',{crew:I18n.t(c.name),status:readiness.toLowerCase(),reason:readinessKind==='loading'?I18n.format('mission.remaining',{seconds:Math.ceil((c.reloadUntil-performance.now())/1000)}):readinessKind==='hot'?I18n.format('mission.temperature',{temp:Math.round(c.temperature)}):I18n.t('mission.noAmmo')}));renderCrewResources();return}
+  if(readinessKind!=='ready'){reject(I18n.format('mission.notReady',{crew:I18n.t(c.name),status:readiness.toLowerCase(),reason:readinessKind==='loading'?I18n.format('mission.remaining',{seconds:Math.ceil((c.reloadUntil-(window.GameClock?.nowMs()??performance.now()))/1000)}):readinessKind==='hot'?I18n.format('mission.temperature',{temp:Math.round(c.temperature)}):I18n.t('mission.noAmmo')}));renderCrewResources();return}
   const mil=$('unit').value=='mil',sa=$('az').value.trim(),se=$('el').value.trim(),ch=+$('ch').value,a=parseFloat(sa),e0=parseFloat(se);
   if(!Number.isFinite(a)||!Number.isFinite(e0)){reject(I18n.t("Enter valid numeric azimuth and elevation values."));return}
   if(!Number.isInteger(ch)||ch<1||ch>V0.length){reject(I18n.t("Select charge 1 through 5."));return}
@@ -286,7 +286,8 @@ function fire(){
   if(!r){reject(I18n.t("Projectile did not return to ground."));return}
   const b=Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y),dx=r.x-c.t.x,dy=r.y-c.t.y,al=dx*Math.sin(b)+dy*Math.cos(b),rg=dx*Math.cos(b)-dy*Math.sin(b),d=Math.hypot(dx,dy),hit=d<=R_HIT;
   if(window.sh95Event)window.sh95Event(I18n.format('mission.shotEvent',{crew:k+1,shot:c.shots.length+1,result:hit?I18n.t('HIT'):I18n.format('mission.burst',{distance:Math.round(d)})}));
-  c.ammo--;c.temperature=Math.min(CREW_MAX_TEMP,c.temperature+CREW_HEAT_PER_SHOT);c.reloadUntil=performance.now()+CREW_RELOAD_MS;
+  c.ammo--;c.temperature=Math.min(CREW_MAX_TEMP,c.temperature+CREW_HEAT_PER_SHOT);c.reloadUntil=(window.GameClock?.nowMs()??performance.now())+CREW_RELOAD_MS;
+  window.GameClock?.lockFor('projectile in flight',r.t);
   feedback(true);
   c.shots.push({x:r.x,y:r.y});c.trajs.push(r.pts);last=k;if(hit)c.hit=true;
   const all=CR.every(q2=>q2.hit),bad=x=>`<b style="color:#b3392b">${x}</b>`,df=(s,r2)=>Math.abs(s-r2)<.005?r2:bad(r2),lg=(s,r2)=>Math.abs(s-r2)<.005?s:`${s} → ${bad(r2)}`;
@@ -509,7 +510,7 @@ $('fire').onclick=fire;$('newt').onclick=()=>newTask(false);$('nowind').onclick=
 $('fit').onclick=()=>{fitView();draw()};$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
 $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 
-const tick=()=>$('clock').textContent=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
+// The desktop clock is maintained by GameClock.
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
 window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
