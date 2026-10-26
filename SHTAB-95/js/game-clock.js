@@ -22,6 +22,6 @@ function render(){const d=now(),lang=window.I18n?.language==='ru'?'ru-RU':'en-GB
 clock?.addEventListener('click',()=>{panel.hidden=!panel.hidden;render()});
 document.getElementById('sh95ClockClose').onclick=()=>panel.hidden=true;
 button.onclick=()=>{if(!skip(Number(document.getElementById('sh95SkipAmount').value)))render()};
-subscribe(render);render();setInterval(render,1000);
+listeners.add(render);render();setInterval(render,1000);
 window.addEventListener('beforeunload',()=>{try{localStorage.setItem(KEY,String(Math.floor(nowMs())))}catch{}});
 })();
