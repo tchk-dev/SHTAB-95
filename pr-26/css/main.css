@@ -1,0 +1,308 @@
+
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:12px/1.4 Tahoma,Verdana,"Segoe UI",sans-serif;color:#000;background:linear-gradient(#4a8be0 0%,#8dc0f0 45%,#6aa84a 46%,#3f7d27 100%) fixed;padding:14px 10px 44px}
+.win{max-width:1180px;margin:0 auto;border:1px solid #0831d9;border-radius:8px 8px 0 0;background:#ece9d8;box-shadow:2px 4px 14px rgba(0,0,0,.45);overflow:hidden}
+.title{display:flex;align-items:center;gap:6px;padding:4px 5px 4px 8px;color:#fff;font:bold 13px Trebuchet MS,Tahoma,sans-serif;text-shadow:1px 1px #0a1c6e;
+background:linear-gradient(180deg,#0058ee 0%,#3593ff 4%,#288eff 6%,#127dff 8%,#036ffc 10%,#0262ee 14%,#0057e5 20%,#0054e3 24%,#0055eb 56%,#005bf5 66%,#026afe 76%,#0062ef 86%,#0052d6 92%,#0040ab 94%,#003092 100%)}
+.title .t{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cb{width:21px;height:21px;border:1px solid #fff;border-radius:3px;color:#fff;font:bold 12px Tahoma;text-align:center;line-height:18px;background:linear-gradient(135deg,#6ea0ff,#2663e0 60%,#1648c8);text-shadow:none}
+.cb.x{background:linear-gradient(135deg,#f0a08a,#d9421a 60%,#b32c0a)}
+.menu{display:flex;gap:2px;padding:2px 4px;border-bottom:1px solid #aca899;background:#ece9d8}
+.menu span{padding:2px 8px}
+.tool{display:flex;flex-wrap:wrap;gap:6px;padding:5px;border-bottom:1px solid #aca899}
+.main{display:grid;grid-template-columns:310px 1fr;gap:0}
+@media(max-width:860px){.main{grid-template-columns:1fr}}
+.pane{padding:10px;background:linear-gradient(180deg,#7ba2e7,#6375d6);display:flex;flex-direction:column;gap:10px}
+.content{padding:8px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.panel{border-radius:6px 6px 0 0;overflow:hidden;background:#d6dff7}
+.panel h3{margin:0;padding:5px 10px;font:bold 12px Tahoma;color:#215dc6;background:linear-gradient(90deg,#fff,#c6d3f7)}
+.panel .b{padding:8px 10px;border:1px solid #fff;border-top:0}
+.panel table{width:100%;border-collapse:collapse}
+.panel td{padding:2px 0;border-bottom:1px dotted #9aaad8}
+.panel td:last-child{text-align:right;font-weight:bold;color:#0a2a80;font-variant-numeric:tabular-nums}
+.hint{font-size:11px;color:#333;margin-top:6px}
+label{display:block;margin:6px 0 2px}
+input,select{width:100%;padding:3px 4px;border:1px solid #7f9db9;background:#fff;font:12px Tahoma;color:#000}
+.row{display:flex;gap:8px}.row>*{flex:1}
+button{border:1px solid #003c74;border-radius:3px;padding:4px 12px;font:12px Tahoma;color:#000;background:linear-gradient(180deg,#fff,#ece9d8 85%,#d6d0c5);cursor:pointer}
+button:hover{box-shadow:inset 0 0 0 2px #f7c35a}
+button:active{background:#d6d0c5}
+#fire{width:100%;margin-top:10px;padding:8px;font:bold 14px Tahoma;color:#fff;text-shadow:1px 1px #1d4a12;border-color:#1b5e10;background:linear-gradient(180deg,#7fd36a,#3c9a2c 50%,#2e8420)}
+#res .m{margin-top:8px;padding:6px 8px;border:1px solid #7f9db9;background:#fffbe0;font-size:12px}
+#res .m.hit{background:#dff5d8;border-color:#2e8420;color:#14540b;font-weight:bold}
+.group{border:1px solid #aca899;border-radius:4px;padding:6px;background:#ece9d8}
+.group>.cap{color:#0046d5;margin:-14px 0 4px 4px;background:#ece9d8;display:inline-block;padding:0 3px}
+canvas{display:block;width:100%;height:auto;border:2px inset #fff;background:#9ec}
+#map{cursor:crosshair;touch-action:none}
+.lv{max-height:150px;overflow:auto;border:1px solid #7f9db9;background:#fff}
+.lv table{width:100%;border-collapse:collapse}
+.lv th{position:sticky;top:0;text-align:left;padding:2px 6px;background:linear-gradient(180deg,#fff,#ece9d8);border:1px solid #d6d2c2;font-weight:normal}
+.lv td{padding:2px 6px}
+.lv tr:nth-child(even) td{background:#f4f7ff}
+.status{display:flex;gap:2px;border-top:1px solid #aca899;padding:2px;background:#ece9d8}
+.status div{flex:1;border:1px solid #aca899;border-color:#aca899 #fff #fff #aca899;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task{position:fixed;left:0;right:0;bottom:0;height:34px;display:flex;align-items:center;gap:10px;padding:0 0 env(safe-area-inset-bottom,0px);background:linear-gradient(180deg,#3168d5,#245edb 10%,#2160e0 80%,#1941a5);border-top:1px solid #4a7be8}
+.start{height:100%;padding:0 22px 0 14px;border-radius:0 12px 12px 0;color:#fff;font:italic bold 17px Trebuchet MS,Tahoma;text-shadow:1px 1px 2px #1d4a12;background:linear-gradient(180deg,#5fbf4a,#3c9a2c 50%,#2e8420);display:flex;align-items:center}
+.tb{height:24px;padding:0 14px;color:#fff;background:#1e52b7;border-radius:3px;display:flex;align-items:center;box-shadow:inset 1px 1px 3px rgba(0,0,0,.5)}
+.clock{margin-left:auto;height:100%;padding:0 14px;color:#fff;display:flex;align-items:center;background:linear-gradient(180deg,#0f9bf1,#0e8ae0);border-left:1px solid #0b3c9a}
+
+.set{width:100%;max-width:780px;margin:0 auto;font:15px/1.4 Georgia,"Times New Roman",serif;background:linear-gradient(#5a3a22,#3d2614);border-radius:18px;padding:18px;box-shadow:0 12px 40px #0006,inset 0 2px 0 #ffffff22;color:#f0e2c4}
+.set h1{font-size:20px;margin:0 0 12px;letter-spacing:.02em;font-weight:normal;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.set h1 small{font-size:12px;opacity:.7}
+.glass{background:#0b0f0a;border-radius:10px;border:3px solid #1c120a;padding:8px;position:relative}
+.set canvas{width:100%;height:190px;display:block;border:0;background:none}
+.fq{position:absolute;right:14px;top:8px;font:28px/1 "Courier New",monospace;color:#ffb347;text-shadow:0 0 10px #ff8a00aa}
+.fq small{font-size:13px}
+.sm{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:#9fd69a}
+.bar{flex:1;height:8px;background:#1b2a19;border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6fcf62 60%,#e8c34a 80%,#e5533d);transition:width .08s}
+.knobs{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:14px 10px;margin:16px 0 8px}
+.kw{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-size:13px}
+.knob{width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d8cdb4,#6e6247 60%,#2b2316);box-shadow:0 4px 8px #0008,inset 0 0 0 3px #1b140c;position:relative;touch-action:none;cursor:grab;outline:none}
+.knob.big{width:128px;height:128px}
+.knob:focus-visible{box-shadow:0 0 0 3px #ffb347,0 4px 8px #0008}
+.knob .k{position:absolute;inset:0;border-radius:50%}
+.knob .k:after{content:"";position:absolute;left:50%;top:7%;width:4px;height:22%;margin-left:-2px;background:#ff8a2a;border-radius:2px}
+.val{font:12px "Courier New",monospace;color:#ffb347;min-height:1.2em}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.set button{font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid #1b140c;background:#6e5a3c;color:#f0e2c4;cursor:pointer}
+.set button[aria-pressed="true"]{background:#ff8a2a;color:#1b0e00}
+.set button:focus-visible{outline:3px solid #ffb347}
+#hint{margin-top:10px;font-size:13px;background:#00000040;border-radius:8px;padding:8px 12px}
+#hint div{display:flex;justify-content:space-between;gap:8px;cursor:pointer}
+.tip{font-size:12px;opacity:.75;margin-top:10px}
+@media (max-width:520px){.knobs{grid-template-columns:1fr 1fr}.kw:first-child{grid-column:1/3}}
+
+.link{padding:5px 8px;border:1px solid #7f9db9;margin-bottom:6px}
+.link.on{background:#dff5d8;border-color:#2e8420;color:#14540b;font-weight:bold}
+.link.off{background:#ffe9e4;border-color:#b3392b;color:#7a1a0c}
+.panel .b>.row+label{margin-top:6px}
+.qb{height:6px;background:#ddd;border:1px solid #7f9db9;margin-top:4px}.qb i{display:block;height:100%}
+
+/* Windows 95 workstation theme */
+:root{--face:#c0c0c0;--shadow:#808080;--dark:#404040;--light:#fff;--navy:#000080;--teal:#008080}
+body{font:12px/1.35 'MS Sans Serif',Tahoma,Arial,sans-serif;background:var(--teal);padding:18px 12px 54px;color:#000}
+.win{max-width:1350px;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;background:var(--face);box-shadow:2px 2px 0 #000,8px 10px 0 #0005;overflow:visible}
+.title{border-radius:0;background:linear-gradient(90deg,#000080,#1084aa);font:bold 13px Tahoma,Arial,sans-serif;text-shadow:none;padding:4px 5px;color:#fff;min-height:29px}
+.cb,.cb.x{width:18px;height:18px;line-height:14px;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;background:#c0c0c0;color:#000;font:bold 12px Arial;text-shadow:none}
+.menu{background:var(--face);border:0;padding:2px 4px;gap:0;align-items:center}
+.menu button{border:0;background:transparent;box-shadow:none;padding:3px 9px}
+.menu button:hover{background:var(--navy);color:#fff}
+.menu-right{margin-left:auto;color:#505050;font:10px 'Courier New',monospace;padding-right:8px}
+.tool{border-top:1px solid #fff;border-bottom:1px solid #808080;padding:6px}
+button,.set button{font:12px Tahoma,Arial,sans-serif;color:#000;background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;box-shadow:none;text-shadow:none;padding:5px 10px;cursor:pointer}
+button:hover,.set button:hover{box-shadow:none;filter:brightness(1.035)}
+button:active,.set button:active{border-color:#404040 #fff #fff #404040;padding-top:6px;padding-bottom:4px}
+button:focus-visible,.set button:focus-visible{outline:1px dotted #000;outline-offset:-4px}
+.bootstrip{background:#dedede;border-bottom:1px solid #808080;padding:5px 12px;font:11px 'Courier New',monospace;display:flex;gap:8px;align-items:center}
+.bootstrip strong{color:#000080}.bootright{margin-left:auto;color:#666}.led,.power-led{display:inline-block;width:9px;height:9px;border-radius:50%;background:#5b705c;border:1px solid #273527;box-shadow:inset 1px 1px 2px #0008}.led,.power-led.lit{background:#22ed44;box-shadow:0 0 6px #24f15e}
+.main{grid-template-columns:310px minmax(0,1fr)}
+.pane{background:#bdbdbd;padding:9px;gap:9px;border-right:2px groove #fff}
+.content{background:#c0c0c0;padding:9px;gap:10px}
+.panel{border:2px solid;border-color:#fff #555 #555 #fff;border-radius:0;background:#c0c0c0}
+.panel h3{background:#000080;color:#fff;padding:5px 7px;font:bold 12px Tahoma;margin:2px}
+.panel .b{border:0;padding:8px}
+.panel td{border-bottom:1px dotted #999}.panel td:last-child{color:#000080}
+input,select{border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0;font:12px Tahoma;background:#fff;padding:4px}
+#fire{background:#c0c0c0;color:#000;border:3px solid;border-color:#fff #404040 #404040 #fff;text-shadow:none;font:bold 13px Tahoma;padding:10px 6px}
+#fire:active{border-color:#404040 #fff #fff #404040}
+.group{position:relative;border:2px groove #fff;border-radius:0;padding:12px 8px 8px;background:#c0c0c0;margin-top:5px}
+.group>.cap{position:absolute;top:-9px;left:12px;margin:0;padding:0 5px;color:#000080;background:#c0c0c0;font:bold 11px Tahoma}
+canvas{border:2px solid;border-color:#808080 #fff #fff #808080}
+#map{background:#c7d5b4}
+.lv{max-height:170px;border:2px inset #fff}.lv th{background:#c0c0c0;font-weight:bold;border:1px solid #888}.lv tr:nth-child(even) td{background:#eee}
+.status{background:#c0c0c0;border-top:1px solid #fff;padding:3px;gap:3px}.status div{border:2px inset #fff;padding:2px 6px}
+.task{height:37px;background:#c0c0c0;border-top:2px solid #fff;padding:3px 5px;gap:5px;box-shadow:0 -1px #808080}
+.start{height:27px;padding:0 12px;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;background:#c0c0c0;color:#000;font:bold 13px Tahoma;text-shadow:none;white-space:nowrap}
+.tb{height:27px;padding:0 12px;background:#c0c0c0;border:2px solid;border-color:#fff #555 #555 #fff;border-radius:0;color:#000;box-shadow:none}.tb.active{border-color:#777 #fff #fff #777;background:#b0b0b0;font-weight:bold}
+.clock{background:#c0c0c0;color:#000;border:2px inset #fff;padding:0 10px;font:12px Tahoma}
+.set{max-width:none;background:#c0c0c0;border:2px ridge #fff;border-radius:0;padding:11px;color:#000;box-shadow:none;font:12px Tahoma}
+.set h1{font:bold 14px Tahoma;margin-bottom:10px;letter-spacing:0}.set h1 small{font:11px 'Courier New',monospace;color:#444}
+.glass{background:#0a160e;border:3px inset #fff;border-radius:0;padding:6px}
+.set #cv{height:170px;border:0}.fq{font:bold 26px 'Courier New',monospace;color:#8cff98;text-shadow:0 0 6px #1bff5c}
+.sm{color:#91e9a2;font:11px 'Courier New',monospace}.bar{border-radius:0;background:#112818}.bar i{border-radius:0;background:linear-gradient(90deg,#28c751,#e0c639,#f05031)}
+.rf-readouts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px;font:10px 'Courier New',monospace}.rf-readouts span{border:2px inset #fff;padding:5px;background:#d4d4d4}.rf-readouts b{display:block;font-size:12px;color:#004b20}
+.knobs{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:14px 0}.kw{font:11px Tahoma}.knob,.knob.big{width:65px;height:65px;background:radial-gradient(circle at 32% 26%,#eee,#a8a8a8 45%,#505050 78%,#242424);border:2px solid #777;box-shadow:2px 2px 0 #777,inset 0 0 0 3px #ddd;border-radius:50%}.knob .k:after{background:#00e064}.val{color:#000080;font:bold 11px 'Courier New',monospace}
+.set .btns{gap:5px}.set button{padding:6px 10px;background:#c0c0c0;color:#000;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0}.set button[aria-pressed=true]{background:#b0b0b0;border-color:#555 #fff #fff #555;color:#000080;font-weight:bold}
+#hint{border:2px inset #fff;border-radius:0;background:#e7e7e7;color:#000;font:12px Tahoma} .tip{color:#333;opacity:1;font:11px Tahoma}
+.instrument{border:2px inset #fff;margin-top:12px;background:#06150c;padding:5px}.instrument-title{display:flex;justify-content:space-between;gap:5px;color:#b3e6bc;font:11px 'Courier New',monospace;padding:3px 5px 7px}.instrument canvas{width:100%;height:auto;border:0;background:#06150c}.instrument-footer{display:flex;justify-content:space-between;color:#81bd8e;font:10px 'Courier New',monospace;padding:3px}
+.power-led{margin-right:5px}.note-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.note-grid>div{border:2px inset #fff;background:#f4f4eb;padding:8px;min-height:90px;font:11px 'Courier New',monospace}.note-grid strong{display:block;border-bottom:1px dashed #888;padding-bottom:4px;margin-bottom:6px;color:#000080}#syslog{max-height:120px;overflow:auto;white-space:pre-line}#crewbrief{white-space:pre-line}
+.link{border:2px inset #fff;background:#eee}.link.on{background:#e0f1de}.link.off{background:#f5e5e5}
+.start-menu{position:fixed;bottom:37px;left:3px;z-index:20;display:flex;width:265px;min-height:175px;background:#c0c0c0;border:2px solid;border-color:#fff #333 #333 #fff;box-shadow:3px 3px #0008}.start-menu[hidden],.dialog-backdrop[hidden]{display:none}.start-side{writing-mode:vertical-rl;transform:rotate(180deg);background:#808080;color:#fff;font:bold 20px Tahoma;padding:8px}.start-options{display:flex;flex-direction:column;flex:1;padding:6px}.start-options button{text-align:left;border:0;padding:13px 8px}.start-options button:hover{background:#000080;color:#fff}
+.dialog-backdrop{position:fixed;inset:0;background:#0006;display:flex;align-items:center;justify-content:center;z-index:30;padding:12px}.dialog{background:#c0c0c0;width:min(440px,100%);border:3px solid;border-color:#fff #404040 #404040 #fff;box-shadow:5px 5px #0006}.dialog-title{background:#000080;color:#fff;padding:5px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}.dialog-title button{padding:0 6px}.dialog-body{padding:22px 18px;line-height:1.6;white-space:pre-line}.dialog-buttons{text-align:center;padding:10px}.dialog-buttons button{min-width:85px}
+@media(max-width:860px){.main{grid-template-columns:1fr}.pane{border-right:0}.bootright{display:none}}@media(max-width:540px){body{padding:5px 3px 49px}.knobs{grid-template-columns:repeat(3,minmax(0,1fr))}.kw:first-child{grid-column:auto}.rf-readouts{grid-template-columns:1fr 1fr}.note-grid{grid-template-columns:1fr}.tb:nth-of-type(3){display:none}.title{font-size:11px}}
+
+/* Map annotation overlay and Windows 95 controls */
+#map{cursor:crosshair;touch-action:none}
+.map-help{font:11px Tahoma;background:#ffffe1;border:1px solid #808080;padding:6px;margin-top:5px}
+.map-tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:5px 0}
+.map-tools label{font:11px Tahoma}
+.map-tools button{padding:3px 7px}
+#mapread{font:11px 'Courier New',monospace;color:#000080;margin-left:auto}
+/* Compact radio layout: one RF waterfall and side-by-side audio diagnostics */
+.set{max-width:none}
+.glass{position:relative;overflow:hidden;padding:7px 7px 5px}
+.set .glass #rfwater{display:block;width:100%;height:155px;border:0;background:#03130d;image-rendering:auto}
+.rf-screen-heading{display:flex;justify-content:space-between;gap:10px;padding:3px 5px 6px;font:10px 'Courier New',monospace;color:#a5d7b0}
+.rf-axis{display:flex;justify-content:space-between;color:#7fcf99;font:10px 'Courier New',monospace;padding:4px 2px 8px}
+.glass .fq{top:30px;right:12px;z-index:1;font-size:23px;pointer-events:none;background:#06170eb8;padding:2px 5px}
+.radio-diagnostics{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:10px}
+.radio-diagnostics .instrument{min-width:0;margin:0;padding:4px}
+.radio-diagnostics .instrument-title{font-size:10px;white-space:nowrap;overflow:hidden}
+.radio-diagnostics .instrument canvas{display:block;width:100%;height:110px}
+.radio-diagnostics .instrument-footer{font-size:9px}
+@media(max-width:580px){.radio-diagnostics{grid-template-columns:1fr}.radio-diagnostics .instrument canvas{height:95px}.set .glass #rfwater{height:130px}.rf-screen-heading{font-size:9px}}
+
+/* Cartographic point editor and monochrome terminal plot */
+.map-coordinate-editor{border:2px inset #fff;background:#c0c0c0;margin-top:6px;padding:6px;font:11px Tahoma}
+.coord-head{background:#000080;color:#fff;padding:3px 6px;font-weight:bold;display:flex;justify-content:space-between}
+.coord-head span{font:10px 'Courier New',monospace;color:#c8f3d0}
+.coord-row{display:flex;align-items:end;gap:6px;flex-wrap:wrap;margin-top:5px}
+.coord-row label{flex:1 1 110px;margin:0;font:11px Tahoma}.coord-row input{margin-top:2px;font:12px 'Courier New',monospace}
+.coord-row button{padding:4px 7px;white-space:nowrap}.coord-foot{color:#444;font:10px Tahoma;margin-top:5px}
+.profile-display{border:3px inset #fff;background:#071710;padding:5px;color:#9ee7b0}
+.profile-top,.profile-bottom{display:flex;justify-content:space-between;gap:8px;font:10px 'Courier New',monospace;letter-spacing:.3px;padding:3px 5px}
+.profile-bottom{color:#6aab7d;font-size:9px}.profile-display #prof{border:0;background:#071710;width:100%;max-width:100%;height:auto;display:block;box-sizing:border-box}.profile-panel{min-width:0}.profile-display{min-width:0;overflow:hidden}.profile-top{flex-wrap:wrap;align-items:center;line-height:1.45}.profile-top span:last-child{color:#bcf5ce}
+/* Field utilities / Windows 95 */
+.field-tools .b{padding:8px}.calc-screen{background:#fff;border:2px inset #fff;padding:5px;font:17px 'Courier New',monospace;text-align:right;width:100%;box-sizing:border-box;color:#101010}.calc-info{font:10px Tahoma;color:#444;min-height:14px;margin:5px 0}.calc-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}.calc-grid button{padding:6px 0;font:11px Tahoma;min-width:0}.calc-grid button.op{color:#000080;font-weight:bold}.calc-grid button.eq{background:#d9e6d4;font-weight:bold}.calc-plot{display:block;width:100%;height:145px;background:#f7f7ef;margin-top:7px;box-sizing:border-box}.calc-history{font:10px 'Courier New',monospace;max-height:52px;overflow:auto;white-space:pre-wrap;margin-top:5px;color:#333}.morse-pad{width:100%;height:65px;font:bold 14px Tahoma;background:#d2d2d2;touch-action:none;user-select:none}.morse-pad.pressed{border-color:#555 #fff #fff #555;background:#b2c9ad}.morse-current{background:#0b1b11;color:#84ee98;font:20px 'Courier New',monospace;padding:6px;min-height:29px;overflow-wrap:anywhere;border:2px inset #fff}.morse-output{width:100%;box-sizing:border-box;min-height:60px;resize:vertical;font:12px 'Courier New',monospace;border:2px inset #fff}.morse-actions{display:flex;flex-wrap:wrap;gap:3px;margin:5px 0}.morse-actions button{padding:5px;font-size:11px}.morse-meter{height:8px;background:#ddd;border:1px inset #fff;margin:6px 0}.morse-meter i{display:block;height:100%;background:#008050;width:0}.field-small{font:10px Tahoma;color:#333;line-height:1.4;margin:5px 0}
+
+/* ARМ-95 map and radio reconnaissance */
+#map{display:block;width:100%;height:auto;background:#071b15;border:3px inset #fff;image-rendering:auto}
+.map-tools{background:#c0c0c0;border:2px inset #fff;padding:5px}
+.map-tools .tool-label{font:10px 'Courier New',monospace;color:#303030}
+.map-tools .map-tool.active{background:#000080;color:#fff;border-color:#303030 #fff #fff #303030}
+.map-help{background:#d9e1d9;color:#193421;border:1px solid #808080;font:10px 'Courier New',monospace}
+.bearing-panel{margin-top:10px;padding:7px;border:2px inset #fff;background:#d4d4d4;font:11px 'Courier New',monospace}
+.bearing-title{display:flex;justify-content:space-between;background:#000080;color:#fff;padding:5px;font-weight:bold}
+.bearing-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:7px 0}
+#bearingStatus{color:#174b29;font-weight:bold}
+.bearing-list{display:grid;gap:3px}
+.bearing-list>div{display:flex;justify-content:space-between;gap:6px;border:1px solid #999;background:#e4e4e4;padding:5px}
+.bearing-list b{color:#00512a;text-align:right}
+.sfx-control{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font:11px "MS Sans Serif",Tahoma,sans-serif;white-space:nowrap}
+.sfx-control input[type=range]{width:80px;min-width:60px;accent-color:#0a6260;height:15px}
+.sfx-control #sfxPercent{min-width:30px;text-align:right}
+.sfx-control button[aria-pressed="false"]{color:#777}
+@media(max-width:720px){.sfx-control{margin-left:0}}
+
+/* Offline Windows 95 games */
+.start-separator{border-top:1px solid #808080;border-bottom:1px solid white;margin:3px 4px}
+.game-window[hidden]{display:none}.game-window{position:fixed;z-index:45;top:9%;left:50%;transform:translateX(-50%);background:#c0c0c0;border:3px solid;border-color:#fff #444 #444 #fff;box-shadow:5px 6px 0 #0006;max-width:calc(100vw - 14px);font:12px Tahoma;color:#000}
+.game-title{display:flex;align-items:center;justify-content:space-between;background:#000080;color:white;font-weight:bold;padding:4px 6px;gap:20px}.game-title button{font-weight:bold;min-width:22px;padding:0 3px}
+.game-toolbar{display:flex;align-items:center;gap:8px;padding:7px;flex-wrap:wrap}.game-toolbar button,.game-window button{font-family:Tahoma}.game-toolbar button{border:2px outset white;background:#c0c0c0;padding:3px 8px}
+.mine-grid{display:grid;grid-template-columns:repeat(9,27px);padding:4px;margin:0 8px 10px;border:3px inset white;background:#999;touch-action:manipulation}.mine-cell{width:27px;height:27px;border:2px outset white;background:#c0c0c0;font:bold 15px Arial;padding:0;line-height:21px;text-align:center;cursor:pointer}.mine-cell.open{border:1px solid #777;background:#bbb;cursor:default}.mine-cell.flag{color:#b00}.mine-cell.bomb{background:#eaa}.mine-cell.n1{color:#00f}.mine-cell.n2{color:#080}.mine-cell.n3{color:#d00}.mine-cell.n4{color:#008}
+.sol-window{width:min(740px,calc(100vw - 14px))}.sol-table{background:#007d43;border:3px inset white;margin:0 7px 8px;padding:9px;overflow-x:auto;min-height:365px}.sol-top,.sol-columns{display:grid;grid-template-columns:repeat(7,minmax(69px,1fr));gap:5px;min-width:520px}.sol-top{margin-bottom:24px}.sol-columns{min-height:260px}.sol-slot{height:94px;min-width:63px;position:relative;border:1px dashed #a6cdb6;border-radius:4px;cursor:pointer}.sol-col{min-height:210px;position:relative;cursor:pointer}.sol-card{position:absolute;top:0;left:0;box-sizing:border-box;width:63px;height:90px;background:#fafaf7;border:1px solid #333;border-radius:5px;padding:5px 4px;font:bold 16px Georgia;box-shadow:1px 1px 2px #0005;user-select:none}.sol-card.red{color:#bb1515}.sol-card.black{color:#151515}.sol-card.back{background:repeating-linear-gradient(45deg,#244c91,#244c91 4px,#b6d2f2 4px,#b6d2f2 6px);border:4px solid #eee}.sol-card.selected{outline:3px solid #ffe34c}.sol-card small{display:block;font-size:19px}.sol-message{padding:0 9px 8px;font:11px Tahoma}
+@media(max-width:550px){.game-window{top:5%}.mine-grid{grid-template-columns:repeat(9,25px)}.mine-cell{width:25px;height:25px}}
+
+/* Единая типографика терминала: 13px текст, 14px управление, 12px приборные подписи. */
+body,.panel,.panel .b,.set,.set button,.dialog-body,.game-window{font-family:Tahoma,Arial,sans-serif;font-size:13px;line-height:1.48}
+.panel h3,.dialog-title,.game-title{font: bold 14px/1.35 Tahoma,Arial,sans-serif;padding:6px 8px}
+button,.set button,input,select,.map-coordinate-editor,.map-help,.bearing-panel,.link,.note-grid>div{font-family:Tahoma,Arial,sans-serif;font-size:13px;line-height:1.35}
+button,.set button{min-height:30px}.panel .b{padding:10px}.panel td,.panel th{font-size:13px;line-height:1.5;padding-top:4px;padding-bottom:4px}
+label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.status,.map-help,.instrument-title,.instrument-footer,.profile-bottom,.rf-readouts,.rf-readouts b,.note-grid>div,.coord-head,.bearing-list,.bearing-title,.morse-actions button,.morse-output,.calc-grid button,.sfx-control,.menu-right,.map-coordinate-editor,.sol-message{font-size:12px;line-height:1.45}
+.title{font-size:14px}.menu button,.tool button{font-size:13px}.set h1{font-size:16px}.set h1 small{font-size:12px}
+.rf-screen-heading{font-size:12px}.radio-diagnostics .instrument-title,.radio-diagnostics .instrument-footer{font-size:12px}
+.morse-pad{font-size:15px}.calc-grid button{min-height:32px}.game-toolbar button{font-size:13px}
+@media(max-width:540px){body{font-size:13px}.panel h3{font-size:14px}.title{font-size:13px}}
+/* Ресурсный модуль расчётов */
+.crew-resources{margin:9px 0 11px;border:2px inset #fff;background:#d9d9d9;padding:7px}
+.crew-resources-title{font-weight:bold;font-size:13px;margin-bottom:7px}
+.crew-resource{border:1px solid #999;background:#eee;margin:5px 0;padding:6px}
+.crew-resource-head{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:bold}
+.crew-resource-meta{font:12px/1.45 'Courier New',monospace;margin:4px 0}
+.crew-resource-track{height:11px;background:#777;border:2px inset #fff;overflow:hidden;margin-top:4px}
+.crew-resource-track i{display:block;height:100%;width:0;background:#277d45;transition:width .2s linear}
+.crew-resource-track.heat i{background:linear-gradient(90deg,#2d9b54,#d9b32d,#c13e2b)}
+.crew-resource-track.reload i{background:#225fa8}
+.crew-resource.hot{background:#f3d7d1}.crew-resource.empty{background:#ddd;color:#555}
+
+/* Tape recorder, visually consistent with R-95 controls */
+.recorder-panel{border:2px inset #eee;background:#c5c5c5;padding:9px;margin:10px 0;color:#161616;font:12px Tahoma,Arial,sans-serif}
+.recorder-head{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #777;padding-bottom:6px;margin-bottom:8px}
+.recorder-head strong{font-size:12px}.recorder-head span{font:11px 'Courier New',monospace;color:#333}
+.recorder-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.recorder-controls button{padding:5px 9px;min-height:29px}.recorder-controls button:disabled{opacity:.5}
+.recorder-controls label{display:flex;align-items:center;gap:5px;font:11px 'Courier New',monospace}.recorder-controls select{font:12px Tahoma,Arial;background:#fff}
+.recorder-readouts{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;background:#092014;color:#b6f4bf;padding:8px;margin-top:8px;font:12px 'Courier New',monospace}
+.recorder-progress input{width:100%;margin:7px 0 3px}.recorder-note{color:#333;font:11px/1.45 Tahoma,Arial,sans-serif}
+ .decoder-panel{margin-top:9px;padding:8px;border:2px inset #eee;background:#bcbcbc}
+.decoder-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+.decoder-actions button{padding:5px 9px}.decoder-actions span{font:11px 'Courier New',monospace}
+.decoder-screen{box-sizing:border-box;width:100%;min-height:92px;max-height:200px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#081b11;color:#b9f1bf;border:2px inset #eee;padding:9px;font:13px/1.5 'Courier New',monospace}
+.recorder-panel.recording #recToggle{background:#a92935;color:white;border-color:#5d161d}
+
+/* Doors 95 file manager */
+.file-window[hidden]{display:none!important}.file-window{position:fixed;z-index:2000;top:14%;left:50%;transform:translateX(-50%);width:min(620px,94vw);background:#c0c0c0;border:2px outset #fff;box-shadow:4px 5px 0 #333;color:#111;font:12px Tahoma,Arial,sans-serif}
+.file-title{background:linear-gradient(90deg,#000080,#008080);color:#fff;padding:5px 7px;display:flex;align-items:center;justify-content:space-between}.file-title button{font-weight:bold;padding:1px 8px}.file-path{margin:9px 10px 0;padding:5px;background:#fff;border:2px inset #ddd;font:12px 'Courier New',monospace}.file-body{padding:10px}.file-list{background:#fff;border:2px inset #ddd;max-height:210px;overflow:auto;min-height:90px}.file-item{display:flex;align-items:center;gap:8px;padding:6px;border-bottom:1px solid #ddd;flex-wrap:wrap}.file-item span{flex:1;min-width:150px}.file-item button{font-size:11px;padding:3px 7px}.file-detail{margin-top:9px;min-height:24px;line-height:1.5}
+
+/* Mission conditions and manual Morse workstation */
+.mission-conditions{display:flex;gap:8px;flex-wrap:wrap;background:#c0c0c0;padding:5px 9px;border-bottom:2px groove #fff}
+.mission-condition{display:inline-block;border:2px outset #fff;background:#e8e8e8;padding:3px 9px;cursor:help;font:12px Tahoma}
+.mission-condition:focus{outline:2px solid #000080}
+.manual-morse{margin-top:12px;padding:9px;border:2px inset #fff;background:#d2d2d2}
+.manual-morse strong{display:block;margin-bottom:5px}
+.manual-morse .morse-output{margin-top:5px}
+#defeat95{z-index:4000}
+
+/* Four radio controls: equal-width columns, consistent centers and responsive spacing. */
+.knobs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;justify-items:stretch}
+.knobs .kw{min-width:0;width:100%;grid-column:auto;display:flex;align-items:center;justify-content:flex-start;gap:5px}
+.knobs .knob,.knobs .knob.big{width:clamp(54px,6vw,78px);height:clamp(54px,6vw,78px);flex:none}
+@media(max-width:650px){.knobs{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 8px}.knobs .kw:first-child{grid-column:auto}}
+@media(max-width:340px){.knobs .knob,.knobs .knob.big{width:54px;height:54px}}
+
+/* Windows 95 mission-condition inspector */
+.mission-conditions{position:relative;z-index:12;align-items:center;overflow:visible}
+.mission-condition{font:12px Tahoma,Arial,sans-serif;color:#000;min-height:26px;box-shadow:inset 1px 1px #fff,inset -1px -1px #555;cursor:pointer}
+.mission-condition:hover{background:#fff}
+.mission-condition[aria-expanded="true"]{border:2px inset #fff;background:#d4d4d4;box-shadow:inset 1px 1px #777,inset -1px -1px #fff}
+.condition-panel[hidden]{display:none!important}
+.condition-panel{position:absolute;top:calc(100% - 1px);left:9px;width:min(365px,calc(100vw - 34px));max-width:calc(100% - 18px);background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:1px 1px 0 #000,3px 4px 0 rgba(0,0,0,.4);padding:3px;z-index:100;font:12px Tahoma,Arial,sans-serif;color:#000}
+.condition-panel-title{display:flex;align-items:center;justify-content:space-between;background:#000080;color:#fff;font-weight:bold;padding:2px 3px 2px 7px;min-height:22px;gap:10px}
+.condition-panel-close{font:bold 15px Tahoma,Arial,sans-serif;line-height:16px;width:21px;height:19px;color:#000;background:#c0c0c0;border:2px outset #fff;cursor:pointer}
+.condition-panel-close:active{border-style:inset}
+.condition-panel-name{font-weight:bold;padding:11px 9px 8px;border-bottom:1px solid #808080}
+.condition-panel-metrics{margin:0 8px;padding:8px 0;display:grid;gap:6px;font:12px "Courier New",monospace}
+.condition-panel-metrics>div{background:#fff;border:2px inset #fff;padding:6px 7px}
+.condition-panel-foot{border-top:1px solid #fff;padding:7px 9px;color:#404040;font-size:11px;line-height:1.35}
+@media(max-width:460px){.condition-panel{left:4px;max-width:calc(100% - 8px)}}
+
+/* Keep condition buttons stationary across hover, focus and pressed states. */
+.mission-condition,.mission-condition:hover,.mission-condition:focus,.mission-condition:active,.mission-condition[aria-expanded="true"]{box-sizing:border-box;border-width:2px;border-style:solid;border-color:#fff #666 #666 #fff;min-height:28px;line-height:18px;padding:3px 9px;transform:none;transition:none}
+.mission-condition:focus-visible{outline:1px dotted #000;outline-offset:-5px}
+.mission-condition:active,.mission-condition[aria-expanded="true"]{border-color:#666 #fff #fff #666;background:#d4d4d4}
+
+/* MG-95 tape transport: square, raised Windows 95 seek handle. */
+.recorder-progress #recSeek{
+ display:block;width:100%;height:20px;margin:7px 0 3px;padding:0;
+ border:0;border-radius:0;background:transparent;
+ appearance:none;-webkit-appearance:none;accent-color:auto;cursor:pointer;
+}
+.recorder-progress #recSeek::-webkit-slider-runnable-track{
+ height:8px;border:2px solid;border-color:#707070 #fff #fff #707070;
+ border-radius:0;background:#a5a5a5;box-sizing:border-box;
+}
+.recorder-progress #recSeek::-moz-range-track{
+ height:8px;border:2px solid;border-color:#707070 #fff #fff #707070;
+ border-radius:0;background:#a5a5a5;box-sizing:border-box;
+}
+.recorder-progress #recSeek::-webkit-slider-thumb{
+ appearance:none;-webkit-appearance:none;width:16px;height:22px;margin-top:-9px;
+ border:2px solid;border-color:#fff #505050 #505050 #fff;border-radius:0;
+ background:linear-gradient(90deg,#e2e2e2 0%,#c0c0c0 55%,#a8a8a8 100%);
+ box-shadow:inset 1px 1px #f7f7f7,inset -1px -1px #808080;
+}
+.recorder-progress #recSeek::-moz-range-thumb{
+ width:12px;height:18px;border:2px solid;
+ border-color:#fff #505050 #505050 #fff;border-radius:0;
+ background:linear-gradient(90deg,#e2e2e2 0%,#c0c0c0 55%,#a8a8a8 100%);
+ box-shadow:inset 1px 1px #f7f7f7,inset -1px -1px #808080;
+}
+.recorder-progress #recSeek:disabled{cursor:default;opacity:.55}
+.recorder-progress #recSeek:focus-visible{outline:1px dotted #fff;outline-offset:2px}
+
+/* Opaque frequency readout: prevent the waterfall from bleeding through digits. */
+/* Keep the original illuminated tuner display; desktop taskbar must paint above it. */
+.set .glass .fq{background:#06170eb8;z-index:1;text-shadow:0 0 6px #1bff5c;box-shadow:none;padding:2px 5px}
+.task{z-index:1000}
