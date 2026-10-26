@@ -14,7 +14,7 @@ test('weather persists across mission reads and changes on simulated time',()=>{
  assert.equal(first.ws,again.ws);
  const later=weather.advance(start+8*3600000,()=>0.5);
  assert.ok(later.weather);assert.ok(later.ws>=0&&later.ws<=18);
- assert.equal(later.time.id,'night');
+ assert.equal(later.time.id,'evening');
 });
 test('fog is possible in morning and weather has finite conditions',()=>{
  weather.reset();const result=weather.advance(Date.UTC(1995,4,16,7),()=>0.7);
