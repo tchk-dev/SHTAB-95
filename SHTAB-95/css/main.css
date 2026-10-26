@@ -306,3 +306,12 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 /* Keep the original illuminated tuner display; desktop taskbar must paint above it. */
 .set .glass .fq{background:#06170eb8;z-index:1;text-shadow:0 0 6px #1bff5c;box-shadow:none;padding:2px 5px}
 .task{z-index:1000}
+
+/* Wind rose is DOM-based, independent of tactical canvas redraws. */
+.tactical-map-frame{position:relative;width:100%}
+.wind-rose{position:absolute;right:14px;top:14px;width:88px;height:94px;box-sizing:border-box;background:#e9e9df;border:2px solid;border-color:#fff #666 #666 #fff;box-shadow:1px 1px 0 #333;color:#172b30;text-align:center;pointer-events:none;font:11px Tahoma,Arial,sans-serif;z-index:2}
+.wind-rose-n{position:absolute;top:4px;left:0;right:0;font-weight:bold}
+.wind-rose-arrow{position:absolute;left:30px;top:25px;width:24px;height:24px;line-height:24px;font-size:27px;transform-origin:50% 50%;display:block}
+.wind-rose-calm{position:absolute;top:24px;left:0;right:0;font-size:28px}
+.wind-rose-speed{position:absolute;bottom:6px;left:0;right:0;font-weight:bold;white-space:nowrap}
+.wind-rose [hidden]{display:none}
