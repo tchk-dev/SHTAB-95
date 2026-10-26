@@ -19,7 +19,7 @@
   <div class="file-body"><div id="filesList" class="file-list">Loading…</div><div class="file-detail" id="filesInfo">Select a recording to play or open it in MG-95.</div><audio id="filesAudio" controls preload="none" style="width:100%;margin-top:8px"></audio></div>
  </div>
  <div class="tool">
-  <button id="languageToggle" type="button" title="Switch language">EN · English</button><button id="newt">🗺 New Mission</button><button id="nowind">🍃 No Wind</button>
+  <button id="languageToggle" type="button" title="Switch language">EN · English</button><label class="terrain-region-label">REGION <select id="terrainRegion" aria-label="Mission region"><option value="velikograd">Velikograd</option><option value="donja_bukovica">Donja Bukovica</option><option value="popovac">Popovac</option><option value="lipovac">Lipovac</option><option value="pribrezje">Pribrežje</option><option value="mckhetovac">Mckhetovac</option></select></label><button id="newt">🗺 New Mission</button><button id="nowind">🍃 No Wind</button>
   <button id="fit">⌂ Reset View</button><span class="sfx-control"><button type="button" id="sfxToggle" aria-pressed="true" title="Mute Interface Sounds">♫ SOUND</button><input id="sfxVolume" type="range" min="0" max="100" value="65" aria-label="Interface Volume" title="Interface Volume"><span id="sfxPercent">65%</span></span><button id="zin">＋</button><button id="zout">－</button>
  </div>
  <div class="mission-conditions" id="missionConditions" aria-label="Mission Conditions"></div><div class="bootstrip"><span class="led"></span> LOCAL NODE / COMMUNICATION CHANNEL <strong id="sysmode">STANDBY</strong><span class="bootright">SIMULATION • DOS/Win95 workstation</span></div><div class="main">
