@@ -2,13 +2,13 @@
 const SR_MIN=530,SR_MAX=1710;
 const S={tune:1100,bw:8,rf:1,atm:.4,vol:.6,agc:true,sq:false,on:false,sig:0};
 const ST=[
- {f:702,n:"Melodiya Radio — music",P:.9},
+ {f:702,n:"Radio Moravica — music",P:.9},
  {f:891,n:"Amateur — Morse",P:.7},
- {f:1017,n:"Announcer — speech",P:.85},
+ {f:1017,n:"Radio Vragrad — speech",P:.85},
  {f:1233,n:"Numbers station",P:.6},
  {f:1359,n:"Teletype — RTTY",P:.75},
  {f:610,n:'',P:.85},{f:970,n:'',P:.85},{f:1460,n:'',P:.85}];
-const CIVIL_NAMES=["Melodiya Radio — music","Amateur — Morse","Announcer — speech","Numbers station","Teletype — RTTY"];
+const CIVIL_NAMES=["Radio Moravica — music","Amateur — Morse","Radio Vragrad — speech","Numbers station","Teletype — RTTY"];
 function randomCivilFrequencies(){
  const used=ST.slice(5).map(s=>s.f);
  ST.slice(0,5).forEach((s,i)=>{let f,tries=0;do{f=Math.round((SR_MIN+24+rnd()*(SR_MAX-SR_MIN-48))/3)*3;tries++}while(tries<500&&used.some(v=>Math.abs(v-f)<32));
