@@ -325,3 +325,7 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 .wind-sock-hub{position:absolute;left:50%;top:50%;width:11px;height:11px;transform:translate(-50%,-50%);border:2px outset #f5f5ef;border-radius:50%;background:#536764;box-sizing:border-box}
 .wind-sock-panel .wind-rose-calm{top:53px;z-index:2;color:#172b30;text-shadow:0 0 4px white}
 .wind-sock-panel .wind-rose-speed{bottom:4px;font:bold 12px Tahoma,Arial,sans-serif}
+
+/* Regional terrain selection in the mission toolbar. */
+.terrain-region-label{display:inline-flex;align-items:center;gap:5px;font:11px Tahoma,Arial,sans-serif;white-space:nowrap}
+.terrain-region-label select{font:12px Tahoma,Arial,sans-serif;background:#fff;color:#111;border:2px inset #eee;padding:2px 4px;max-width:155px}
