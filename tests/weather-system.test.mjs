@@ -66,3 +66,8 @@ test('new mission resamples weather and wind without changing the clock',()=>{
  assert.match(map,/SH95Weather\.newMission\(date\.getTime\(\)\)/);
  assert.match(map,/updateTimedConditions\(window\.GameClock\?\.now\(\)\|\|new Date\(\),true\)/);
 });
+
+test('wind updates redraw the canvas without pointer movement',()=>{
+ const map=read('js/artillery-map.js');
+ assert.match(map,/if\(HM&&terr\)\{draw\(\);renderData\(\);\}/);
+});
