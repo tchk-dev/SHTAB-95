@@ -14,6 +14,32 @@ const TERRAIN_REGIONS={
  mckhetovac:{label:'Mckhetovac',base:380,relief:1200,rough:.94,scale:5,type:'mountains'}
 };
 let terrainRegion='velikograd';
+
+function initTerrainRegionCombo(){
+ const combo=$('terrainRegionCombo'),trigger=$('terrainRegionTrigger'),menu=$('terrainRegionMenu'),value=$('terrainRegionValue'),input=$('terrainRegion');
+ if(!combo||!trigger||!menu||!input)return;
+ const options=[...menu.querySelectorAll('[data-region]')];
+ const close=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
+ const open=()=>{menu.hidden=false;trigger.setAttribute('aria-expanded','true')};
+ const choose=option=>{input.value=option.dataset.region;value.textContent=option.textContent;options.forEach(item=>item.setAttribute('aria-selected',String(item===option)));close();trigger.focus()};
+ trigger.addEventListener('click',()=>menu.hidden?open():close());
+ trigger.addEventListener('keydown',event=>{
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();open();const current=options.findIndex(option=>option.dataset.region===input.value);options[(current+(event.key==='ArrowDown'?1:-1)+options.length)%options.length].focus()}
+  else if(event.key==='Escape')close();
+ });
+ menu.addEventListener('click',event=>{const option=event.target.closest('[data-region]');if(option)choose(option)});
+ menu.addEventListener('keydown',event=>{
+  const current=options.indexOf(document.activeElement);
+  if(event.key==='Escape'){event.preventDefault();close();trigger.focus()}
+  else if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();options[(current+(event.key==='ArrowDown'?1:-1)+options.length)%options.length].focus()}
+  else if(event.key==='Home'||event.key==='End'){event.preventDefault();options[event.key==='Home'?0:options.length-1].focus()}
+  else if(event.key==='Enter'||event.key===' '){event.preventDefault();if(current>=0)choose(options[current])}
+ });
+ document.addEventListener('pointerdown',event=>{if(!combo.contains(event.target))close()});
+ combo.addEventListener('focusout',event=>{if(!combo.contains(event.relatedTarget))close()});
+}
+initTerrainRegionCombo();
+
 function genTerrain(seed,regionId=terrainRegion){
  const profile=TERRAIN_REGIONS[regionId]||TERRAIN_REGIONS.velikograd;
  const r=mulberry(seed),hm=new Float32Array(N*N),oct=[];
