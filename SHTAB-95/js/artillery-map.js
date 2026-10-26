@@ -152,12 +152,59 @@ function renderMissionConditions(){
  box.onfocusout=e=>{if(!box.contains(e.relatedTarget))close()};
 }
 document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
-function setMissionConditions(){
- const time=TIMES[Math.floor(Math.random()*TIMES.length)],weather=pickWeather(time.id);
- const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
- missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);
- renderMissionConditions();
+// Dayparts: 00 night, 06 morning, 12 day, 18 evening (game-world UTC).
+const TRANSITIONS={
+ clear:[55,30,10,0,3,2,0,0],
+ cloudy:[22,36,26,0,12,4,0,0],
+ overcast:[8,25,32,0,22,13,0,0],
+ fog:[18,32,27,0,17,6,0,0],
+ drizzle:[8,14,20,0,32,22,4,0],
+ rain:[4,7,12,0,26,32,13,6],
+ downpour:[2,4,9,0,14,38,23,10],
+ thunderstorm:[0,3,7,0,10,43,25,12]
+};
+const timeAt=ms=>TIMES[(()=>{const h=new Date(ms).getUTCHours();return h<6?3:h<12?0:h<18?1:2})()];
+function nextBoundary(ms){
+ const d=new Date(ms),day=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+ for(const h of [0,6,12,18])if(day+h*3600000>ms)return day+h*3600000;
+ return day+86400000;
 }
+function nextWeather(old,time){
+ const weights=TRANSITIONS[old.id]||TRANSITIONS.clear;
+ const candidates=WEATHERS.map((w,i)=>({w,weight:(w.weights[time.id]||0)*weights[i]}));
+ let roll=Math.random()*candidates.reduce((sum,x)=>sum+x.weight,0);
+ for(const x of candidates){roll-=x.weight;if(roll<0)return x.w}
+ return candidates.find(x=>x.weight>0)?.w||pickWeather(time.id);
+}
+let weatherProcessedAt=null;
+function applyConditions(time,weather){
+ const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
+ missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);renderMissionConditions();
+}
+function setMissionConditions(){
+ const ms=window.GameClock?.nowMs()??Date.now(),time=timeAt(ms);
+ weatherProcessedAt=ms;applyConditions(time,pickWeather(time.id));
+}
+function updateTimedConditions(date){
+ if(!missionConditions)return;
+ const target=date.getTime();
+ if(weatherProcessedAt===null||target<weatherProcessedAt){setMissionConditions();return}
+ let changed=false,weatherChanged=false;
+ for(let boundary=nextBoundary(weatherProcessedAt);boundary<=target;boundary=nextBoundary(boundary)){
+  const time=timeAt(boundary),old=missionConditions.weather;
+  let weather=Math.random()<.65?nextWeather(old,time):old;
+  // Keep original daypart restrictions, including morning-only fog.
+  if(!(weather.weights[time.id]>0))weather=nextWeather(old,time);
+  applyConditions(time,weather);changed=true;if(weather!==old)weatherChanged=true;
+ }
+ weatherProcessedAt=target;
+ if(changed)window.SH95Notifications?.notify(
+  I18n.t(missionConditions.time.name)+' · '+I18n.t(missionConditions.weather.name),
+  'WEATHER'
+ );
+}
+window.GameClock?.subscribe(updateTimedConditions);
+setInterval(()=>updateTimedConditions(window.GameClock?.now()||new Date()),1000);
 function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat95');$('defeatText').textContent=I18n.format('mission.defeat',{crew:I18n.t(c.name),ammo:c.ammoMax});el.hidden=false;if(window.sh95Event)window.sh95Event(I18n.format('mission.defeatEvent',{crew:I18n.t(c.name)}))}
 $('defeatRetry').onclick=()=>{newTask(false)};
 const CREW_RELOAD_MS=9500,CREW_HEAT_PER_SHOT=19,CREW_COOL_PER_SEC=0.85;
@@ -513,5 +560,5 @@ $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 // The desktop clock is maintained by GameClock.
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
-window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
+window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
 newTask(false);
