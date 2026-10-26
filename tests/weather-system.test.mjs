@@ -69,5 +69,15 @@ test('new mission resamples weather and wind without changing the clock',()=>{
 
 test('wind updates redraw the canvas without pointer movement',()=>{
  const map=read('js/artillery-map.js');
- assert.match(map,/if\(HM&&terr\)\{draw\(\);renderData\(\);\}/);
+ assert.match(map,/if\(HM&&terr\)renderData\(\)/);
+ assert.match(map,/renderWindReadout\(\)/);
+ assert.doesNotMatch(map,/if\(S.ws\)\{const a=/);
+});
+
+test('wind rose is independent from map canvas and has live readout',()=>{
+ const html=read('index.html');const map=read('js/artillery-map.js');
+ assert.match(html,/id="windRose"/);
+ assert.match(html,/id="windRoseArrow"/);
+ assert.match(map,/function renderWindReadout\(/);
+ assert.match(map,/renderWindReadout\(\);\s*if\(HM&&terr\)renderData\(\)/);
 });
