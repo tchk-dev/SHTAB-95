@@ -1,0 +1,18 @@
+(function(){'use strict';
+const ru=window.SHTAB_LOCALES.ru;
+const reverse=Object.fromEntries(Object.entries(ru).map(([en,ru])=>[ru,en]));
+let language='en'; // Every new session starts in English; manual switching remains available.
+const originalText=new WeakMap(),originalAttr=new WeakMap();
+function walk(root){if(!root)return;
+ if(root.nodeType===3){const prev=originalText.get(root);const current=root.nodeValue;const source=prev===undefined?current:(current===prev.en||current===prev.ru?prev.source:current);const en=reverse[source.trim()]||source.trim(),ruText=ru[en]||source.trim();const whitespaceBefore=source.match(/^\s*/)[0],whitespaceAfter=source.match(/\s*$/)[0];const next=whitespaceBefore+(language==='ru'?ruText:en)+whitespaceAfter;originalText.set(root,{source,en:whitespaceBefore+en+whitespaceAfter,ru:whitespaceBefore+ruText+whitespaceAfter});if(root.nodeValue!==next)root.nodeValue=next;return}
+ if(root.nodeType!==1)return;
+ if(['SCRIPT','STYLE','CANVAS'].includes(root.tagName))return;
+ for(const attr of ['title','aria-label','placeholder'])if(root.hasAttribute(attr)){const old=root.getAttribute(attr),base=originalAttr.get(root)?.[attr]||old;const en=reverse[base]||base;const value=language==='ru'?(ru[en]||base):en;if(old!==value)root.setAttribute(attr,value);originalAttr.set(root,{...(originalAttr.get(root)||{}),[attr]:base})}
+ if(root.tagName==='INPUT'||root.tagName==='TEXTAREA')return;
+ for(const child of root.childNodes)walk(child)
+}
+let pending=false;const observer=new MutationObserver(()=>{if(pending)return;pending=true;queueMicrotask(()=>{pending=false;observer.disconnect();walk(document.body);observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','aria-label','placeholder']})})});
+function setLanguage(next){language=next==='ru'?'ru':'en';document.documentElement.lang=language;observer.disconnect();walk(document.body);for(const [id,key] of [['mfile','File'],['mview','View'],['mtools','Tools'],['mhelp','Help']]){const b=document.getElementById(id);if(!b)continue;const value=window.SHTAB_LOCALES[language][key]||key;const u=document.createElement('u');u.textContent=value[0];b.replaceChildren(u,document.createTextNode(value.slice(1)))}const button=document.getElementById('languageToggle');if(button){button.textContent=window.SHTAB_LOCALES[language]['ui.languageButton'];button.title=window.SHTAB_LOCALES[language]['ui.languageHint']}observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['title','aria-label','placeholder']});window.dispatchEvent(new Event('shtab:languagechange'))}
+window.I18n={get language(){return language},setLanguage,t(key){const en=reverse[key]||key;return window.SHTAB_LOCALES[language]?.[en]||en},format(key,values={}){return this.t(key).replace(/\{([a-zA-Z][\w]*)\}/g,(_,name)=>String(values[name]??'{'+name+'}'))},dictionary:ru};
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('languageToggle').addEventListener('click',()=>setLanguage(language==='en'?'ru':'en'));setLanguage(language)});
+})();
