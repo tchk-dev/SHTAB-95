@@ -132,6 +132,8 @@ function applyWeather(next){
  S={...S,ws:windlessTask?0:next.ws,wd:next.wd};
  Radio.setAtmosphere(next.noise);renderMissionConditions();
  const wind=$('s2');if(wind)wind.textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');
+ // Wind arrow is painted on canvas; redraw it without waiting for pointer movement.
+ if(HM&&terr){draw();renderData();}
 }
 function updateTimedConditions(date,newMission=false){
  const next=newMission?window.SH95Weather.newMission(date.getTime()):window.SH95Weather.advance(date.getTime());if(!next)return;
