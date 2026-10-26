@@ -41,7 +41,14 @@ function renderTerrain(){
   c.putImageData(im,0,0);terr=cv}
 
 
-const CALL=[['Sokol','#0a3fc4'],['Kovač','#c2185b'],['Vihor','#ff7900']];
+// Fictional Moravican unit callsigns. Draw three distinct names per assignment.
+const CALL_NAMES=["Sokol","Kovač","Vihor","Jastreb","Ris","Vuk","Medved","Orao","Gavran","Zubr","Jelen","Vepar","Sova","Lisica","Kuna","Vran","Breg","Kamen","Dub","Javor","Bor","Jasen","Hrast","Plamen","Iskra","Munja","Oluja","Zora","Sever","Perun"];
+const CALL_COLORS=['#0a3fc4','#c2185b','#ff7900'];
+function pickCrewNames(){
+ const pool=CALL_NAMES.slice();
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+ return pool.slice(0,CALL_COLORS.length);
+}
 // Three intelligence stations per mission; frequency allocations are classified until confirmed.
 function pickFreqs(){
  const used=[];
@@ -200,7 +207,7 @@ function newTask(noWind){
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
-  CR=CALL.map((c,k)=>({k,name:c[0],color:c[1],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:performance.now()}));
+  CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:performance.now()}));
   renderCrewResources();
   window.sh95CrewData=()=>CR;
   Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
