@@ -303,4 +303,6 @@ label,.hint,.tip,.field-small,.calc-info,.calc-history,.sm,.kw,.val,.bootstrip,.
 .recorder-progress #recSeek:focus-visible{outline:1px dotted #fff;outline-offset:2px}
 
 /* Opaque frequency readout: prevent the waterfall from bleeding through digits. */
-.set .glass .fq{background:#06170e;opacity:1;isolation:isolate;z-index:3;text-shadow:none;box-shadow:0 0 0 2px #06170e;padding:3px 7px}
+/* Keep the original illuminated tuner display; desktop taskbar must paint above it. */
+.set .glass .fq{background:#06170eb8;z-index:1;text-shadow:0 0 6px #1bff5c;box-shadow:none;padding:2px 5px}
+.task{z-index:1000}
