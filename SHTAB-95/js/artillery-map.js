@@ -87,26 +87,6 @@ function place(maxDistance){
   if(best){best.g.z=Math.round(best.gz);best.t.z=Math.round(best.tz);return{g:best.g,t:best.t}}
   const g={x:ORG.x+WS/2,y:ORG.y+WS/2},t={x:g.x+3000,y:g.y};g.z=Math.round(ground(g.x,g.y));t.z=Math.round(ground(t.x,t.y));return{g,t}
 }
-// Temperature is a simplified game model, not actual thermal engineering data.
-const TIMES=[{id:'morning',name:'Morning',icon:'🌅',noise:.16,drag:1.01},{id:'day',name:'Day',icon:'☀',noise:.08,drag:1},{id:'evening',name:'Evening',icon:'🌇',noise:.24,drag:1.015},{id:'night',name:'Night',icon:'🌙',noise:.34,drag:1.025}];
-// Weighted conditional weather: keys are time-of-day IDs; zero means impossible.
-// Probabilities are relative weights and are normalized for each mission.
-const WEATHERS=[
- {id:'clear',name:'Clear',icon:'☀️',noise:0,drag:1,weights:{morning:25,day:35,evening:25,night:35}},
- {id:'cloudy',name:'Cloudy',icon:'☁️',noise:.04,drag:1.015,weights:{morning:22,day:25,evening:27,night:25}},
- {id:'overcast',name:'Overcast',icon:'🌥️',noise:.09,drag:1.03,weights:{morning:15,day:16,evening:20,night:15}},
- {id:'fog',name:'Fog',icon:'🌫️',noise:.06,drag:1.025,weights:{morning:20,day:0,evening:0,night:0}},
- {id:'drizzle',name:'Drizzle',icon:'🌦️',noise:.17,drag:1.04,weights:{morning:8,day:9,evening:10,night:10}},
- {id:'rain',name:'Rain',icon:'🌧️',noise:.28,drag:1.06,weights:{morning:7,day:10,evening:11,night:10}},
- {id:'downpour',name:'Heavy Rain',icon:'🌧️',noise:.45,drag:1.085,weights:{morning:2,day:3,evening:4,night:3}},
- {id:'thunderstorm',name:'Thunderstorm',icon:'⛈️',noise:.58,drag:1.1,weights:{morning:1,day:2,evening:3,night:2}}
-];
-function pickWeather(timeId,random=Math.random){
- const total=WEATHERS.reduce((sum,w)=>sum+(w.weights[timeId]||0),0);
- let roll=random()*total;
- for(const w of WEATHERS){roll-=w.weights[timeId]||0;if(roll<0)return w}
- return WEATHERS.find(w=>(w.weights[timeId]||0)>0);
-}
 let missionConditions=null,missionOver=false;
 function conditionDetails(item,kind){
  const title=I18n.t(kind==='time'?'Time of Day':'Weather');
@@ -144,56 +124,17 @@ function renderMissionConditions(){
  box.onfocusout=e=>{if(!box.contains(e.relatedTarget))close()};
 }
 document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
-// Dayparts: 00 night, 06 morning, 12 day, 18 evening (game-world UTC).
-const TRANSITIONS={
- clear:[55,30,10,0,3,2,0,0],
- cloudy:[22,36,26,0,12,4,0,0],
- overcast:[8,25,32,0,22,13,0,0],
- fog:[18,32,27,0,17,6,0,0],
- drizzle:[8,14,20,0,32,22,4,0],
- rain:[4,7,12,0,26,32,13,6],
- downpour:[2,4,9,0,14,38,33,0],
- thunderstorm:[0,3,7,0,10,43,25,12]
-};
-const timeAt=ms=>TIMES[(()=>{const h=new Date(ms).getUTCHours();return h<6?3:h<12?0:h<18?1:2})()];
-function nextBoundary(ms){
- const d=new Date(ms),day=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
- for(const h of [0,6,12,18])if(day+h*3600000>ms)return day+h*3600000;
- return day+86400000;
-}
-function nextWeather(old,time){
- const weights=TRANSITIONS[old.id]||TRANSITIONS.clear;
- const candidates=WEATHERS.map((w,i)=>({w,weight:(w.weights[time.id]||0)*weights[i]}));
- let roll=Math.random()*candidates.reduce((sum,x)=>sum+x.weight,0);
- for(const x of candidates){roll-=x.weight;if(roll<0)return x.w}
- return candidates.find(x=>x.weight>0)?.w||pickWeather(time.id);
-}
-let weatherProcessedAt=null;
-function applyConditions(time,weather){
- const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
- missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);renderMissionConditions();
-}
-function setMissionConditions(){
- const ms=window.GameClock?.nowMs()??Date.now(),time=timeAt(ms);
- weatherProcessedAt=ms;applyConditions(time,pickWeather(time.id));
+// Weather is owned by the session-wide weather model, not the tactical map.
+function applyWeather(next){
+ missionConditions={time:next.time,weather:next.weather,noise:next.noise,drag:next.drag};
+ S={...S,ws:next.ws,wd:next.wd};
+ Radio.setAtmosphere(next.noise);renderMissionConditions();
+ const wind=$('s2');if(wind)wind.textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');
 }
 function updateTimedConditions(date){
- if(!missionConditions)return;
- const target=date.getTime();
- if(weatherProcessedAt===null||target<weatherProcessedAt){setMissionConditions();return}
- let changed=false,weatherChanged=false;
- for(let boundary=nextBoundary(weatherProcessedAt);boundary<=target;boundary=nextBoundary(boundary)){
-  const time=timeAt(boundary),old=missionConditions.weather;
-  let weather=Math.random()<.65?nextWeather(old,time):old;
-  // Keep original daypart restrictions, including morning-only fog.
-  if(!(weather.weights[time.id]>0))weather=nextWeather(old,time);
-  applyConditions(time,weather);changed=true;if(weather!==old)weatherChanged=true;
- }
- weatherProcessedAt=target;
- if(changed)window.SH95Notifications?.notify(
-  I18n.t(missionConditions.time.name)+' · '+I18n.t(missionConditions.weather.name),
-  'WEATHER'
- );
+ const next=window.SH95Weather.advance(date.getTime());if(!next)return;
+ if(!missionConditions||next.changed){applyWeather(next);if(missionConditions&&next.changed)window.SH95Notifications?.notify(I18n.t(next.time.name)+' · '+I18n.t(next.weather.name),'WEATHER');}
+ else {S={...S,ws:next.ws,wd:next.wd};}
 }
 window.GameClock?.subscribe(updateTimedConditions);
 setInterval(()=>updateTimedConditions(window.GameClock?.now()||new Date()),1000);
@@ -242,7 +183,7 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
 };
 function newTask(noWind){
  cancelProjectiles();
-  missionOver=false;$('defeat95').hidden=true;S={ws:noWind?0:Math.round(rnd(2,12)),wd:Math.round(rnd(0,359))};setMissionConditions();
+  missionOver=false;$('defeat95').hidden=true;updateTimedConditions(window.GameClock?.now()||new Date());S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
