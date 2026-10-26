@@ -7,8 +7,8 @@
 .db-window-icon{font-size:13px;color:#ffdc57}
 .db-window-controls{display:flex;gap:2px}
 .db-title button,.db-toolbar button,.db-address button{font:inherit;background:#c0c0c0;color:#000;border:2px solid;border-color:#fff #555 #555 #fff;cursor:pointer}
-.db-title button{width:19px;height:17px;padding:0;line-height:12px;font-weight:bold}
-.db-title button:active,.db-toolbar button:active,.db-address button:active{border-color:#555 #fff #fff #555}
+.db-title .db-window-controls .cb{box-sizing:border-box;flex:0 0 18px;display:inline-flex;align-items:center;justify-content:center;width:18px;min-width:18px;max-width:18px;height:18px;min-height:18px;max-height:18px;margin:0;padding:0;line-height:1;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;background:#c0c0c0;color:#000;font:bold 12px Arial;text-shadow:none}
+.db-title .db-window-controls .cb:active,.db-toolbar button:active,.db-address button:active{border-color:#555 #fff #fff #555}
 .db-menubar{display:flex;gap:15px;padding:4px 8px 3px;border-bottom:1px solid #888;font-size:12px}
 .db-menubar span::first-letter{text-decoration:underline}
 .db-toolbar{display:flex;align-items:center;gap:3px;min-height:40px;padding:3px 5px;border-top:1px solid #fff;border-bottom:1px solid #888}
@@ -32,3 +32,8 @@
 .db-link:visited,.db-page a:visited{color:#551a8b}
 .db-status{padding:4px 7px;border-top:1px solid #888;background:#c0c0c0;font-size:11px}
 @media(max-width:500px){.db-menubar{gap:9px}.db-brand span:last-child{display:none}.db-page{padding:10px}}
+
+/* Consistent Start-menu icons, no external assets. */
+.start-options button{display:flex;align-items:center;gap:9px;min-height:36px;padding:6px 8px}
+.start-options .start-icon{display:inline-flex;flex:0 0 23px;align-items:center;justify-content:center;width:23px;height:23px;background:#e5e5e5;border:1px solid;border-color:#fff #555 #555 #fff;color:#000080;font:bold 18px Georgia,serif;line-height:1}
+.start-options button:hover .start-icon{background:#fff;color:#000080}
