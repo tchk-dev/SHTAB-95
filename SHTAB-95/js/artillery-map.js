@@ -160,7 +160,7 @@ const TRANSITIONS={
  fog:[18,32,27,0,17,6,0,0],
  drizzle:[8,14,20,0,32,22,4,0],
  rain:[4,7,12,0,26,32,13,6],
- downpour:[2,4,9,0,14,38,23,10],
+ downpour:[2,4,9,0,14,38,33,0],
  thunderstorm:[0,3,7,0,10,43,25,12]
 };
 const timeAt=ms=>TIMES[(()=>{const h=new Date(ms).getUTCHours();return h<6?3:h<12?0:h<18?1:2})()];
