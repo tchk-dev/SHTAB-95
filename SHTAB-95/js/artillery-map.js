@@ -4,16 +4,40 @@ const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
 const X=wx=>W/2+(wx-v.cx)/v.m,Y=wy=>H/2-(wy-v.cy)/v.m;
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function genTerrain(seed){
-  const r=mulberry(seed),hm=new Float32Array(N*N),oct=[];let tot=0;
-  for(let o=0;o<5;o++){const f=3*2**o,amp=.55**o,L=new Float32Array((f+1)*(f+1));tot+=amp;for(let i=0;i<L.length;i++)L[i]=r();oct.push({f,amp,L})}
-  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
-    let n=0;
-    for(const{f,amp,L}of oct){const u=i/(N-1)*f,w=j/(N-1)*f,i0=Math.min(u|0,f-1),j0=Math.min(w|0,f-1),s=f+1;let a=u-i0,b=w-j0;a=a*a*(3-2*a);b=b*b*(3-2*b);
-      n+=amp*(L[j0*s+i0]*(1-a)*(1-b)+L[j0*s+i0+1]*a*(1-b)+L[(j0+1)*s+i0]*(1-a)*b+L[(j0+1)*s+i0+1]*a*b)}
-    hm[j*N+i]=Math.pow(Math.min(1,Math.max(0,(n/tot-.30)*2.4)),1.25)*520;
+// Working terrain profiles for the six Moravican regions. Weather remains independent.
+const TERRAIN_REGIONS={
+ velikograd:{label:'Velikograd',base:80,relief:320,rough:.30,scale:3,type:'basin'},
+ donja_bukovica:{label:'Donja Bukovica',base:35,relief:135,rough:.12,scale:2,type:'plain'},
+ popovac:{label:'Popovac',base:140,relief:280,rough:.38,scale:4,type:'hills'},
+ lipovac:{label:'Lipovac',base:180,relief:680,rough:.72,scale:5,type:'ridges'},
+ pribrezje:{label:'Pribrežje',base:260,relief:590,rough:.84,scale:5,type:'karst'},
+ mckhetovac:{label:'Mckhetovac',base:380,relief:1200,rough:.94,scale:5,type:'mountains'}
+};
+let terrainRegion='velikograd';
+function genTerrain(seed,regionId=terrainRegion){
+ const profile=TERRAIN_REGIONS[regionId]||TERRAIN_REGIONS.velikograd;
+ const r=mulberry(seed),hm=new Float32Array(N*N),oct=[];
+ for(let o=0;o<5;o++){const f=profile.scale*2**o,amp=(.32+profile.rough*.27)**o,L=new Float32Array((f+1)*(f+1));for(let i=0;i<L.length;i++)L[i]=r();oct.push({f,amp,L})}
+ for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+  const u=i/(N-1),v=j/(N-1);let n=0,weight=0;
+  for(const{f,amp,L}of oct){const x=u*f,y=v*f,i0=Math.min(x|0,f-1),j0=Math.min(y|0,f-1),stride=f+1;let a=x-i0,b=y-j0;a=a*a*(3-2*a);b=b*b*(3-2*b);
+   n+=amp*(L[j0*stride+i0]*(1-a)*(1-b)+L[j0*stride+i0+1]*a*(1-b)+L[(j0+1)*stride+i0]*(1-a)*b+L[(j0+1)*stride+i0+1]*a*b);weight+=amp}
+  n=n/weight;
+  const edge=Math.min(1,Math.hypot((u-.5)*1.55,(v-.5)*1.55));
+  const ridge=Math.abs(Math.sin((u*.85+v*.35)*Math.PI*5+n*4));
+  let shape;
+  switch(profile.type){
+   case 'basin':shape=.10+.60*Math.pow(edge,1.9)+.30*n;break;
+   case 'plain':shape=.10+.68*n;break;
+   case 'hills':shape=.16+.78*n;break;
+   case 'ridges':shape=.10+.40*n+.50*ridge;break;
+   case 'karst':shape=.18+.48*n+.34*Math.pow(ridge,3);break;
+   default:shape=.08+.30*n+.62*Math.pow(ridge,1.8);
   }
-  return hm}
+  hm[j*N+i]=Math.max(0,profile.base+profile.relief*Math.max(0,Math.min(1,shape)));
+ }
+ return hm;
+}
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
   const i=u|0,j=w|0,a=u-i,b=w-j;
@@ -200,7 +224,8 @@ function newTask(noWind){
   missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date(),true);S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
-  HM=genTerrain((Math.random()*1e9)|0);
+  terrainRegion=$('terrainRegion')?.value||terrainRegion;
+  HM=genTerrain((Math.random()*1e9)|0,terrainRegion);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
