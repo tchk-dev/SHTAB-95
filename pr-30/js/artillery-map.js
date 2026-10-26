@@ -43,11 +43,19 @@ function ground(x,y){
   const i=u|0,j=w|0,a=u-i,b=w-j;
   return HM[j*N+i]*(1-a)*(1-b)+HM[j*N+i+1]*a*(1-b)+HM[(j+1)*N+i]*(1-a)*b+HM[(j+1)*N+i+1]*a*b}
 
-// Hypsometric palette: green lowlands, ochre slopes, brown highlands.
+// Hypsometric palette scaled to each map's actual elevation range.
+let terrainColorMin=0,terrainColorMax=480;
+function setTerrainColorRange(heights){
+ let low=Infinity,high=-Infinity;
+ for(const height of heights){if(height<low)low=height;if(height>high)high=height;}
+ terrainColorMin=Number.isFinite(low)?low:0;
+ terrainColorMax=Number.isFinite(high)?Math.max(high,terrainColorMin+1):480;
+}
+// Green lowlands, ochre slopes, brown highlands.
 const RAMP=[[0,[105,160,95]],[.22,[155,187,111]],[.45,[210,190,119]],[.7,[174,135,101]],[1,[235,227,204]]];
 function colorAt(h){
-  if(h<4)return[78,132,200];
-  const t=Math.min(1,h/480);for(let k=1;k<RAMP.length;k++)if(t<=RAMP[k][0]){const[a,ca]=RAMP[k-1],[b,cb]=RAMP[k],f=(t-a)/(b-a);return ca.map((c,i)=>c+(cb[i]-c)*f)}
+  if(h<4&&terrainColorMin<4)return[78,132,200];
+  const t=Math.max(0,Math.min(1,(h-terrainColorMin)/Math.max(1,terrainColorMax-terrainColorMin)));for(let k=1;k<RAMP.length;k++)if(t<=RAMP[k][0]){const[a,ca]=RAMP[k-1],[b,cb]=RAMP[k],f=(t-a)/(b-a);return ca.map((c,i)=>c+(cb[i]-c)*f)}
   return RAMP[4][1]}
 function renderTerrain(){
   const P=768,cv=document.createElement('canvas');cv.width=cv.height=P;const c=cv.getContext('2d'),im=c.createImageData(P,P),hh=new Float32Array(P*P),px=WS/P;
@@ -59,7 +67,7 @@ function renderTerrain(){
   for(let j=0;j<P;j++){const [iy,b]=ay[j],row=iy*N,next=(iy+1)*N;for(let i=0;i<P;i++){const [ix,a]=ax[i];hh[j*P+i]=HM[row+ix]*(1-a)*(1-b)+HM[row+ix+1]*a*(1-b)+HM[next+ix]*(1-a)*b+HM[next+ix+1]*a*b}}
   for(let j=1;j<P-1;j++)for(let i=1;i<P-1;i++){
     const k=j*P+i,h=hh[k];let col=colorAt(h),sh=1;
-    if(h>=4){const gx=(hh[k+1]-hh[k-1])/(2*px),gy=(hh[k-P]-hh[k+P])/(2*px);sh=Math.min(1.35,Math.max(.55,1+1.8*(gx-gy)));
+    if(h>=4||terrainColorMin>=4){const gx=(hh[k+1]-hh[k-1])/(2*px),gy=(hh[k-P]-hh[k+P])/(2*px);sh=Math.min(1.35,Math.max(.55,1+1.8*(gx-gy)));
       const b=Math.floor(h/40);if(b!==Math.floor(hh[k+1]/40)||b!==Math.floor(hh[k+P]/40))sh*=.8}
     const o=k*4;im.data[o]=col[0]*sh;im.data[o+1]=col[1]*sh;im.data[o+2]=col[2]*sh;im.data[o+3]=255}
   c.putImageData(im,0,0);terr=cv}
@@ -226,6 +234,7 @@ function newTask(noWind){
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
   HM=genTerrain((Math.random()*1e9)|0,terrainRegion);
+  setTerrainColorRange(HM);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
