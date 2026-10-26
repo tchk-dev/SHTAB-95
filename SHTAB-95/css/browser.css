@@ -37,3 +37,23 @@
 .start-options button{display:flex;align-items:center;gap:9px;min-height:36px;padding:6px 8px}
 .start-options .start-icon{display:inline-flex;flex:0 0 23px;align-items:center;justify-content:center;width:23px;height:23px;background:#e5e5e5;border:1px solid;border-color:#fff #555 #555 #fff;color:#000080;font:bold 18px Georgia,serif;line-height:1}
 .start-options button:hover .start-icon{background:#fff;color:#000080}
+
+
+/* DoorsNet functional menu controls. */
+.db-menubar button{border:0;background:transparent;color:#000;padding:1px 3px;font:inherit;cursor:pointer}
+.db-menubar button:hover,.db-menubar button:focus-visible{background:#000080;color:#fff;outline:none}
+.db-menubar button::first-letter{text-decoration:underline}
+.db-popup{position:absolute;z-index:3;top:49px;left:10px;max-width:min(350px,90%);padding:10px;background:#c0c0c0;border:2px solid;border-color:#fff #444 #444 #fff;box-shadow:2px 2px #555;color:#000}
+.db-popup[hidden],.db-console[hidden]{display:none!important}
+.db-popup button{display:block;width:100%;text-align:left;margin-top:5px;padding:5px;background:#ddd;border:2px outset #fff;color:#000}
+.db-console{padding:7px;display:flex;flex-wrap:wrap;align-items:center;gap:5px;background:#c0c0c0;border-bottom:2px ridge #fff;font:12px 'Courier New',monospace}
+.db-console input{flex:1;min-width:120px;background:#111;color:#90f090;border:2px inset #888;padding:5px;font:inherit}
+.db-console button,.db-star{background:#c0c0c0;border:2px outset #fff;color:#000;cursor:pointer}
+#dbConsoleOutput{width:100%;font-size:11px}
+.db-site-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.db-star{font:20px Arial;color:#b27b00;min-width:30px;min-height:27px}
+html.doors-pink-wallpaper{--teal:#e18ebc}
+html.doors-pink-wallpaper body{background:#e18ebc}
+
+.db-page.db-inspecting .db-content *{cursor:crosshair!important}
+.db-page .db-selected{outline:2px dashed #e00080!important;outline-offset:2px}
