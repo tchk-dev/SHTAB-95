@@ -41,7 +41,14 @@ function renderTerrain(){
   c.putImageData(im,0,0);terr=cv}
 
 
-const CALL=[['Thunder','#0a3fc4'],['Hammer','#c2185b'],['Hurricane','#ff7900']];
+// Fictional Moravican unit callsigns. Draw three distinct names per assignment.
+const CALL_NAMES=["Sokol","Kovač","Vihor","Jastreb","Ris","Vuk","Medved","Orao","Gavran","Zubr","Jelen","Vepar","Sova","Lisica","Kuna","Vran","Breg","Kamen","Dub","Javor","Bor","Jasen","Hrast","Plamen","Iskra","Munja","Oluja","Zora","Sever","Perun"];
+const CALL_COLORS=['#0a3fc4','#c2185b','#ff7900'];
+function pickCrewNames(){
+ const pool=CALL_NAMES.slice();
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+ return pool.slice(0,CALL_COLORS.length);
+}
 // Three intelligence stations per mission; frequency allocations are classified until confirmed.
 function pickFreqs(){
  const used=[];
@@ -145,23 +152,70 @@ function renderMissionConditions(){
  box.onfocusout=e=>{if(!box.contains(e.relatedTarget))close()};
 }
 document.addEventListener('pointerdown',e=>{const box=$('missionConditions');if(box&&!box.contains(e.target)){const panel=$('conditionPanel');if(panel&&!panel.hidden){panel.hidden=true;box.querySelectorAll('.mission-condition').forEach(el=>el.setAttribute('aria-expanded','false'))}}});
-function setMissionConditions(){
- const time=TIMES[Math.floor(Math.random()*TIMES.length)],weather=pickWeather(time.id);
- const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
- missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);
- renderMissionConditions();
+// Dayparts: 00 night, 06 morning, 12 day, 18 evening (game-world UTC).
+const TRANSITIONS={
+ clear:[55,30,10,0,3,2,0,0],
+ cloudy:[22,36,26,0,12,4,0,0],
+ overcast:[8,25,32,0,22,13,0,0],
+ fog:[18,32,27,0,17,6,0,0],
+ drizzle:[8,14,20,0,32,22,4,0],
+ rain:[4,7,12,0,26,32,13,6],
+ downpour:[2,4,9,0,14,38,33,0],
+ thunderstorm:[0,3,7,0,10,43,25,12]
+};
+const timeAt=ms=>TIMES[(()=>{const h=new Date(ms).getUTCHours();return h<6?3:h<12?0:h<18?1:2})()];
+function nextBoundary(ms){
+ const d=new Date(ms),day=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+ for(const h of [0,6,12,18])if(day+h*3600000>ms)return day+h*3600000;
+ return day+86400000;
 }
+function nextWeather(old,time){
+ const weights=TRANSITIONS[old.id]||TRANSITIONS.clear;
+ const candidates=WEATHERS.map((w,i)=>({w,weight:(w.weights[time.id]||0)*weights[i]}));
+ let roll=Math.random()*candidates.reduce((sum,x)=>sum+x.weight,0);
+ for(const x of candidates){roll-=x.weight;if(roll<0)return x.w}
+ return candidates.find(x=>x.weight>0)?.w||pickWeather(time.id);
+}
+let weatherProcessedAt=null;
+function applyConditions(time,weather){
+ const noise=Math.min(1,time.noise+weather.noise),drag=time.drag*weather.drag;
+ missionConditions={time,weather,noise,drag};Radio.setAtmosphere(noise);renderMissionConditions();
+}
+function setMissionConditions(){
+ const ms=window.GameClock?.nowMs()??Date.now(),time=timeAt(ms);
+ weatherProcessedAt=ms;applyConditions(time,pickWeather(time.id));
+}
+function updateTimedConditions(date){
+ if(!missionConditions)return;
+ const target=date.getTime();
+ if(weatherProcessedAt===null||target<weatherProcessedAt){setMissionConditions();return}
+ let changed=false,weatherChanged=false;
+ for(let boundary=nextBoundary(weatherProcessedAt);boundary<=target;boundary=nextBoundary(boundary)){
+  const time=timeAt(boundary),old=missionConditions.weather;
+  let weather=Math.random()<.65?nextWeather(old,time):old;
+  // Keep original daypart restrictions, including morning-only fog.
+  if(!(weather.weights[time.id]>0))weather=nextWeather(old,time);
+  applyConditions(time,weather);changed=true;if(weather!==old)weatherChanged=true;
+ }
+ weatherProcessedAt=target;
+ if(changed)window.SH95Notifications?.notify(
+  I18n.t(missionConditions.time.name)+' · '+I18n.t(missionConditions.weather.name),
+  'WEATHER'
+ );
+}
+window.GameClock?.subscribe(updateTimedConditions);
+setInterval(()=>updateTimedConditions(window.GameClock?.now()||new Date()),1000);
 function showDefeat(c){if(missionOver)return;missionOver=true;const el=$('defeat95');$('defeatText').textContent=I18n.format('mission.defeat',{crew:I18n.t(c.name),ammo:c.ammoMax});el.hidden=false;if(window.sh95Event)window.sh95Event(I18n.format('mission.defeatEvent',{crew:I18n.t(c.name)}))}
 $('defeatRetry').onclick=()=>{newTask(false)};
 const CREW_RELOAD_MS=9500,CREW_HEAT_PER_SHOT=19,CREW_COOL_PER_SEC=0.85;
 const CREW_BASE_TEMP=32,CREW_MAX_TEMP=120,CREW_UNLOCK_TEMP=88;
-function advanceCrewThermal(c,now=performance.now()){
+function advanceCrewThermal(c,now=(window.GameClock?.nowMs()??performance.now())){
   if(!Number.isFinite(c.thermalAt)){c.thermalAt=now;return}
   const dt=Math.max(0,Math.min((now-c.thermalAt)/1000,60));
   c.temperature=Math.max(CREW_BASE_TEMP,c.temperature-CREW_COOL_PER_SEC*dt);
   c.thermalAt=now;
 }
-function crewState(c,now=performance.now()){
+function crewState(c,now=(window.GameClock?.nowMs()??performance.now())){
   advanceCrewThermal(c,now);
   if(c.ammo<=0)return [I18n.t("AMMUNITION DEPLETED"),'empty'];
   if(c.temperature>=CREW_UNLOCK_TEMP)return [I18n.t("COOLING"),'hot'];
@@ -170,7 +224,7 @@ function crewState(c,now=performance.now()){
 }
 function renderCrewResources(){
   const box=document.getElementById('crewResourceRows');if(!box||!CR?.length)return;
-  const now=performance.now();
+  const now=(window.GameClock?.nowMs()??performance.now());
   box.innerHTML=CR.map(c=>{
     const [state,kind]=crewState(c,now),left=Math.max(0,(c.reloadUntil-now)/1000),progress=100*(1-Math.min(1,left/(CREW_RELOAD_MS/1000)));
     const temp=Math.round(c.temperature),heat=Math.max(0,Math.min(100,(temp-CREW_BASE_TEMP)/(CREW_MAX_TEMP-CREW_BASE_TEMP)*100));
@@ -195,12 +249,13 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  return true;
 };
 function newTask(noWind){
+ cancelProjectiles();
   missionOver=false;$('defeat95').hidden=true;S={ws:noWind?0:Math.round(rnd(2,12)),wd:Math.round(rnd(0,359))};setMissionConditions();
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   HM=genTerrain((Math.random()*1e9)|0);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
-  CR=CALL.map((c,k)=>({k,name:c[0],color:c[1],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:performance.now()}));
+  CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
   window.sh95CrewData=()=>CR;
   Radio.setCrews(CR.map(c=>({f:c.f,label:I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)}),az:Math.round((Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y)*180/Math.PI+360)%360),x:Math.round(c.t.x),y:Math.round(c.t.y)})));
@@ -251,6 +306,15 @@ function garble(s){
   const i=idx[Math.floor(Math.random()*idx.length)];let d;do{d=String(Math.floor(Math.random()*10))}while(d===s[i]);
   return s.slice(0,i)+d+s.slice(i+1)}
 const gauss=()=>Math.sqrt(-2*Math.log(1-Math.random()))*Math.cos(2*Math.PI*Math.random());
+const inFlight=new Map();let flightSerial=0,profileFlight=null,flightAnimation=0;
+function cancelProjectiles(){for(const shot of inFlight.values())clearTimeout(shot.timer);inFlight.clear();profileFlight=null;cancelAnimationFrame(flightAnimation);flightAnimation=0;window.GameClock?.lock('projectile in flight',false)}
+function animateFlights(){if(!inFlight.size){flightAnimation=0;return}drawProfile();flightAnimation=requestAnimationFrame(animateFlights)}
+function beginProjectile(shot){
+ inFlight.set(shot.id,shot);profileFlight=shot;
+ window.GameClock?.lock('projectile in flight',true);
+ if(!flightAnimation)flightAnimation=requestAnimationFrame(animateFlights);
+ shot.timer=setTimeout(()=>{if(!inFlight.has(shot.id))return;inFlight.delete(shot.id);shot.arrive(shot===profileFlight);if(!inFlight.size)window.GameClock?.lock('projectile in flight',false);draw()},Math.max(1,shot.duration*1000));
+}
 function fire(){
   if(missionOver)return;
   const feedback=(received,reason='')=>window.dispatchEvent(new CustomEvent('sh95:order-result',{detail:{received,reason}}));
@@ -260,7 +324,7 @@ function fire(){
   const c=CR[k];
   if(c.hit){reject(I18n.format('mission.alreadyHit',{crew:I18n.t(c.name)}));return}
   const [readiness,readinessKind]=crewState(c);
-  if(readinessKind!=='ready'){reject(I18n.format('mission.notReady',{crew:I18n.t(c.name),status:readiness.toLowerCase(),reason:readinessKind==='loading'?I18n.format('mission.remaining',{seconds:Math.ceil((c.reloadUntil-performance.now())/1000)}):readinessKind==='hot'?I18n.format('mission.temperature',{temp:Math.round(c.temperature)}):I18n.t('mission.noAmmo')}));renderCrewResources();return}
+  if(readinessKind!=='ready'){reject(I18n.format('mission.notReady',{crew:I18n.t(c.name),status:readiness.toLowerCase(),reason:readinessKind==='loading'?I18n.format('mission.remaining',{seconds:Math.ceil((c.reloadUntil-(window.GameClock?.nowMs()??performance.now()))/1000)}):readinessKind==='hot'?I18n.format('mission.temperature',{temp:Math.round(c.temperature)}):I18n.t('mission.noAmmo')}));renderCrewResources();return}
   const mil=$('unit').value=='mil',sa=$('az').value.trim(),se=$('el').value.trim(),ch=+$('ch').value,a=parseFloat(sa),e0=parseFloat(se);
   if(!Number.isFinite(a)||!Number.isFinite(e0)){reject(I18n.t("Enter valid numeric azimuth and elevation values."));return}
   if(!Number.isInteger(ch)||ch<1||ch>V0.length){reject(I18n.t("Select charge 1 through 5."));return}
@@ -278,17 +342,29 @@ function fire(){
   const r=simulate(ra*ku,re*ku,V0[rc-1],c);
   if(!r){reject(I18n.t("Projectile did not return to ground."));return}
   const b=Math.atan2(c.t.x-c.g.x,c.t.y-c.g.y),dx=r.x-c.t.x,dy=r.y-c.t.y,al=dx*Math.sin(b)+dy*Math.cos(b),rg=dx*Math.cos(b)-dy*Math.sin(b),d=Math.hypot(dx,dy),hit=d<=R_HIT;
-  if(window.sh95Event)window.sh95Event(I18n.format('mission.shotEvent',{crew:k+1,shot:c.shots.length+1,result:hit?I18n.t('HIT'):I18n.format('mission.burst',{distance:Math.round(d)})}));
-  c.ammo--;c.temperature=Math.min(CREW_MAX_TEMP,c.temperature+CREW_HEAT_PER_SHOT);c.reloadUntil=performance.now()+CREW_RELOAD_MS;
+
+  c.ammo--;c.temperature=Math.min(CREW_MAX_TEMP,c.temperature+CREW_HEAT_PER_SHOT);c.reloadUntil=(window.GameClock?.nowMs()??performance.now())+CREW_RELOAD_MS;
   feedback(true);
-  c.shots.push({x:r.x,y:r.y});c.trajs.push(r.pts);last=k;if(hit)c.hit=true;
+  c.trajs.push(r.pts);last=k;
   const all=CR.every(q2=>q2.hit),bad=x=>`<b style="color:#b3392b">${x}</b>`,df=(s,r2)=>Math.abs(s-r2)<.005?r2:bad(r2),lg=(s,r2)=>Math.abs(s-r2)<.005?s:`${s} → ${bad(r2)}`;
   const correctionLong=Math.abs(al)<1?'':(al>0?I18n.t('overshoot '):I18n.t('short '))+Math.abs(al).toFixed(0)+I18n.t(' m');
   const correctionSide=Math.abs(rg)<1?'':', '+(rg>0?I18n.t('right '):I18n.t('left '))+Math.abs(rg).toFixed(0)+I18n.t(' m');
-  say(I18n.format('mission.fireReport',{crew:I18n.t(c.name),azimuth:df(a,ra),elevation:df(e0,re),charge:df(ch,rc),hit:hit?I18n.t('mission.targetHit'):'',correction:correctionLong+correctionSide,distance:d.toFixed(0),time:r.t.toFixed(1),complete:all?I18n.t('mission.allComplete'):''}),hit?'hit':'');
-  $('log').insertAdjacentHTML('beforeend',`<tr><td>${k+1}.${c.shots.length}</td><td style="color:${c.color}">«${I18n.t(c.name)}»</td><td>${lg(a,ra)}</td><td>${lg(e0,re)}</td><td>${lg(ch,rc)}</td><td>${r.t.toFixed(1)}</td><td>${d.toFixed(0)}</td></tr>`);
-  $('s1').textContent=all?I18n.t("All targets destroyed!"):I18n.format('mission.deviation',{crew:I18n.t(c.name),distance:d.toFixed(0)});
-  renderData();renderCrewResources();draw();if(window.sh95Brief)window.sh95Brief();if(!hit&&c.ammo===0)showDefeat(c)}
+  const shotNumber=c.trajs.length;
+  const report=()=>{
+    say(I18n.format('mission.fireReport',{crew:I18n.t(c.name),azimuth:df(a,ra),elevation:df(e0,re),charge:df(ch,rc),hit:hit?I18n.t('mission.targetHit'):'',correction:correctionLong+correctionSide,distance:d.toFixed(0),time:r.t.toFixed(1),complete:CR.every(q2=>q2.hit)?I18n.t('mission.allComplete'):''}),hit?'hit':'');
+    $('log').insertAdjacentHTML('beforeend',`<tr><td>${k+1}.${shotNumber}</td><td style="color:${c.color}">«${I18n.t(c.name)}»</td><td>${lg(a,ra)}</td><td>${lg(e0,re)}</td><td>${lg(ch,rc)}</td><td>${r.t.toFixed(1)}</td><td>${d.toFixed(0)}</td></tr>`);
+    $('s1').textContent=CR.every(q2=>q2.hit)?I18n.t("All targets destroyed!"):I18n.format('mission.deviation',{crew:I18n.t(c.name),distance:d.toFixed(0)});
+  };
+  const shot={id:++flightSerial,crew:c,trajectory:r.pts,start:performance.now(),duration:r.t,arrive(isLatest){
+    c.shots.push({x:r.x,y:r.y});if(hit)c.hit=true;
+    if(isLatest){report();if(window.sh95Event)window.sh95Event(I18n.format('mission.shotEvent',{crew:k+1,shot:shotNumber,result:hit?I18n.t('HIT'):I18n.format('mission.burst',{distance:Math.round(d)})}));}
+    renderData();renderCrewResources();if(window.sh95Brief)window.sh95Brief();
+    if(!hit&&c.ammo===0&&!inFlight.size)showDefeat(c);
+  }};
+  beginProjectile(shot);
+  say(I18n.t('TRAJECTORY')+' · '+r.t.toFixed(1)+' '+I18n.t(' s'));
+  renderCrewResources();draw();
+}
 
 /* ---- map ---- */
 function fitView(){const xs=CR.flatMap(c=>[c.g.x,c.t.x]),ys=CR.flatMap(c=>[c.g.y,c.t.y]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
@@ -362,7 +438,7 @@ function drawProfile(){
     state.textContent=I18n.t("AWAITING SHOT");ctx.fillStyle='#9dc8a9';ctx.font='bold 16px Courier New';ctx.textAlign='center';
     ctx.fillText(I18n.t("AWAITING TRAJECTORY DATA"),left+pw/2,top+ph/2);ctx.restore();return;
   }
-  const c=CR[last],tr=c.trajs?.[c.trajs.length-1];
+  const c=profileFlight?.crew||CR[last],tr=profileFlight?.trajectory||c.trajs?.[c.trajs.length-1];
   if(!Array.isArray(tr)||tr.length<2){state.textContent=I18n.t("TRAJECTORY UNAVAILABLE");ctx.restore();return}
   // Align the cross-section with the actual shot, not the target.
   // Otherwise, a shot in the opposite direction would move the entire trajectory
@@ -402,7 +478,10 @@ function drawProfile(){
   ctx.beginPath();terrain.forEach((z,i)=>i?ctx.lineTo(sx(i*D/240),sy(z)):ctx.moveTo(sx(0),sy(z)));
   ctx.strokeStyle='#68d693';ctx.lineWidth=2;ctx.stroke();
   ctx.beginPath();let hasPoint=false;
-  for(const p of tr){if(!p||p.length<3||!p.every(Number.isFinite))continue;
+  const fraction=profileFlight&&inFlight.has(profileFlight.id)?Math.min(1,(performance.now()-profileFlight.start)/(profileFlight.duration*1000)):1;
+  const visible=Math.max(1,Math.floor((tr.length-1)*fraction));
+  for(let i=0;i<=visible;i++){
+    const p=tr[i];if(!p||p.length<3||!p.every(Number.isFinite))continue;
     const x=sx(along(p)),y=sy(p[2]);if(!hasPoint){ctx.moveTo(x,y);hasPoint=true}else ctx.lineTo(x,y);
   }
   ctx.strokeStyle='#ffd47c';ctx.lineWidth=2.5;ctx.stroke();
@@ -502,8 +581,8 @@ $('fire').onclick=fire;$('newt').onclick=()=>newTask(false);$('nowind').onclick=
 $('fit').onclick=()=>{fitView();draw()};$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
 $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 
-const tick=()=>$('clock').textContent=new Date().toLocaleTimeString(I18n.language==='ru'?'ru-RU':'en-GB',{hour:'2-digit',minute:'2-digit'});tick();setInterval(tick,30000);
+// The desktop clock is maintained by GameClock.
 setInterval(updateLink,150);
 setInterval(renderCrewResources,250);
-window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();tick();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
+window.addEventListener('shtab:languagechange',()=>{if(!CR?.length)return;Radio.setCrewLabels?.(CR.map(c=>I18n.format('mission.recon',{number:c.k+1,crew:I18n.t(c.name)})));lkKey='';renderData();renderCrewResources();updateLink();updateBearingPanel();draw();drawProfile();$('s2').textContent=S.ws?I18n.format('mission.wind',{direction:S.wd,speed:S.ws}):I18n.t('Wind: Calm');renderMissionConditions()});
 newTask(false);
