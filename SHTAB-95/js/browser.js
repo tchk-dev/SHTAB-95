@@ -72,20 +72,20 @@ $('dbConsole').addEventListener('submit',e=>{
  e.preventDefault();
  const input=$('dbCommand').value.trim();
  const output=$('dbConsoleOutput');
- const match=input.match(/^(?:open|goto|go)\\s+(.+)$/i);
+ const match=input.match(/^(?:open|goto|go)\s+(.+)$/i);
  if(match){const name=normalize(match[1]);if(sites.has(name)){navigate(name);output.textContent='Opened doors://'+name}else output.textContent='Unknown site: '+name}
  else if(/^help$/i.test(input))output.textContent='inspect (then click element) | select <CSS selector> | text <new text> | save-image [filename] | list | open <site> | help';
  else if(/^list$/i.test(input))output.textContent=[...sites.keys()].join(' · ');
  else if(/^inspect$/i.test(input)){inspectMode=true;page.classList.add('db-inspecting');output.textContent='Click an element on the page to inspect it.'}
- else if(/^select\\s+(.+)$/i.test(input)){
-  try{const el=page.querySelector('.db-content').querySelector(input.replace(/^select\\s+/i,''));if(el)selectElement(el);else output.textContent='Element not found.'}
+ else if(/^select\s+(.+)$/i.test(input)){
+  try{const el=page.querySelector('.db-content').querySelector(input.replace(/^select\s+/i,''));if(el)selectElement(el);else output.textContent='Element not found.'}
   catch{output.textContent='Invalid CSS selector.'}
  }
- else if(/^text\\s+([\\s\\S]+)$/i.test(input)){
+ else if(/^text\s+([\s\S]+)$/i.test(input)){
   if(!selectedElement||!selectedElement.isConnected)output.textContent='Select an element first (inspect or select).';
-  else {selectedElement.textContent=input.replace(/^text\\s+/i,'');output.textContent='Text changed locally. Reload resets the page.'}
+  else {selectedElement.textContent=input.replace(/^text\s+/i,'');output.textContent='Text changed locally. Reload resets the page.'}
  }
- else if(/^save-image(?:\\s+(.+))?$/i.test(input)){
+ else if(/^save-image(?:\s+(.+))?$/i.test(input)){
   if(!selectedElement||!selectedElement.isConnected)output.textContent='Select an image first.';
   else {
    const img=selectedElement.closest('img')||selectedElement.querySelector('img');
@@ -95,7 +95,7 @@ $('dbConsole').addEventListener('submit',e=>{
     const url=new URL(src,document.baseURI);
     if(url.origin!==location.origin||!/^https?:$/.test(url.protocol))output.textContent='Only bundled local images can be saved.';
     else {
-     const filename=input.match(/^save-image(?:\\s+(.+))?$/i)[1];
+     const filename=input.match(/^save-image(?:\s+(.+))?$/i)[1];
      const a=document.createElement('a');a.href=url.href;a.download=(filename||url.pathname.split('/').pop()||'image.png').replace(/[^a-z0-9._-]/gi,'_');a.click();
      output.textContent='Image download requested: '+a.download;
     }
