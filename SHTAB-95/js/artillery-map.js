@@ -1,4 +1,5 @@
-const WS=40000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
+const {WORLD_SIZE:WS,GRID_SIZE:N,CELL_SIZE:CELL}=window.SH95TerrainData;
+const G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
 let S,HM,ORG,terr,CR=[],last=null,v={cx:0,cy:0,m:30};
 const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
@@ -34,7 +35,7 @@ initTerrainRegionCombo();
 
 // Temporary flat terrain until the new geographic generator is implemented.
 function genTerrain(){
-  return new Float32Array(N*N);
+  return window.SH95TerrainData.createHeightMap();
 }
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
