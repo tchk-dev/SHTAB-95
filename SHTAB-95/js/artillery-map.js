@@ -57,7 +57,7 @@ function initTerrainDiagnostics(){
  label.style.cssText='display:inline-flex;align-items:center;gap:5px;font:11px monospace;margin:4px';
  label.textContent='TERRAIN: ';
  const select=document.createElement('select');select.id='terrainDiagnosticLayer';
- for(const [value,name] of [['height','Elevation'],['flow','Flow accumulation'],['incision','Erosion depth']]){
+ for(const [value,name] of [['height','Elevation'],['flow','Flow accumulation'],['direction','Flow direction'],['incision','Erosion depth']]){
   const option=document.createElement('option');option.value=value;option.textContent=name;select.appendChild(option);
  }
  select.onchange=()=>{terrainLayer=select.value;if(HM){renderTerrain();draw()}};
@@ -77,12 +77,12 @@ function renderTerrain(){
   const image=ctx.createImageData(1024,1024);
   let min=Infinity,max=-Infinity;
   for(const h of HM){min=Math.min(min,h);max=Math.max(max,h)}
-  const layer=terrainLayer==='flow'?terrainDiagnostics?.accumulation:terrainLayer==='incision'?terrainDiagnostics?.incision:null;
+  const layer=terrainLayer==='flow'?terrainDiagnostics?.accumulation:terrainLayer==='incision'?terrainDiagnostics?.incision:terrainLayer==='direction'?terrainDiagnostics?.receiver:null;
   let layerMax=0;
   if(layer)for(const v of layer)layerMax=Math.max(layerMax,v);
   for(let y=0;y<1024;y++)for(let x=0;x<1024;x++){
     const ix=Math.floor(x/2),iy=N-1-Math.floor(y/2),index=iy*N+ix;
-    const t=layer?(terrainLayer==='flow'?Math.log1p(layer[index])/Math.log1p(Math.max(1,layerMax)):layer[index]/Math.max(.001,layerMax)):(HM[index]-min)/Math.max(1,max-min);
+    const t=layer?(terrainLayer==='flow'?Math.log1p(layer[index])/Math.log1p(Math.max(1,layerMax)):terrainLayer==='direction'?(layer[index]<0?0:(Math.atan2(Math.floor(layer[index]/N)-iy,layer[index]%N-ix)+Math.PI)/(2*Math.PI)):layer[index]/Math.max(.001,layerMax)):(HM[index]-min)/Math.max(1,max-min);
     const k=(y*1024+x)*4;
     image.data[k]=layer?245-205*t:215-78*t;
     image.data[k+1]=layer?242-165*t:223-95*t;
