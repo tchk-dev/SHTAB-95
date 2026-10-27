@@ -1,0 +1,15 @@
+{
+  "region": "donja_bukovica",
+  "seed": 42,
+  "unitRunoff": true,
+  "elapsedMs": 157.9402710000004,
+  "catchmentMs": 175.055335,
+  "catchments": 2469,
+  "saddles": 5868,
+  "maximumSpillDifference": 0,
+  "internalSinks": 425,
+  "edgeSinks": 2044,
+  "riverSinks": 112,
+  "uphill": 0,
+  "crossings": 0
+}

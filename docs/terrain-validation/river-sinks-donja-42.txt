@@ -1,0 +1,4 @@
+{"all":0,"rivers":0,"examples":[]}
+{"dryUphillEdges":118,"waterUphillEdges":1052,"maxRise":0.3662872314453125,"examples":[[10953,11466,0.0140228271484375],[17514,18027,0.01622772216796875],[26829,26317,0.0056915283203125],[31892,31381,0.00244140625],[32403,31892,0.00506591796875]]}
+{"strictSinks":44,"hasLowerNeighbour":74}
+{"noRankCandidate":112,"crossBlocked":3,"rankEligible":3}
