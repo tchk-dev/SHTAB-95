@@ -1,0 +1,112 @@
+{
+  "runs": [
+    {
+      "region": "donja_bukovica",
+      "seed": 0,
+      "riverEdges": 4111,
+      "segments": 4206,
+      "dryUphill": 120,
+      "waterUphill": 612,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "donja_bukovica",
+      "seed": 42,
+      "riverEdges": 5167,
+      "segments": 5260,
+      "dryUphill": 118,
+      "waterUphill": 1052,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "donja_bukovica",
+      "seed": 4294967295,
+      "riverEdges": 6047,
+      "segments": 6227,
+      "dryUphill": 233,
+      "waterUphill": 754,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "popovac",
+      "seed": 0,
+      "riverEdges": 4216,
+      "segments": 4325,
+      "dryUphill": 72,
+      "waterUphill": 838,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "popovac",
+      "seed": 42,
+      "riverEdges": 4076,
+      "segments": 4183,
+      "dryUphill": 84,
+      "waterUphill": 657,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "popovac",
+      "seed": 4294967295,
+      "riverEdges": 5622,
+      "segments": 5800,
+      "dryUphill": 124,
+      "waterUphill": 1035,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "lipovac",
+      "seed": 0,
+      "riverEdges": 3538,
+      "segments": 3624,
+      "dryUphill": 66,
+      "waterUphill": 585,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "lipovac",
+      "seed": 42,
+      "riverEdges": 3920,
+      "segments": 4019,
+      "dryUphill": 58,
+      "waterUphill": 997,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "lipovac",
+      "seed": 4294967295,
+      "riverEdges": 5841,
+      "segments": 6022,
+      "dryUphill": 45,
+      "waterUphill": 1693,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 0,
+      "riverEdges": 3178,
+      "segments": 3272,
+      "dryUphill": 25,
+      "waterUphill": 596,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 42,
+      "riverEdges": 3761,
+      "segments": 3856,
+      "dryUphill": 37,
+      "waterUphill": 631,
+      "diagonalCrossings": 0
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 4294967295,
+      "riverEdges": 6678,
+      "segments": 6857,
+      "dryUphill": 26,
+      "waterUphill": 2325,
+      "diagonalCrossings": 0
+    }
+  ]
+}
