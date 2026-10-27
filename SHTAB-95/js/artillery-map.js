@@ -1,18 +1,10 @@
-const WS=32000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
-let S,HM,ORG,terr,mapFeatures=null,terrainSeed=0,CR=[],last=null,v={cx:0,cy:0,m:30};
+const WS=100000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
+let S,HM,ORG,terr,CR=[],last=null,v={cx:0,cy:0,m:30};
 const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
 const X=wx=>W/2+(wx-v.cx)/v.m,Y=wy=>H/2-(wy-v.cy)/v.m;
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-// Working terrain profiles for the six Moravican regions. Weather remains independent.
-const TERRAIN_REGIONS={
- velikograd:{label:'Velikograd',base:80,relief:320,rough:.30,scale:3,type:'basin'},
- donja_bukovica:{label:'Donja Bukovica',base:35,relief:135,rough:.12,scale:2,type:'plain'},
- popovac:{label:'Popovac',base:140,relief:280,rough:.38,scale:4,type:'hills'},
- lipovac:{label:'Lipovac',base:180,relief:680,rough:.72,scale:5,type:'ridges'},
- pribrezje:{label:'Pribrežje',base:260,relief:590,rough:.84,scale:5,type:'karst'},
- mckhetovac:{label:'Mckhetovac',base:380,relief:1200,rough:.94,scale:5,type:'mountains'}
-};
+// Region selection is preserved for future terrain generation.
 let terrainRegion='velikograd';
 
 function initTerrainRegionCombo(){
@@ -40,53 +32,22 @@ function initTerrainRegionCombo(){
 }
 initTerrainRegionCombo();
 
-function genTerrain(seed,regionId=terrainRegion){
- const profile=TERRAIN_REGIONS[regionId]||TERRAIN_REGIONS.velikograd;
- const r=mulberry(seed),hm=new Float32Array(N*N),oct=[];
- for(let o=0;o<5;o++){const f=profile.scale*2**o,amp=(.32+profile.rough*.27)**o,L=new Float32Array((f+1)*(f+1));for(let i=0;i<L.length;i++)L[i]=r();oct.push({f,amp,L})}
- for(let j=0;j<N;j++)for(let i=0;i<N;i++){
-  const u=i/(N-1),v=j/(N-1);let n=0,weight=0;
-  for(const{f,amp,L}of oct){const x=u*f,y=v*f,i0=Math.min(x|0,f-1),j0=Math.min(y|0,f-1),stride=f+1;let a=x-i0,b=y-j0;a=a*a*(3-2*a);b=b*b*(3-2*b);
-   n+=amp*(L[j0*stride+i0]*(1-a)*(1-b)+L[j0*stride+i0+1]*a*(1-b)+L[(j0+1)*stride+i0]*(1-a)*b+L[(j0+1)*stride+i0+1]*a*b);weight+=amp}
-  n=n/weight;
-  const edge=Math.min(1,Math.hypot((u-.5)*1.55,(v-.5)*1.55));
-  const ridge=Math.abs(Math.sin((u*.85+v*.35)*Math.PI*5+n*4));
-  let shape;
-  switch(profile.type){
-   case 'basin':shape=.10+.60*Math.pow(edge,1.9)+.30*n;break;
-   case 'plain':shape=.10+.68*n;break;
-   case 'hills':shape=.16+.78*n;break;
-   case 'ridges':shape=.10+.40*n+.50*ridge;break;
-   case 'karst':shape=.18+.48*n+.34*Math.pow(ridge,3);break;
-   default:shape=.08+.30*n+.62*Math.pow(ridge,1.8);
-  }
-  hm[j*N+i]=Math.max(0,profile.base+profile.relief*Math.max(0,Math.min(1,shape)));
- }
- return hm;
+// Temporary flat terrain until the new geographic generator is implemented.
+function genTerrain(){
+  return new Float32Array(N*N);
 }
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
   const i=u|0,j=w|0,a=u-i,b=w-j;
   return HM[j*N+i]*(1-a)*(1-b)+HM[j*N+i+1]*a*(1-b)+HM[(j+1)*N+i]*(1-a)*b+HM[(j+1)*N+i+1]*a*b}
 
-// Hypsometric palette scaled to each map's actual elevation range.
-let terrainColorMin=0,terrainColorMax=480;
-function setTerrainColorRange(heights){
- let low=Infinity,high=-Infinity;
- for(const height of heights){if(height<low)low=height;if(height>high)high=height;}
- terrainColorMin=Number.isFinite(low)?low:0;
- terrainColorMax=Number.isFinite(high)?Math.max(high,terrainColorMin+1):480;
-}
-// Green lowlands, ochre slopes, brown highlands.
-const RAMP=[[0,[105,160,95]],[.22,[155,187,111]],[.45,[210,190,119]],[.7,[174,135,101]],[1,[235,227,204]]];
-function colorAt(h){
-  if(h<4&&terrainColorMin<4)return[78,132,200];
-  const t=Math.max(0,Math.min(1,(h-terrainColorMin)/Math.max(1,terrainColorMax-terrainColorMin)));for(let k=1;k<RAMP.length;k++)if(t<=RAMP[k][0]){const[a,ca]=RAMP[k-1],[b,cb]=RAMP[k],f=(t-a)/(b-a);return ca.map((c,i)=>c+(cb[i]-c)*f)}
-  return RAMP[4][1]}
 function renderTerrain(){
-  // The same heightmap drives both cartography and projectile collision.
-  mapFeatures=window.SH95Cartography.generate(HM,terrainRegion,terrainSeed,WS,N);
-  terr=window.SH95Cartography.render(mapFeatures);
+  // Intentionally blank 100 km × 100 km planning sheet.
+  terr=document.createElement('canvas');
+  terr.width=terr.height=1024;
+  const ctx=terr.getContext('2d');
+  ctx.fillStyle='#f7f5e8';
+  ctx.fillRect(0,0,terr.width,terr.height);
 }
 
 // Fictional Moravican unit callsigns. Draw three distinct names per assignment.
@@ -249,8 +210,7 @@ function newTask(noWind){
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
-  terrainSeed=(Math.random()*1e9)|0;
-  HM=genTerrain(terrainSeed,terrainRegion);
+  HM=genTerrain();
   setTerrainColorRange(HM);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
@@ -392,15 +352,12 @@ function draw(){
     if(tr){x.setLineDash([5,4]);x.strokeStyle=c.color;x.lineWidth=1.5;x.beginPath();tr.forEach((p,i)=>{const px=X(c.g.x+p[0]),py=Y(c.g.y+p[1]);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.setLineDash([])}
     c.shots.forEach((s,i)=>{const px=X(s.x),py=Y(s.y);x.font='bold 20px Tahoma';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d62000';halo(x,'✹',px,py);x.font='bold 11px Tahoma';x.fillStyle=c.color;x.textBaseline='bottom';halo(x,(c.k+1)+'.'+(i+1),px+14,py-6);x.textAlign='start'})});
   CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,I18n.t(c.name).toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'T'+(c.k+1)):null)});
-  // Topographic key: elevation is now read from numbered contour lines.
-  x.fillStyle='rgba(248,246,225,.94)';x.fillRect(W-151,H-53,143,46);
-  x.strokeStyle='#777465';x.lineWidth=1;x.strokeRect(W-151.5,H-53.5,144,47);
-  x.font='10px Georgia,serif';x.textAlign='left';x.fillStyle='#34362f';
-  x.fillText(terrainRegion.replace(/_/g,' ').toUpperCase(),W-144,H-38);
-  x.strokeStyle='#a16c48';x.beginPath();x.moveTo(W-143,H-28);x.lineTo(W-113,H-28);x.stroke();
-  x.fillText('100 m',W-108,H-25);
-  x.strokeStyle='#55a9cb';x.beginPath();x.moveTo(W-143,H-16);x.lineTo(W-113,H-16);x.stroke();
-  x.fillText('RIVER',W-108,H-13);
+  // Scale and provisional flat-map status.
+  x.fillStyle='rgba(248,246,225,.95)';x.fillRect(W-166,H-45,158,38);
+  x.strokeStyle='#777465';x.strokeRect(W-166.5,H-45.5,159,39);
+  x.fillStyle='#34362f';x.font='bold 11px Courier New';x.textAlign='left';
+  x.fillText('100 km × 100 km',W-159,H-29);
+  x.font='10px Courier New';x.fillText('TERRAIN: PENDING',W-159,H-15);
   x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText(I18n.format('map.grid',{size:st}),9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
   drawAnnotations(x);drawProfile()}
 function drawProfile(){
