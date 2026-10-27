@@ -14,7 +14,7 @@ function solve(heights,size,catchments,inputVolumes,cellArea=1){
  }
  for(let i=0;i<count;i++){const id=basin[i];if(id<0||id>=n)throw Error('Invalid basin label');cells[id].push(i)}
  const root=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i]}return i};
- let exported=0;for(let i=0;i<n;i++)if(drain[i]){exported+=volume[i];volume[i]=0}
+ const events=[];let exported=0;for(let i=0;i<n;i++)if(drain[i]){exported+=volume[i];volume[i]=0}
  const queue=[],pending=new Uint8Array(n);
  function enqueue(i){i=root(i);if(!drain[i]&&!pending[i]){pending[i]=1;queue.push(i)}}
  for(let i=0;i<n;i++)enqueue(i);
@@ -29,12 +29,20 @@ function solve(heights,size,catchments,inputVolumes,cellArea=1){
   if(!best)throw Error('Catchment has no spill path');
   const result=global.SH95Reservoir.fill(heights,cells[i],best.level,volume[i],cellArea);
   if(result.overflow<=0)continue;
+  const fromCell=root(basin[best.from])===i?best.from:best.to;
+  const toCell=fromCell===best.from?best.to:best.from;
+  events.push({fromCell,toCell,amount:result.overflow});
   volume[i]=result.stored;
   if(drain[target]){exported+=result.overflow;continue}
   const other=global.SH95Reservoir.fill(heights,cells[target],best.level,volume[target],cellArea);
   // Once both sides have reached the connecting saddle, they form one pool.
   const capacity=other.stored+other.overflow;
-  const connected=other.overflow>0||(other.level!==null&&other.level>=best.level)||capacity===0&&cells[target].every(p=>heights[p]>=best.level);
+  const targetAtSaddle=other.overflow>0||(other.level!==null&&other.level>=best.level)||capacity===0&&cells[target].every(p=>heights[p]>=best.level);
+  // A neighbour with a lower escape cannot rise to this saddle: process its
+  // lower spill before allowing a pool merge, even if it has unprocessed input.
+  let targetSpill=Infinity;
+  for(const edge of edges){const a=root(edge.a),b=root(edge.b);if(a!==b&&(a===target||b===target))targetSpill=Math.min(targetSpill,edge.level)}
+  const connected=targetAtSaddle&&targetSpill>=best.level;
   if(connected){
    parent[target]=i;for(const p of cells[target])cells[i].push(p);cells[target]=[];
    volume[i]+=volume[target]+result.overflow;volume[target]=0;enqueue(i);
@@ -49,7 +57,9 @@ function solve(heights,size,catchments,inputVolumes,cellArea=1){
   levels[i]=result.level===null?NaN:result.level;stored+=result.stored;
  }
  const groups=new Int32Array(n);for(let i=0;i<n;i++)groups[i]=root(i);
- return {groups,levels,stored,exported};
+ // Transfers later submerged by merging are internal to the final lake.
+ const transfers=events.filter(e=>groups[basin[e.fromCell]]!==groups[basin[e.toCell]]);
+ return {groups,levels,stored,exported,transfers};
 }
 global.SH95ReservoirNetwork=Object.freeze({solve});
 })(window);
