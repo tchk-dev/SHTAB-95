@@ -34,8 +34,9 @@ function initTerrainRegionCombo(){
 initTerrainRegionCombo();
 
 // Temporary flat terrain until the new geographic generator is implemented.
-function genTerrain(){
-  return window.SH95TerrainData.createHeightMap();
+function genTerrain(seed,region){
+  const geology=window.SH95Geology.generate(region,seed);
+  return window.SH95Macrorelief.generate(geology,N).heightMap;
 }
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
@@ -47,8 +48,15 @@ function renderTerrain(){
   terr=document.createElement('canvas');
   terr.width=terr.height=1024;
   const ctx=terr.getContext('2d');
-  ctx.fillStyle='#f7f5e8';
-  ctx.fillRect(0,0,terr.width,terr.height);
+  const image=ctx.createImageData(1024,1024);
+  let min=Infinity,max=-Infinity;
+  for(const h of HM){min=Math.min(min,h);max=Math.max(max,h)}
+  for(let y=0;y<1024;y++)for(let x=0;x<1024;x++){
+    const ix=Math.floor(x/2),iy=511-Math.floor(y/2);
+    const t=(HM[iy*N+ix]-min)/Math.max(1,max-min),k=(y*1024+x)*4;
+    image.data[k]=215-78*t;image.data[k+1]=223-95*t;image.data[k+2]=188-80*t;image.data[k+3]=255;
+  }
+  ctx.putImageData(image,0,0);
 }
 
 // Fictional Moravican unit callsigns. Draw three distinct names per assignment.
@@ -211,8 +219,7 @@ function newTask(noWind){
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
-  HM=genTerrain();
-  setTerrainColorRange(HM);
+  HM=genTerrain((Math.random()*0xFFFFFFFF)>>>0,terrainRegion);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
@@ -358,7 +365,7 @@ function draw(){
   x.strokeStyle='#777465';x.strokeRect(W-166.5,H-45.5,159,39);
   x.fillStyle='#34362f';x.font='bold 11px Courier New';x.textAlign='left';
   x.fillText('40 km × 40 km',W-159,H-29);
-  x.font='10px Courier New';x.fillText('TERRAIN: PENDING',W-159,H-15);
+  x.font='10px Courier New';x.fillText('MACRORELIEF ONLY',W-159,H-15);
   x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText(I18n.format('map.grid',{size:st}),9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
   drawAnnotations(x);drawProfile()}
 function drawProfile(){
