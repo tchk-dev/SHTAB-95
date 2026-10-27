@@ -106,8 +106,7 @@ function renderTerrain(){
      // Discrete isolines at real elevations, not periodic illumination bands.
      const interval=50;
      if(terrainLayer==='height'&&((ix>0&&Math.floor(HM[index]/interval)!==Math.floor(west/interval))||(iy>0&&Math.floor(HM[index]/interval)!==Math.floor(south/interval))))color=color.map(c=>c*.81);
-     const depth=terrainDiagnostics?.waterDepth?.[index]??0;
-     if(depth>.4)color=[142,184,198];
+     if(terrainDiagnostics?.waterMask?.[index])color=[142,184,198];
      else if((terrainDiagnostics?.accumulation?.[index]??0)>600)color=[73,131,156];
     }
     image.data[k]=color[0];image.data[k+1]=color[1];image.data[k+2]=color[2];
@@ -145,11 +144,12 @@ function missionRangeLimit(){
  return Math.max(3000,Math.min(15000,maximum*.85));
 }
 function isDryTerrain(point){
+ const mask=terrainDiagnostics?.waterMask;
  const water=terrainDiagnostics?.waterDepth;
- if(!water)return true;
+ if(!mask&&!water)return true;
  const x=Math.max(0,Math.min(N-1,Math.round((point.x-ORG.x)/CELL)));
  const y=Math.max(0,Math.min(N-1,Math.round((point.y-ORG.y)/CELL)));
- return water[y*N+x]<=.4;
+ return mask?!mask[y*N+x]:water[y*N+x]<=.4;
 }
 function place(maxDistance){
   const valid=(g,t)=>t.x>=ORG.x+1200&&t.x<=ORG.x+WS-1200&&t.y>=ORG.y+1200&&t.y<=ORG.y+WS-1200&&

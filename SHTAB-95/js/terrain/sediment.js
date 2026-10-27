@@ -32,11 +32,15 @@ function evolve(eroded,size,hydrology,options={}){
   const slope=Math.max(0,(heights[i]-heights[j])/(cellSize*(diagonal?Math.SQRT2:1)));
   // Ponded cells can aggrade to spill level; open channels retain half their
   // downstream drop, preventing deposition from reversing the local gradient.
-  const room=Math.max(0,drainage.filledHeight[i]-heights[i],(heights[j]-heights[i])*.5);
+  const room=Math.max(0,drainage.filledHeight[i]-heights[i]);
   const channelRoom=Math.max(0,(heights[i]-heights[j])*.45);
   // Bound local aggradation in this model step; excess stays mobile and
   // continues to downstream cells or leaves the tile through an outlet.
-  const deposit=Math.min(load[i]*Math.max(0,.65-slope*18),room+channelRoom,6);
+  // Inside a filled basin the spill surface is the deposition ceiling.
+  // Adding channelRoom here used to build artificial emergent dams along
+  // the routing tree, even when the surrounding lake was still unfilled.
+  const capacity=room>0?room:channelRoom;
+  const deposit=Math.min(load[i]*Math.max(0,.65-slope*18),capacity,6);
   heights[i]+=deposit;deposition[i]=deposit;stored+=deposit;
   load[j]+=load[i]-deposit;
  }
