@@ -1,0 +1,137 @@
+{
+  "description": "Exploratory static 0.1 m uniform runoff; no losses",
+  "runs": [
+    {
+      "region": "donja_bukovica",
+      "seed": 0,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.399999999125,
+      "stored": 8288.947485351575,
+      "exported": 17925.452514648383,
+      "wetFraction": 0.06901931762695312,
+      "elapsedMs": 840.1600739999994
+    },
+    {
+      "region": "donja_bukovica",
+      "seed": 42,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.39999999952,
+      "stored": 15457.004261780035,
+      "exported": 10757.395738220184,
+      "wetFraction": 0.06999588012695312,
+      "elapsedMs": 727.0422470000003
+    },
+    {
+      "region": "donja_bukovica",
+      "seed": 4294967295,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.39999999897,
+      "stored": 17172.081139373764,
+      "exported": 9042.318860626083,
+      "wetFraction": 0.07254791259765625,
+      "elapsedMs": 952.9046630000003
+    },
+    {
+      "region": "popovac",
+      "seed": 0,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.39999999939,
+      "stored": 16515.28599548345,
+      "exported": 9699.114004516608,
+      "wetFraction": 0.0462188720703125,
+      "elapsedMs": 715.8041320000002
+    },
+    {
+      "region": "popovac",
+      "seed": 42,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.399999999474,
+      "stored": 13555.466061401692,
+      "exported": 12658.933938598564,
+      "wetFraction": 0.03870391845703125,
+      "elapsedMs": 736.4433829999998
+    },
+    {
+      "region": "popovac",
+      "seed": 4294967295,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.39999999913,
+      "stored": 17752.739929199255,
+      "exported": 8461.660070800617,
+      "wetFraction": 0.053302764892578125,
+      "elapsedMs": 810.0438080000004
+    },
+    {
+      "region": "lipovac",
+      "seed": 0,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.3999999993,
+      "stored": 16423.046810913223,
+      "exported": 9791.353189086873,
+      "wetFraction": 0.02443695068359375,
+      "elapsedMs": 569.0587400000004
+    },
+    {
+      "region": "lipovac",
+      "seed": 42,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.399999999398,
+      "stored": 18906.581658935884,
+      "exported": 7307.818341064279,
+      "wetFraction": 0.03052520751953125,
+      "elapsedMs": 610.6784769999995
+    },
+    {
+      "region": "lipovac",
+      "seed": 4294967295,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.39999999931,
+      "stored": 19013.6977294921,
+      "exported": 7200.702270507773,
+      "wetFraction": 0.024578094482421875,
+      "elapsedMs": 716.0033500000009
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 0,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.39999999954,
+      "stored": 16115.852191162257,
+      "exported": 10098.547808837884,
+      "wetFraction": 0.012020111083984375,
+      "elapsedMs": 388.19013799999993
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 42,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.3999999994,
+      "stored": 16866.03558349598,
+      "exported": 9348.364416504042,
+      "wetFraction": 0.014068603515625,
+      "elapsedMs": 719.6554159999996
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 4294967295,
+      "runoffMetres": 0.1,
+      "cellArea": 1,
+      "initial": 26214.399999999263,
+      "stored": 20977.181103515573,
+      "exported": 5237.218896484316,
+      "wetFraction": 0.016994476318359375,
+      "elapsedMs": 655.7374899999995
+    }
+  ]
+}
