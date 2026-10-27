@@ -36,7 +36,10 @@ initTerrainRegionCombo();
 // Temporary flat terrain until the new geographic generator is implemented.
 function genTerrain(seed,region){
   const geology=window.SH95Geology.generate(region,seed);
-  return window.SH95Macrorelief.generate(geology,N).heightMap;
+  const macro=window.SH95Macrorelief.generate(geology,N);
+  const result=window.SH95Erosion.erode(macro.heightMap,N,window.SH95Hydrology,{rockHardness:macro.rockHardness,cellSize:CELL,iterations:10,strength:10,maxCut:4});
+  terrainHydrology=result.hydrology;
+  return result.heightMap;
 }
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
@@ -220,7 +223,6 @@ function newTask(noWind){
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
   HM=genTerrain((Math.random()*0xFFFFFFFF)>>>0,terrainRegion);
-  terrainHydrology=window.SH95Hydrology.analyze(HM,N);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
