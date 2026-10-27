@@ -44,6 +44,20 @@ function analyze(heightMap,size){
    push(j,filled[j]);
   }
  }
+ // Flood discovery parents are only a flat/depression fallback. On slopes route
+ // to the steepest D8 descent; rank makes every flat edge acyclic.
+ const rank=new Int32Array(count);
+ for(let p=0;p<used;p++)rank[order[p]]=p;
+ for(let y=1;y<size-1;y++)for(let x=1;x<size-1;x++){
+  const i=y*size+x;let best=receiver[i],bestSlope=0;
+  for(let k=0;k<8;k++){
+   const j=(y+DY[k])*size+x+DX[k];
+   if(rank[j]>=rank[i])continue;
+   const slope=(filled[i]-filled[j])/(DX[k]&&DY[k]?Math.SQRT2:1);
+   if(slope>bestSlope){bestSlope=slope;best=j}
+  }
+  receiver[i]=best;
+ }
  // Every upstream cell appears after its receiver in flood order.
  for(let p=used-1;p>=0;p--){
   const i=order[p],to=receiver[i];

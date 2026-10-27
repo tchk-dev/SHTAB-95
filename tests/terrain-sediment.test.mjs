@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const c={window:{}};vm.createContext(c);
+for(const f of ['hydrology','erosion','sediment'])vm.runInContext(fs.readFileSync(new URL('../SHTAB-95/js/terrain/'+f+'.js',import.meta.url),'utf8'),c);
+test('sediment conserves eroded volume, diffuses slopes and preserves inputs',()=>{
+ const n=32,h=Float32Array.from({length:n*n},(_,i)=>200-Math.floor(i/n)*2+Math.abs(i%n-16)*3);
+ const e=c.window.SH95Erosion.erode(h,n,c.window.SH95Hydrology,{iterations:4,strength:10,channelThreshold:4});
+ const before=e.heightMap.slice();
+ const a=c.window.SH95Sediment.evolve(e,n,c.window.SH95Hydrology);
+ const b=c.window.SH95Sediment.evolve(e,n,c.window.SH95Hydrology);
+ assert.deepEqual(a.heightMap,b.heightMap);assert.deepEqual(e.heightMap,before);
+ assert.ok(a.heightMap.every(Number.isFinite));
+ assert.ok(a.budget.depositedVolume>0);assert.ok(a.budget.exportedVolume>0);
+ assert.ok(Math.abs(a.budget.erodedVolume-a.budget.depositedVolume-a.budget.exportedVolume)<1e-6*a.budget.erodedVolume);
+ assert.ok(Math.abs(a.hillslope.reduce((s,v)=>s+v,0))<.001);
+ const observed=a.heightMap.reduce((s,v,i)=>s+v-before[i],0);
+ const deposited=a.deposition.reduce((s,v)=>s+v,0);
+ assert.ok(Math.abs(observed-deposited)<.02);
+});
