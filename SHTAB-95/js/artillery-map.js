@@ -34,30 +34,60 @@ function initTerrainRegionCombo(){
 initTerrainRegionCombo();
 
 // Temporary flat terrain until the new geographic generator is implemented.
-function genTerrain(seed,region){
-  const geology=window.SH95Geology.generate(region,seed);
-  const macro=window.SH95Macrorelief.generate(geology,N);
-  const result=window.SH95Erosion.erode(macro.heightMap,N,window.SH95Hydrology,{rockHardness:macro.rockHardness,cellSize:CELL,iterations:10,strength:10,maxCut:4});
-  terrainHydrology=result.hydrology;
-  return result.heightMap;
+let terrainDiagnostics=null,terrainLayer='height',terrainJob=0,terrainWorker=null,terrainRequest=0;
+function terrainGenerate(seed,region){
+ return new Promise((resolve,reject)=>{
+  if(typeof Worker==='undefined'){reject(Error('Web Worker unavailable'));return}
+  const worker=new Worker('js/terrain/terrain-worker.js');
+  terrainWorker=worker;
+  const id=++terrainJob;
+  worker.onmessage=event=>{
+   if(event.data.id!==id)return;
+   worker.terminate();if(terrainWorker===worker)terrainWorker=null;
+   if(event.data.error)reject(Error(event.data.error));else resolve(event.data);
+  };
+  worker.onerror=event=>{worker.terminate();if(terrainWorker===worker)terrainWorker=null;reject(Error(event.message||'Worker failed'))};
+  worker.postMessage({id,seed,region});
+ });
 }
+function initTerrainDiagnostics(){
+ const toolbar=$('map')?.parentElement;
+ if(!toolbar||document.getElementById('terrainDiagnosticLayer'))return;
+ const label=document.createElement('label');
+ label.style.cssText='display:inline-flex;align-items:center;gap:5px;font:11px monospace;margin:4px';
+ label.textContent='TERRAIN: ';
+ const select=document.createElement('select');select.id='terrainDiagnosticLayer';
+ for(const [value,name] of [['height','Elevation'],['flow','Flow accumulation'],['direction','Flow direction'],['incision','Erosion depth']]){
+  const option=document.createElement('option');option.value=value;option.textContent=name;select.appendChild(option);
+ }
+ select.onchange=()=>{terrainLayer=select.value;if(HM){renderTerrain();draw()}};
+ label.appendChild(select);toolbar.parentElement?.insertBefore(label,toolbar);
+}
+initTerrainDiagnostics();
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
   const i=u|0,j=w|0,a=u-i,b=w-j;
   return HM[j*N+i]*(1-a)*(1-b)+HM[j*N+i+1]*a*(1-b)+HM[(j+1)*N+i]*(1-a)*b+HM[(j+1)*N+i+1]*a*b}
 
 function renderTerrain(){
-  // Intentionally blank 100 km × 100 km planning sheet.
+  // Elevation and diagnostic rasters.
   terr=document.createElement('canvas');
   terr.width=terr.height=1024;
   const ctx=terr.getContext('2d');
   const image=ctx.createImageData(1024,1024);
   let min=Infinity,max=-Infinity;
   for(const h of HM){min=Math.min(min,h);max=Math.max(max,h)}
+  const layer=terrainLayer==='flow'?terrainDiagnostics?.accumulation:terrainLayer==='incision'?terrainDiagnostics?.incision:terrainLayer==='direction'?terrainDiagnostics?.receiver:null;
+  let layerMax=0;
+  if(layer)for(const v of layer)layerMax=Math.max(layerMax,v);
   for(let y=0;y<1024;y++)for(let x=0;x<1024;x++){
-    const ix=Math.floor(x/2),iy=511-Math.floor(y/2);
-    const t=(HM[iy*N+ix]-min)/Math.max(1,max-min),k=(y*1024+x)*4;
-    image.data[k]=215-78*t;image.data[k+1]=223-95*t;image.data[k+2]=188-80*t;image.data[k+3]=255;
+    const ix=Math.floor(x/2),iy=N-1-Math.floor(y/2),index=iy*N+ix;
+    const t=layer?(terrainLayer==='flow'?Math.log1p(layer[index])/Math.log1p(Math.max(1,layerMax)):terrainLayer==='direction'?(layer[index]<0?0:(Math.atan2(Math.floor(layer[index]/N)-iy,layer[index]%N-ix)+Math.PI)/(2*Math.PI)):layer[index]/Math.max(.001,layerMax)):(HM[index]-min)/Math.max(1,max-min);
+    const k=(y*1024+x)*4;
+    image.data[k]=layer?245-205*t:215-78*t;
+    image.data[k+1]=layer?242-165*t:223-95*t;
+    image.data[k+2]=layer?231-100*t:188-80*t;
+    image.data[k+3]=255;
   }
   ctx.putImageData(image,0,0);
 }
@@ -216,13 +246,28 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  if(window.sh95Event)window.sh95Event(I18n.format('mission.intercept',{crew:crewNumber}));
  return true;
 };
-function newTask(noWind){
+async function newTask(noWind){
+ const request=++terrainRequest;
+ if(terrainWorker){terrainWorker.terminate();terrainWorker=null}
  cancelProjectiles();
   missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date(),true);S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
-  HM=genTerrain((Math.random()*0xFFFFFFFF)>>>0,terrainRegion);
+  const seed=(Math.random()*0xFFFFFFFF)>>>0;
+  const newButton=$('newt'),noWindButton=$('nowind');
+  newButton.disabled=true;noWindButton.disabled=true;
+  let generated;
+  try{
+   generated=await terrainGenerate(seed,terrainRegion);
+  }catch(error){
+   if(request===terrainRequest){newButton.disabled=false;noWindButton.disabled=false;console.error('Terrain generation failed:',error);alert('Terrain generation failed: '+error.message)}
+   return;
+  }
+  if(request!==terrainRequest)return;
+  newButton.disabled=false;noWindButton.disabled=false;
+  HM=generated.heightMap;terrainDiagnostics=generated;
+  console.info('Terrain generation timing (ms)',generated.timings);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
@@ -368,7 +413,7 @@ function draw(){
   x.strokeStyle='#777465';x.strokeRect(W-166.5,H-45.5,159,39);
   x.fillStyle='#34362f';x.font='bold 11px Courier New';x.textAlign='left';
   x.fillText('40 km × 40 km',W-159,H-29);
-  x.font='10px Courier New';x.fillText('MACRORELIEF ONLY',W-159,H-15);
+  x.font='10px Courier New';x.fillText('FLUVIAL EROSION',W-159,H-15);
   x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText(I18n.format('map.grid',{size:st}),9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
   drawAnnotations(x);drawProfile()}
 function drawProfile(){
