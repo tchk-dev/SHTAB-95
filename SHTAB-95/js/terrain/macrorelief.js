@@ -17,7 +17,7 @@ function generate(geology,size){
   for(const ridge of ridges){
    const rx=u-ridge.cx,ry=v-ridge.cy,along=rx*ridge.dx+ry*ridge.dy;
    const offset=-rx*ridge.dy+ry*ridge.dx-ridge.curve*Math.sin(along*5+ridge.phase);
-   const taper=Math.exp(-Math.pow(Math.max(0,Math.abs(along)-ridge.taper)/.2,2));
+   const taper=Math.exp(-Math.pow(Math.max(0,Math.abs(along)-ridge.taper)/.16,2));
    uplift=Math.max(uplift,ridge.amplitude*Math.exp(-.5*(offset/ridge.width)**2)*taper);
   }
   let weakness=0;
@@ -29,7 +29,7 @@ function generate(geology,size){
   const broad=noise(u*2.4,v*2.4,seed+1)-.5;
   const middle=noise(u*9,v*9,seed+2)-.5;
   const detail=(noise(u*22,v*22,seed+3)-.5)*(.035+.08*uplift);
-  const shape=Math.max(0,Math.min(1,.15+.72*uplift+.22*broad+.09*middle+detail-.4*basin-.15*weakness));
+  const shape=Math.max(0,Math.min(1,.15+.72*uplift+.22*broad+.09*middle+detail-.4*basin));
   heightMap[index]=profile.base+profile.relief*shape;
   rockHardness[index]=Math.max(0,Math.min(255,Math.round(120+profile.hardness*100+noise(u*6,v*6,seed+5)*30-weakness*100)));
  }
