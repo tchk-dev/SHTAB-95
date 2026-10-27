@@ -20,3 +20,23 @@ test('sediment conserves eroded volume, diffuses slopes and preserves inputs',()
  const deposited=a.deposition.reduce((s,v)=>s+v,0);
  assert.ok(Math.abs(observed-deposited)<.02);
 });
+test('lake deposition cannot overtop the initial spill surface and create routing-tree dams',()=>{
+ const n=16,h=new Float32Array(n*n).fill(12);
+ for(let y=1;y<n-1;y++)for(let x=1;x<n-1;x++)h[y*n+x]=7+x*.12+y*.05;
+ h[8*n]=10;
+ const eroded={heightMap:h,incision:new Float32Array(n*n).fill(3)};
+ let before,filled;
+ const hydrology={analyze(heights,size){
+  const result=c.window.SH95Hydrology.analyze(heights,size);
+  if(!before){before=heights.slice();filled=result.filledHeight.slice()}
+  return result;
+ }};
+ const result=c.window.SH95Sediment.evolve(eroded,n,hydrology);
+ let ponded=0;
+ for(let i=0;i<h.length;i++)if(filled[i]-before[i]>.001){
+  ponded++;assert.ok(result.heightMap[i]<=filled[i]+.001,'deposition protrudes above the lake surface');
+ }
+ assert.ok(ponded>50);
+ const budget=result.budget;
+ assert.ok(Math.abs(budget.erodedVolume-budget.depositedVolume-budget.exportedVolume)<budget.erodedVolume*1e-8);
+});
