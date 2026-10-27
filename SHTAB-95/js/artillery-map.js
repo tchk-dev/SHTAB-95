@@ -34,7 +34,7 @@ function initTerrainRegionCombo(){
 initTerrainRegionCombo();
 
 // Temporary flat terrain until the new geographic generator is implemented.
-let terrainDiagnostics=null,terrainLayer='height',terrainJob=0,terrainWorker=null,terrainRequest=0;
+let terrainDiagnostics=null,terrainLayer='height',terrainJob=0,terrainWorker=null,terrainRequest=0,terrainGenerating=false;
 function terrainGenerate(seed,region){
  return new Promise((resolve,reject)=>{
   if(typeof Worker==='undefined'){reject(Error('Web Worker unavailable'));return}
@@ -257,11 +257,12 @@ async function newTask(noWind){
   const seed=(Math.random()*0xFFFFFFFF)>>>0;
   const newButton=$('newt'),noWindButton=$('nowind');
   newButton.disabled=true;noWindButton.disabled=true;
+  terrainGenerating=true;draw();
   let generated;
   try{
    generated=await terrainGenerate(seed,terrainRegion);
   }catch(error){
-   if(request===terrainRequest){newButton.disabled=false;noWindButton.disabled=false;console.error('Terrain generation failed:',error);alert('Terrain generation failed: '+error.message)}
+   if(request===terrainRequest){terrainGenerating=false;draw();newButton.disabled=false;noWindButton.disabled=false;console.error('Terrain generation failed:',error);alert('Terrain generation failed: '+error.message)}
    return;
   }
   if(request!==terrainRequest)return;
@@ -276,7 +277,7 @@ async function newTask(noWind){
   last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
   renderWindReadout();
   $('log').innerHTML='<tr>'+['Shot','Crew','Azimuth','Elevation','Charge','Time, s','Deviation, m'].map(label=>'<th>'+I18n.t(label)+'</th>').join('')+'</tr>';
-  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
+  renderData();renderTerrain();fitView();terrainGenerating=false;updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
 
 function simulate(az,el,v0,c){
   return window.SH95Ballistics.simulate(az,el,v0,c,{weather:S,ground,dragMultiplier:missionConditions?.drag||1});
@@ -392,7 +393,13 @@ function marker(x,wx,wy,sym,col,label){
 
 window.sh95RedrawMap=()=>draw();
 function draw(){
-  const x=mapC.getContext('2d');x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
+  const x=mapC.getContext('2d');
+  if(terrainGenerating){
+    x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
+    x.fillStyle='#b9c8a9';x.font='bold 16px Courier New';x.textAlign='center';
+    x.fillText('GENERATING TERRAIN...',W/2,H/2);
+    x.font='12px Courier New';x.fillText('PLEASE WAIT',W/2,H/2+24);x.textAlign='left';return;
+  }x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
   x.imageSmoothingEnabled=true;x.save();x.filter=window.sh95GreenMap?'grayscale(1) sepia(.8) hue-rotate(70deg) saturate(1.5) brightness(.64) contrast(1.2)':'none';x.drawImage(terr,X(ORG.x),Y(ORG.y+WS),WS/v.m,WS/v.m);x.restore();
   const steps=[100,200,500,1000,2000,5000],st=steps.find(s=>s/v.m>=80)||5000;
   x.lineWidth=1;x.strokeStyle='rgba(95,209,130,.27)';x.font='bold 11px Courier New,monospace';x.textBaseline='alphabetic';
