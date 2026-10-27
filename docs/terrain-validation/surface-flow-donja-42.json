@@ -1,0 +1,11 @@
+{
+  "region": "donja_bukovica",
+  "seed": 42,
+  "unitRunoff": true,
+  "elapsedMs": 160.07127799999944,
+  "internalSinks": 425,
+  "edgeSinks": 2044,
+  "riverSinks": 112,
+  "uphill": 0,
+  "crossings": 0
+}
