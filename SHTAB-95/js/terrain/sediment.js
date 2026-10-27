@@ -22,7 +22,7 @@ function evolve(eroded,size,hydrology,options={}){
   }
   for(let i=0;i<count;i++){heights[i]+=delta[i];hillslope[i]+=delta[i]}
  }
- const drainage=hydrology.analyze(heights,size),load=new Float64Array(eroded.incision);
+ const drainage=hydrology.analyze(heights,size,options.runoff),load=new Float64Array(eroded.incision);
  let supplied=0,stored=0,exported=0;
  for(const v of load)supplied+=v;
  for(let p=count-1;p>=0;p--){
@@ -34,11 +34,13 @@ function evolve(eroded,size,hydrology,options={}){
   // downstream drop, preventing deposition from reversing the local gradient.
   const room=Math.max(0,drainage.filledHeight[i]-heights[i],(heights[j]-heights[i])*.5);
   const channelRoom=Math.max(0,(heights[i]-heights[j])*.45);
-  const deposit=Math.min(load[i]*Math.max(0,.65-slope*18),room+channelRoom);
+  // Bound local aggradation in this model step; excess stays mobile and
+  // continues to downstream cells or leaves the tile through an outlet.
+  const deposit=Math.min(load[i]*Math.max(0,.65-slope*18),room+channelRoom,6);
   heights[i]+=deposit;deposition[i]=deposit;stored+=deposit;
   load[j]+=load[i]-deposit;
  }
- return {heightMap:heights,hillslope,deposition,hydrology:hydrology.analyze(heights,size),
+ return {heightMap:heights,hillslope,deposition,hydrology:hydrology.analyze(heights,size,options.runoff),
   budget:{erodedVolume:supplied*cellSize*cellSize,depositedVolume:stored*cellSize*cellSize,exportedVolume:exported*cellSize*cellSize}};
 }
 global.SH95Sediment=Object.freeze({evolve});

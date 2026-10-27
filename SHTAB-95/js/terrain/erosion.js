@@ -15,7 +15,7 @@ function erode(source,size,hydrology,options={}){
  const heights=new Float32Array(source),incision=new Float32Array(source.length);
  let drainage;
  for(let step=0;step<iterations;step++){
-  drainage=hydrology.analyze(heights,size);
+  drainage=hydrology.analyze(heights,size,options.runoff);
   const {receiver,accumulation,order}=drainage;
   // Process upstream-to-downstream, keeping the recipient lower than the donor.
   for(let p=order.length-1;p>=0;p--){
@@ -33,7 +33,7 @@ function erode(source,size,hydrology,options={}){
    heights[i]-=actual;incision[i]+=actual;
   }
  }
- return {heightMap:heights,incision,hydrology:hydrology.analyze(heights,size)};
+ return {heightMap:heights,incision,hydrology:hydrology.analyze(heights,size,options.runoff)};
 }
 global.SH95Erosion=Object.freeze({erode});
 })(window);

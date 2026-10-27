@@ -2,11 +2,18 @@
 (function(global){
 'use strict';
 const DX=[-1,0,1,-1,1,-1,0,1],DY=[-1,-1,-1,0,0,1,1,1];
-function analyze(heightMap,size){
+function analyze(heightMap,size,runoff=null){
  if(!Number.isInteger(size)||size<2||heightMap.length!==size*size)throw Error('Invalid terrain grid');
  const count=size*size,filled=new Float32Array(count),receiver=new Int32Array(count);
  const accumulation=new Float32Array(count),visited=new Uint8Array(count),order=new Int32Array(count);
  receiver.fill(-1);accumulation.fill(1);
+ if(runoff){
+  if(runoff.length!==count)throw Error('Invalid runoff grid');
+  for(let i=0;i<count;i++){
+   if(!Number.isFinite(runoff[i])||runoff[i]<0)throw Error('Invalid runoff');
+   accumulation[i]=runoff[i];
+  }
+ }
  const heap=[];
  function push(index,level){
   let i=heap.length;heap.push([level,index]);

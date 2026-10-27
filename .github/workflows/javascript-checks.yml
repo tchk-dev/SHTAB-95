@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -33,3 +32,5 @@ jobs:
         run: |
           node --test tests/*.test.mjs
           node --test SHTAB-95/tests/i18n.test.js
+      - name: Verify full-resolution terrain seed matrix
+        run: node tests/terrain-worker-matrix.mjs
