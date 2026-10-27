@@ -21,5 +21,5 @@ test('fluvial incision is deterministic, finite and never raises terrain',()=>{
 test('zero iterations preserves terrain and input is not mutated',()=>{
  const n=8,h=Float32Array.from({length:n*n},(_,i)=>100-i);
  const before=h.slice(),result=erosion.erode(h,n,hyd,{iterations:0});
- assert.deepEqual(h,before);assert.deepEqual(result.heightMap,before);
+ assert.deepEqual(h,before);assert.deepEqual(Array.from(result.heightMap),Array.from(before));
 });
