@@ -12,6 +12,7 @@ test('sediment conserves eroded volume, diffuses slopes and preserves inputs',()
  const b=c.window.SH95Sediment.evolve(e,n,c.window.SH95Hydrology);
  assert.deepEqual(a.heightMap,b.heightMap);assert.deepEqual(e.heightMap,before);
  assert.ok(a.heightMap.every(Number.isFinite));
+ assert.ok(a.deposition.every(v=>v>=0&&v<=6));
  assert.ok(a.budget.depositedVolume>0);assert.ok(a.budget.exportedVolume>0);
  assert.ok(Math.abs(a.budget.erodedVolume-a.budget.depositedVolume-a.budget.exportedVolume)<1e-6*a.budget.erodedVolume);
  assert.ok(Math.abs(a.hillslope.reduce((s,v)=>s+v,0))<.001);

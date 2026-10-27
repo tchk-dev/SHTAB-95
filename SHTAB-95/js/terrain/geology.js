@@ -35,7 +35,11 @@
   // Faults influence rock resistance only, never carve straight troughs.
   const faults=Array.from({length:2},()=>({x:r(),y:r(),
    angle:theta+Math.PI/2+(r()-.5)*.9,width:.008+.012*r(),weakness:.2+.3*r()}));
-  return {profile,ridges,faults,seed};
+  // A seeded regional drainage gradient opens structural valleys toward an
+  // external outlet instead of making every inter-ridge trough a closed lake.
+  const drainageAngle=theta+(r()-.5)*.35+(r()<.5?Math.PI:0);
+  const drainage={dx:Math.cos(drainageAngle),dy:Math.sin(drainageAngle)};
+  return {profile,ridges,faults,seed,drainage};
  }
  global.SH95Geology=Object.freeze({REGIONS,generate});
 })(window);
