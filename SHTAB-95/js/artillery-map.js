@@ -1,4 +1,4 @@
-const WS=100000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
+const WS=40000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
 let S,HM,ORG,terr,CR=[],last=null,v={cx:0,cy:0,m:30};
 const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
@@ -356,7 +356,7 @@ function draw(){
   x.fillStyle='rgba(248,246,225,.95)';x.fillRect(W-166,H-45,158,38);
   x.strokeStyle='#777465';x.strokeRect(W-166.5,H-45.5,159,39);
   x.fillStyle='#34362f';x.font='bold 11px Courier New';x.textAlign='left';
-  x.fillText('100 km × 100 km',W-159,H-29);
+  x.fillText('40 km × 40 km',W-159,H-29);
   x.font='10px Courier New';x.fillText('TERRAIN: PENDING',W-159,H-15);
   x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText(I18n.format('map.grid',{size:st}),9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
   drawAnnotations(x);drawProfile()}
