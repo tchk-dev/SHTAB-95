@@ -1,12 +1,12 @@
 const {WORLD_SIZE:WS,GRID_SIZE:N,CELL_SIZE:CELL}=window.SH95TerrainData;
 const G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
-let S,HM,ORG,terr,CR=[],last=null,v={cx:0,cy:0,m:30};
+let S,HM,ORG,terr,terrainHydrology,CR=[],last=null,v={cx:0,cy:0,m:30};
 const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
 const X=wx=>W/2+(wx-v.cx)/v.m,Y=wy=>H/2-(wy-v.cy)/v.m;
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 // Region selection is preserved for future terrain generation.
-let terrainRegion='velikograd';
+let terrainRegion='donja_bukovica';
 
 function initTerrainRegionCombo(){
  const combo=$('terrainRegionCombo'),trigger=$('terrainRegionTrigger'),menu=$('terrainRegionMenu'),value=$('terrainRegionValue'),input=$('terrainRegion');
@@ -220,6 +220,7 @@ function newTask(noWind){
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
   HM=genTerrain((Math.random()*0xFFFFFFFF)>>>0,terrainRegion);
+  terrainHydrology=window.SH95Hydrology.analyze(HM,N);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
