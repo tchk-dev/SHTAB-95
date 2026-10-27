@@ -107,12 +107,21 @@ function renderTerrain(){
      const interval=50;
      if(terrainLayer==='height'&&((ix>0&&Math.floor(HM[index]/interval)!==Math.floor(west/interval))||(iy>0&&Math.floor(HM[index]/interval)!==Math.floor(south/interval))))color=color.map(c=>c*.81);
      if(terrainDiagnostics?.waterMask?.[index])color=[142,184,198];
-     else if((terrainDiagnostics?.accumulation?.[index]??0)>600)color=[73,131,156];
+
     }
     image.data[k]=color[0];image.data[k+1]=color[1];image.data[k+2]=color[2];
     image.data[k+3]=255;
   }
   ctx.putImageData(image,0,0);
+  if(!layer&&terrainDiagnostics?.receiver&&terrainDiagnostics?.accumulation){
+   const segments=window.SH95RiverGeometry.build(terrainDiagnostics.receiver,terrainDiagnostics.accumulation,N);
+   ctx.strokeStyle='rgb(73,131,156)';ctx.lineCap='round';ctx.lineJoin='round';
+   for(const s of segments){ctx.beginPath();ctx.moveTo(...s.start);ctx.quadraticCurveTo(...s.control,...s.end);ctx.lineWidth=s.width;ctx.stroke()}
+   // A lake occludes routing paths through its filled basin.
+   const mask=terrainDiagnostics.waterMask;
+   if(mask){const overlay=ctx.createImageData(N,N);for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(mask[(N-1-y)*N+x]){const k=(y*N+x)*4;overlay.data[k]=142;overlay.data[k+1]=184;overlay.data[k+2]=198;overlay.data[k+3]=255}
+    const lake=document.createElement('canvas');lake.width=lake.height=N;lake.getContext('2d').putImageData(overlay,0,0);ctx.drawImage(lake,0,0)}
+  }
   console.info('Terrain raster (ms)',Math.round(performance.now()-rasterStart));
 }
 
