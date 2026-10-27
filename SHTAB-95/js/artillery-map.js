@@ -34,8 +34,9 @@ function initTerrainRegionCombo(){
 initTerrainRegionCombo();
 
 // Temporary flat terrain until the new geographic generator is implemented.
-function genTerrain(){
-  return window.SH95TerrainData.createHeightMap();
+function genTerrain(seed,region){
+  const geology=window.SH95Geology.generate(region,seed);
+  return window.SH95Macrorelief.generate(geology,N).heightMap;
 }
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
@@ -211,8 +212,7 @@ function newTask(noWind){
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
-  HM=genTerrain();
-  setTerrainColorRange(HM);
+  HM=genTerrain((Math.random()*0xFFFFFFFF)>>>0,terrainRegion);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
