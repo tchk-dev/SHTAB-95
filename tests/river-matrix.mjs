@@ -11,7 +11,7 @@ function generate(region,seed){
 const runs=[],n=512;
 for(const region of ['donja_bukovica','popovac','lipovac','mckhetovac'])for(const seed of [0,42,4294967295]){
  const {data:d,geometry}=generate(region,seed),r=d.receiver,q=d.accumulation,mask=d.waterMask;
- const seg=geometry.build(r,q,n),starts=new Uint8Array(n*n),ends=new Uint8Array(n*n);let riverEdges=0,dryUphill=0,waterUphill=0,crossings=0;
+ const seg=geometry.build(r,q,n),starts=new Uint8Array(n*n),ends=new Uint8Array(n*n);let riverEdges=0,dryUphill=0,waterUphill=0,crossings=0,dryUphillLocalSinks=0;
  // Every segment remains inside the convex hull of its neighbouring graph cells.
  for(const s of seg){
   const p=i=>[i%n,n-1-Math.floor(i/n)],c=p(s.cell);
@@ -22,12 +22,20 @@ for(const region of ['donja_bukovica','popovac','lipovac','mckhetovac'])for(cons
  }
  for(let i=0;i<r.length;i++)if(q[i]>600&&r[i]>=0){
   const j=r[i];riverEdges++;assert.ok(starts[i]&&ends[i],`edge ${i} -> ${j} has a display gap`);
-  if(d.heightMap[j]-d.heightMap[i]>.001){if(mask[i]||mask[j])waterUphill++;else dryUphill++}
+  if(d.heightMap[j]-d.heightMap[i]>.001){if(mask[i]||mask[j])waterUphill++;else{
+    dryUphill++;
+    const x=i%n,y=Math.floor(i/n);let lower=false;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+     if(!dx&&!dy)continue;const xx=x+dx,yy=y+dy;
+     if(xx>=0&&yy>=0&&xx<n&&yy<n&&d.heightMap[yy*n+xx]<d.heightMap[i]-.001)lower=true;
+    }
+    if(!lower)dryUphillLocalSinks++;
+   }}
  }
  for(let y=0;y<n-1;y++)for(let x=0;x<n-1;x++){
   const a=y*n+x,b=a+1,c=a+n,e=c+1,edge=(i,j)=>r[i]===j||r[j]===i;
   if(edge(a,e)&&edge(b,c))crossings++;
  }
- runs.push({region,seed,riverEdges,segments:seg.length,dryUphill,waterUphill,diagonalCrossings:crossings});console.log(JSON.stringify(runs.at(-1)));
+ runs.push({region,seed,riverEdges,segments:seg.length,dryUphill,dryUphillLocalSinks,waterUphill,diagonalCrossings:crossings});console.log(JSON.stringify(runs.at(-1)));
 }
 if(process.argv[2])fs.writeFileSync(process.argv[2],JSON.stringify({runs},null,2)+'\n');
