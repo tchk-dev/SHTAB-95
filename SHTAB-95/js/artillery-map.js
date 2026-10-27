@@ -34,7 +34,7 @@ function initTerrainRegionCombo(){
 initTerrainRegionCombo();
 
 // Temporary flat terrain until the new geographic generator is implemented.
-let terrainDiagnostics=null,terrainLayer='height',terrainJob=0,terrainWorker=null;
+let terrainDiagnostics=null,terrainLayer='height',terrainJob=0,terrainWorker=null,terrainRequest=0;
 function terrainGenerate(seed,region){
  return new Promise((resolve,reject)=>{
   if(typeof Worker==='undefined'){reject(Error('Web Worker unavailable'));return}
@@ -246,13 +246,28 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  if(window.sh95Event)window.sh95Event(I18n.format('mission.intercept',{crew:crewNumber}));
  return true;
 };
-function newTask(noWind){
+async function newTask(noWind){
+ const request=++terrainRequest;
+ if(terrainWorker){terrainWorker.terminate();terrainWorker=null}
  cancelProjectiles();
   missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date(),true);S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
   terrainRegion=$('terrainRegion')?.value||terrainRegion;
-  HM=genTerrain((Math.random()*0xFFFFFFFF)>>>0,terrainRegion);
+  const seed=(Math.random()*0xFFFFFFFF)>>>0;
+  const newButton=$('newt'),noWindButton=$('nowind');
+  newButton.disabled=true;noWindButton.disabled=true;
+  let generated;
+  try{
+   generated=await terrainGenerate(seed,terrainRegion);
+  }catch(error){
+   if(request===terrainRequest){newButton.disabled=false;noWindButton.disabled=false;console.error('Terrain generation failed:',error);alert('Terrain generation failed: '+error.message)}
+   return;
+  }
+  if(request!==terrainRequest)return;
+  newButton.disabled=false;noWindButton.disabled=false;
+  HM=generated.heightMap;terrainDiagnostics=generated;
+  console.info('Terrain generation timing (ms)',generated.timings);
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
