@@ -29,3 +29,11 @@ test('failed worker or invalid seed preserves the current mission and coordinate
  elements.terrainSeed.value='-1';await c.newTask(false);
  assert.equal(cancelCount,1);assert.equal(errors,2);assert.equal(c.ORG,origin);
 });
+test('map pointer movement waits for terrain before sampling ground',()=>{
+ const source=fs.readFileSync(new URL('../SHTAB-95/js/artillery-map.js',import.meta.url),'utf8');
+ const code=source.slice(source.indexOf("mapC.addEventListener('pointermove'"),source.indexOf('\nfunction finishGesture('));
+ let handler,samples=0;
+ const c={mapC:{addEventListener:(_,fn)=>{handler=fn}},HM:null,ORG:undefined,terrainGenerating:true,ground:()=>{samples++;return 1}};
+ vm.createContext(c);vm.runInContext(code,c);handler({});assert.equal(samples,0);
+ c.HM=new Float32Array(4);c.ORG={x:0,y:0};handler({});assert.equal(samples,0);
+});
