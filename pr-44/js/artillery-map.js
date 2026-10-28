@@ -590,7 +590,7 @@ function chooseMapTool(tool){activeMapTool=tool;for(const [id,name] of [['toolPo
 $('toolPoint').onclick=()=>chooseMapTool('point');
 $('toolLine').onclick=()=>chooseMapTool('line');
 mapC.addEventListener('pointerdown',e=>{
- if(![0,1,2].includes(e.button))return;
+ if(!HM||!ORG||terrainGenerating||![0,1,2].includes(e.button))return;
  e.preventDefault();const [px,py]=pos(e);mapC.setPointerCapture(e.pointerId);
  if(e.button===2){eraseAt(px,py);mapGesture={kind:'erase',id:e.pointerId};}
  else if(e.button===1){mapGesture={kind:'pan',id:e.pointerId,p:[px,py],cx:v.cx,cy:v.cy}}
@@ -603,6 +603,7 @@ mapC.addEventListener('pointerdown',e=>{
  draw();
 });
 mapC.addEventListener('pointermove',e=>{
+ if(!HM||!ORG||terrainGenerating)return;
  const [px,py]=pos(e);hover=[px,py];const w=toWorld(px,py);
  $('s1').textContent=I18n.format('map.cursor',{x:Math.round(w.x),y:Math.round(w.y),height:Math.round(ground(w.x,w.y))});
  $('mapread').textContent=`X ${Math.round(w.x)} · Y ${Math.round(w.y)} | px ${Math.round(px)},${Math.round(py)}`;
