@@ -73,7 +73,7 @@ function build(heights,size,ground,catchments,pools,runoff,cellArea=1){
  while(head<tail){
   const i=queue[head++],j=receiver[i],group=sourceCells.get(i);
   if(group!==undefined){
-   if(accumulation[i]+1e-7<stored[group])throw Error('Lake storage exceeds incoming water');
+   if(accumulation[i]+1e-7<stored[group])throw Error('Lake storage exceeds incoming water: group='+group+' cell='+i+' incoming='+accumulation[i]+' stored='+stored[group]+' deficit='+(stored[group]-accumulation[i])+' outlet='+j);
    accumulation[i]=Math.max(0,accumulation[i]-stored[group]);retained+=stored[group];
   }
   if(j>=0){accumulation[j]+=accumulation[i];if(--indegree[j]===0)queue[tail++]=j}
