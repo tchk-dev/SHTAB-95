@@ -73,7 +73,10 @@ function build(heights,size,ground,catchments,pools,runoff,cellArea=1){
  while(head<tail){
   const i=queue[head++],j=receiver[i],group=sourceCells.get(i);
   if(group!==undefined){
-   if(accumulation[i]+1e-7<stored[group])throw Error('Lake storage exceeds incoming water: group='+group+' cell='+i+' incoming='+accumulation[i]+' stored='+stored[group]+' deficit='+(stored[group]-accumulation[i])+' outlet='+j);
+   // A fixed absolute epsilon falsely rejects ~1e-7 rounding differences
+   // when accumulated water volumes are in the tens of millions.
+   const storageTolerance=Math.max(1e-7,1e-12*Math.max(accumulation[i],stored[group]));
+   if(stored[group]-accumulation[i]>storageTolerance)throw Error('Lake storage exceeds incoming water: group='+group+' cell='+i+' incoming='+accumulation[i]+' stored='+stored[group]+' deficit='+(stored[group]-accumulation[i])+' outlet='+j);
    accumulation[i]=Math.max(0,accumulation[i]-stored[group]);retained+=stored[group];
   }
   if(j>=0){accumulation[j]+=accumulation[i];if(--indegree[j]===0)queue[tail++]=j}
