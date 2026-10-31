@@ -1,4 +1,4 @@
-// Run: node tests/hydrology-region-audit.mjs [region] [seed]
+// Run: node tests/hydrology-region-audit.mjs [region] [seed] [gridSize]
 // Experimental, coarse-resolution comparison on actual production-generated
 // terrain. Never changes the terrain worker or gameplay.
 import fs from 'node:fs';
@@ -18,7 +18,9 @@ runtime.postMessage=(data)=>{produced=data};
 vm.runInContext(sources.get('terrain-worker.js'),runtime);
 runtime.onmessage({data:{id:1,seed,region}});
 assert.ok(produced&&!produced.error,produced?.error||'Worker did not produce a map');
-const size=32,sourceSize=512,count=size*size;
+const size=Number(process.argv[4]??32),sourceSize=512;
+if(!Number.isInteger(size)||size<8||size>sourceSize)throw Error('Invalid audit grid resolution');
+const count=size*size;
 const heights=new Float64Array(count),volumes=new Float64Array(count);
 const cellSize=40000/(size-1),cellArea=cellSize*cellSize;
 for(let y=0;y<size;y++)for(let x=0;x<size;x++){
@@ -34,11 +36,20 @@ for(const file of ['surface-flow.js','catchments.js','reservoir.js','reservoir-n
  vm.runInContext(sources.get(file),c);
 const start=performance.now(),a=c.window.SH95HydrologyScenario.analyze(heights,size,volumes,cellArea),elapsedMs=performance.now()-start;
 assert.ok(Math.abs(a.input-a.retained-a.exported)<a.input*1e-7);
-let wetCells=0,uphill=0;
+let wetCells=0,uphill=0,invalidDepth=0;
+const indegree=new Int32Array(count);
 for(let i=0;i<count;i++){
+ if(!Number.isFinite(a.waterDepth[i])||a.waterDepth[i]<0)invalidDepth++;
  if(a.waterDepth[i]>.001)wetCells++;
  const to=a.receiver[i];
- if(to>=0&&heights[to]+a.waterDepth[to]>heights[i]+a.waterDepth[i]+.001)uphill++;
+ if(to>=0){
+  assert.ok(to<count&&Math.abs(i%size-to%size)<=1&&Math.abs(Math.floor(i/size)-Math.floor(to/size))<=1,'non-neighbour receiver');
+  if(heights[to]+a.waterDepth[to]>heights[i]+a.waterDepth[i]+.001)uphill++;
+  indegree[to]++;
+ }
 }
-assert.equal(uphill,0);
-console.log(JSON.stringify({region,seed,grid:size,runoffAssumptionMetres:.1,wetFraction:wetCells/count,basinCount:a.basinCount,spillCount:a.spillCount,input:a.input,retained:a.retained,exported:a.exported,uphill,elapsedMs},null,2));
+assert.equal(uphill,0);assert.equal(invalidDepth,0);
+const queue=[];for(let i=0;i<count;i++)if(indegree[i]===0)queue.push(i);
+for(let p=0;p<queue.length;p++){const j=a.receiver[queue[p]];if(j>=0&&--indegree[j]===0)queue.push(j)}
+assert.equal(queue.length,count,'cycle in hydrological receiver network');
+console.log(JSON.stringify({region,seed,grid:size,runoffAssumptionMetres:.1,wetFraction:wetCells/count,basinCount:a.basinCount,spillCount:a.spillCount,validatedCells:queue.length,input:a.input,retained:a.retained,exported:a.exported,uphill,elapsedMs},null,2));
