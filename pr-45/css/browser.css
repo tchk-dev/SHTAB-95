@@ -1,0 +1,76 @@
+/* DoorsNet Navigator: deliberately compact, Windows 95-inspired browser chrome. */
+.doors-browser{position:fixed;z-index:1500;left:50%;top:50%;transform:translate(-50%,-50%);width:min(850px,94vw);height:min(640px,85vh);background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:2px 2px #000,0 12px 32px #0008;display:flex;flex-direction:column;color:#000;font:12px Arial,sans-serif}
+.doors-browser[hidden]{display:none!important}
+.doors-browser.db-maximized{left:4px;top:4px;transform:none;width:calc(100vw - 12px);height:calc(100vh - 12px)}
+.db-title{display:flex;align-items:center;gap:5px;min-height:19px;background:#000080;color:#fff;padding:2px 3px}
+.db-title strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.db-window-icon{font-size:13px;color:#ffdc57}
+.db-window-controls{display:flex;gap:2px}
+.db-title button,.db-toolbar button,.db-address button{font:inherit;background:#c0c0c0;color:#000;border:2px solid;border-color:#fff #555 #555 #fff;cursor:pointer}
+.db-title .db-window-controls .cb{box-sizing:border-box;flex:0 0 18px;display:inline-flex;align-items:center;justify-content:center;width:18px;min-width:18px;max-width:18px;height:18px;min-height:18px;max-height:18px;margin:0;padding:0;line-height:1;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;background:#c0c0c0;color:#000;font:bold 12px Arial;text-shadow:none}
+.db-title .db-window-controls .cb:active,.db-toolbar button:active,.db-address button:active{border-color:#555 #fff #fff #555}
+.db-menubar{display:flex;gap:15px;padding:4px 8px 3px;border-bottom:1px solid #888;font-size:12px}
+.db-menubar span::first-letter{text-decoration:underline}
+.db-toolbar{display:flex;align-items:center;gap:3px;min-height:40px;padding:3px 5px;border-top:1px solid #fff;border-bottom:1px solid #888}
+.db-toolbar button{width:30px;height:29px;padding:0;font-size:17px;line-height:1}
+.db-toolbar button:disabled{color:#777;text-shadow:1px 1px #fff}
+.db-toolbar-divider{height:27px;border-left:1px solid #888;border-right:1px solid #fff;margin:0 3px}
+.db-brand{display:flex;align-items:center;gap:6px;margin-left:auto;padding:0 5px;font-size:10px;line-height:11px;font-style:italic;font-weight:bold;white-space:nowrap}
+.db-brand b{font-size:14px}
+.db-door-mark{display:flex;align-items:center;gap:3px;width:33px;height:28px;transform:skewY(-9deg)}
+.db-door-mark i{display:block;width:13px;height:25px;box-shadow:1px 1px 0 #555}
+.db-door-mark i:first-child{background:linear-gradient(100deg,#ffb34c,#d44413);transform:skewX(-8deg)}
+.db-door-mark i:last-child{background:linear-gradient(100deg,#91e62e,#237c12);transform:skewX(-8deg)}
+.db-address{display:flex;align-items:center;gap:6px;padding:4px 6px;border-top:1px solid #fff;border-bottom:1px solid #888}
+.db-address input{min-width:0;flex:1;background:#fff;color:#000;border:2px solid;border-color:#777 #fff #fff #777;padding:3px 5px;font:12px Arial,sans-serif}
+.db-address button{padding:3px 9px}
+.db-page{flex:1;min-height:0;overflow:auto;background:#fff;color:#000;margin:4px;border:2px solid;border-color:#777 #fff #fff #777;padding:18px;font:15px 'Times New Roman',serif}
+.db-site-heading{font:12px Arial,sans-serif;color:#666;border-bottom:1px solid #aaa;padding-bottom:8px}
+.db-content h1{font-size:27px;color:navy}.db-content p{line-height:1.5}
+.db-links{margin-top:20px;border-top:1px solid #aaa;padding-top:12px;display:grid;gap:8px;justify-items:start}
+.db-link,.db-page a{color:#0000ee;text-decoration:underline;cursor:pointer;font:15px 'Times New Roman',serif;text-align:left}
+.db-link:visited,.db-page a:visited{color:#551a8b}
+.db-status{padding:4px 7px;border-top:1px solid #888;background:#c0c0c0;font-size:11px}
+@media(max-width:500px){.db-menubar{gap:9px}.db-brand span:last-child{display:none}.db-page{padding:10px}}
+
+/* Consistent Start-menu icons, no external assets. */
+.start-options button{display:flex;align-items:center;gap:9px;min-height:36px;padding:6px 8px}
+.start-options .start-icon{display:inline-flex;flex:0 0 23px;align-items:center;justify-content:center;width:23px;height:23px;background:#e5e5e5;border:1px solid;border-color:#fff #555 #555 #fff;color:#000080;font:bold 18px Georgia,serif;line-height:1}
+.start-options button:hover .start-icon{background:#fff;color:#000080}
+
+
+/* DoorsNet functional menu controls. */
+.db-menubar button{border:0;background:transparent;color:#000;padding:1px 3px;font:inherit;cursor:pointer}
+.db-menubar button:hover,.db-menubar button:focus-visible{background:#000080;color:#fff;outline:none}
+.db-menubar button::first-letter{text-decoration:underline}
+.db-popup{position:absolute;z-index:3;top:49px;left:10px;max-width:min(350px,90%);padding:10px;background:#c0c0c0;border:2px solid;border-color:#fff #444 #444 #fff;box-shadow:2px 2px #555;color:#000}
+.db-popup[hidden],.db-console[hidden]{display:none!important}
+.db-popup button{display:block;width:100%;text-align:left;margin-top:5px;padding:5px;background:#ddd;border:2px outset #fff;color:#000}
+.db-console{padding:7px;display:flex;flex-wrap:wrap;align-items:center;gap:5px;background:#c0c0c0;border-bottom:2px ridge #fff;font:12px 'Courier New',monospace}
+.db-console input{flex:1;min-width:120px;background:#111;color:#90f090;border:2px inset #888;padding:5px;font:inherit}
+.db-console button,.db-star{background:#c0c0c0;border:2px outset #fff;color:#000;cursor:pointer}
+#dbConsoleOutput{width:100%;font-size:11px}
+.db-site-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.db-star{font:20px Arial;color:#b27b00;min-width:30px;min-height:27px}
+html.doors-pink-wallpaper{--teal:#e18ebc}
+html.doors-pink-wallpaper body{background:#e18ebc}
+
+.db-page.db-inspecting .db-content *{cursor:crosshair!important}
+.db-page .db-selected{outline:2px dashed #e00080!important;outline-offset:2px}
+
+
+/* RadioWorld: deliberately old-fashioned 1995 web design. */
+.rw-site{font:14px 'Times New Roman',serif;background:#e9e9df;color:#111;border:3px ridge #c0c0c0}
+.rw-header{text-align:center;background:#080e66;color:#fff;padding:12px 8px;border-bottom:5px solid #e9b634}
+.rw-header h1{font:bold 37px Georgia,serif!important;color:#fff!important;margin:2px 0;letter-spacing:2px;text-shadow:2px 2px #222}
+.rw-header h1 span{color:#f8d04c}.rw-signal{font:16px monospace;color:#ffdb63;letter-spacing:15px}
+.rw-tagline{font:10px Arial,sans-serif;letter-spacing:1px}
+.rw-marquee{background:#ffffbb;color:#9c1717;text-align:center;border-bottom:2px groove #aaa;font:bold 11px monospace;padding:6px}
+.rw-columns{display:flex;align-items:stretch;gap:0}.rw-side{width:170px;flex-shrink:0;background:#c6c6df;padding:12px 9px;border-right:3px ridge #999;font:12px Arial,sans-serif}
+.rw-side b{display:block;background:#000080;color:white;padding:5px}.rw-side p{color:#0000bb;text-decoration:underline}.rw-side small{color:#555}
+.rw-main{flex:1;min-width:0;padding:12px}.rw-main h2{color:#800000;border-bottom:1px solid #777;font-size:23px;margin:2px 0 10px}
+.rw-table{width:100%;border-collapse:collapse;background:#fff;font:13px 'Courier New',monospace}.rw-table th{background:#000080;color:white;text-align:left;padding:7px;border:1px solid #666}
+.rw-table td{padding:7px;border:1px solid #999}.rw-table tbody tr:nth-child(even){background:#e7e7f5}
+.rw-notice{font:11px Arial,sans-serif;color:#555;border-top:1px dashed #888;margin-top:14px;padding-top:8px}
+.rw-footer{text-align:center;background:#c0c0c0;border-top:2px ridge white;padding:8px;font:11px Arial,sans-serif}
+@media(max-width:600px){.rw-columns{display:block}.rw-side{width:auto;border-right:0;border-bottom:2px ridge #999}.rw-header h1{font-size:28px!important}}
