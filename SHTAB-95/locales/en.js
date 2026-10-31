@@ -1,6 +1,31 @@
 // SHTAB 95 English user-interface messages.
 window.SHTAB_LOCALES=window.SHTAB_LOCALES||{};
 window.SHTAB_LOCALES.en = {
+  "TERRAIN:": "TERRAIN:",
+  "Terrain layer": "Terrain layer",
+  "Topographic": "Topographic",
+  "Biomes": "Biomes",
+  "Annual rainfall": "Annual rainfall",
+  "Mean temperature": "Mean temperature",
+  "Runoff accumulation": "Runoff accumulation",
+  "Flow direction": "Flow direction",
+  "Erosion depth": "Erosion depth",
+  "Sediment deposition": "Sediment deposition",
+  "Seed": "Seed",
+  "Random": "Random",
+  "Terrain seed": "Terrain seed",
+  "GENERATING TERRAIN...": "GENERATING TERRAIN...",
+  "PLEASE WAIT": "PLEASE WAIT",
+  "Height": "Height",
+  "m · contours 50 m · blue: rivers / lake basins": "m · contours 50 m · blue: rivers / lake basins",
+  "Grassland · woodland · montane forest · alpine meadow · bare rock · wetland": "Grassland · woodland · montane forest · alpine meadow · bare rock · wetland",
+  "mm/year": "mm/year",
+  "Mean annual temperature": "Mean annual temperature",
+  "Log runoff accumulation · equivalent contributing cells at 600 mm/year runoff": "Log runoff accumulation · equivalent contributing cells at 600 mm/year runoff",
+  "D8 receiver bearing · map-edge outlets": "D8 receiver bearing · map-edge outlets",
+  "Bedrock incision": "Bedrock incision",
+  "Deposited sediment": "Deposited sediment",
+  "m": "m",
   "SHTAB 95 — Artillery Terminal": "SHTAB 95 — Artillery Terminal",
   "SHTAB 95 — Artillery Terminal [TRAINING MODE]": "SHTAB 95 — Artillery Terminal [TRAINING MODE]",
   "Mission Data": "Mission Data",
@@ -496,5 +521,10 @@ window.SHTAB_LOCALES.en = {
   "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.": "Fictional training projectiles. Each charge uses the listed muzzle velocity; all share the same in-game impact model.",
   "Page not found": "Page not found",
   "No page is registered at this address.": "No page is registered at this address.",
-  "Document loaded": "Document loaded"
+  "Document loaded": "Document loaded",
+  "Bora": "Bora",
+  "Jugo": "Jugo",
+  "Calm Wind": "Calm Wind",
+  "Continental Wind": "Continental Wind",
+  "Wind Type": "Wind Type"
 };
