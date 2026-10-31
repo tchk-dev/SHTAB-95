@@ -65,3 +65,16 @@ test('all currently generated crew callsigns are represented in both catalogs',(
 test('runtime JavaScript contains no hardcoded Cyrillic text',()=>{
  for(const file of runtimeFiles){const code=fs.readFileSync(path.join(root,'js',file),'utf8');assert.doesNotMatch(code,/[А-Яа-яЁё]/,'Cyrillic must live in locales/ru.js, not js/'+file)}
 });
+
+test('terrain diagnostics remain localized after switching language',()=>{
+ const artillery=fs.readFileSync(path.join(root,'js','artillery-map.js'),'utf8');
+ const required=['TERRAIN:','Terrain layer','Topographic','Biomes','Seed','Random',
+  'GENERATING TERRAIN...','PLEASE WAIT','Height','D8 receiver bearing · map-edge outlets'];
+ for(const key of required){
+  assert.ok(Object.hasOwn(en,key),'missing EN terrain key: '+key);
+  assert.ok(Object.hasOwn(ru,key),'missing RU terrain key: '+key);
+  assert.notEqual(en[key],ru[key],'untranslated terrain key: '+key);
+ }
+ assert.match(artillery,/addEventListener\\('shtab:languagechange'/);
+ assert.match(artillery,/if\\(HM\\)renderTerrain\\(\\)/);
+});

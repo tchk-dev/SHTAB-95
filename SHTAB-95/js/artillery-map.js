@@ -70,6 +70,28 @@ function initTerrainDiagnostics(){
  toolbar.parentElement?.insertBefore(label,toolbar);
 }
 initTerrainDiagnostics();
+// Canvas and dynamically-created terrain controls are not translated by the
+// DOM localization observer unless their content is explicitly refreshed.
+window.addEventListener('shtab:languagechange',()=>{
+ const selector=$('terrainDiagnosticLayer');
+ if(selector){
+  const title=selector.parentElement;
+  if(title?.firstChild?.nodeType===3)title.firstChild.nodeValue=I18n.t('TERRAIN:')+' ';
+  selector.setAttribute('aria-label',I18n.t('Terrain layer'));
+  for(const option of selector.options){
+   const names={height:'Topographic',biome:'Biomes',rainfall:'Annual rainfall',temperature:'Mean temperature',flow:'Runoff accumulation',direction:'Flow direction',incision:'Erosion depth',deposition:'Sediment deposition'};
+   option.textContent=I18n.t(names[option.value]||option.value);
+  }
+  const seed=$('terrainSeed');
+  if(seed){
+   seed.parentElement.firstChild.nodeValue=' '+I18n.t('Seed')+' ';
+   seed.placeholder=I18n.t('Random');
+   seed.setAttribute('aria-label',I18n.t('Terrain seed'));
+  }
+ }
+ if(HM)renderTerrain();
+ if(mapC)draw();
+});
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
   const i=u|0,j=w|0,a=u-i,b=w-j;
