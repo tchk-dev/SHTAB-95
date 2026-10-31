@@ -75,6 +75,6 @@ test('terrain diagnostics remain localized after switching language',()=>{
   assert.ok(Object.hasOwn(ru,key),'missing RU terrain key: '+key);
   assert.notEqual(en[key],ru[key],'untranslated terrain key: '+key);
  }
- assert.match(artillery,/addEventListener\\('shtab:languagechange'/);
- assert.match(artillery,/if\\(HM\\)renderTerrain\\(\\)/);
+ assert.ok(artillery.includes("addEventListener('shtab:languagechange'"),'language-change event must refresh terrain UI');
+ assert.ok(artillery.includes('if(HM)renderTerrain()'),'language-change event must refresh terrain legend');
 });
