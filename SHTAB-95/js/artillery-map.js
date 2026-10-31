@@ -55,15 +55,15 @@ function initTerrainDiagnostics(){
  if(!toolbar||document.getElementById('terrainDiagnosticLayer'))return;
  const label=document.createElement('div');
  label.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:11px monospace;margin:6px 4px';
- label.textContent='TERRAIN: ';
- const select=document.createElement('select');select.id='terrainDiagnosticLayer';select.style.width='170px';select.setAttribute('aria-label','Terrain layer');
+ label.textContent=I18n.t('TERRAIN:');
+ const select=document.createElement('select');select.id='terrainDiagnosticLayer';select.style.width='170px';select.setAttribute('aria-label',I18n.t('Terrain layer'));
  for(const [value,name] of [['height','Topographic'],['biome','Biomes'],['rainfall','Annual rainfall'],['temperature','Mean temperature'],['flow','Runoff accumulation'],['direction','Flow direction'],['incision','Erosion depth'],['deposition','Sediment deposition']]){
-  const option=document.createElement('option');option.value=value;option.textContent=name;select.appendChild(option);
+  const option=document.createElement('option');option.value=value;option.textContent=I18n.t(name);select.appendChild(option);
  }
  select.onchange=()=>{terrainLayer=select.value;if(HM){renderTerrain();draw()}};
  label.appendChild(select);
- const seedLabel=document.createElement('label');seedLabel.textContent=' Seed ';
- const seedInput=document.createElement('input');seedInput.id='terrainSeed';seedInput.type='number';seedInput.min='0';seedInput.max='4294967295';seedInput.step='1';seedInput.placeholder='Random';seedInput.style.width='110px';seedInput.setAttribute('aria-label','Terrain seed');
+ const seedLabel=document.createElement('label');seedLabel.textContent=' '+I18n.t('Seed')+' ';
+ const seedInput=document.createElement('input');seedInput.id='terrainSeed';seedInput.type='number';seedInput.min='0';seedInput.max='4294967295';seedInput.step='1';seedInput.placeholder=I18n.t('Random');seedInput.style.width='110px';seedInput.setAttribute('aria-label',I18n.t('Terrain seed'));
  seedLabel.appendChild(seedInput);label.appendChild(seedLabel);
  const legend=document.createElement('span');legend.id='terrainLegend';legend.style.cssText='flex-basis:100%;line-height:1.5';label.appendChild(legend);
  const info=document.createElement('span');info.id='terrainInfo';info.style.marginLeft='8px';label.appendChild(info);
@@ -87,7 +87,16 @@ function renderTerrain(){
   const layer=terrainLayer==='flow'?terrainDiagnostics?.accumulation:terrainLayer==='direction'?terrainDiagnostics?.receiver:['incision','deposition','rainfall','temperature'].includes(terrainLayer)?terrainDiagnostics?.[terrainLayer]:null;
   let layerMin=Infinity,layerMax=-Infinity;
   if(layer)for(const v of layer){layerMin=Math.min(layerMin,v);layerMax=Math.max(layerMax,v)}
-  const legends={height:'Height '+Math.round(min)+'–'+Math.round(max)+' m · contours 50 m · blue: rivers / lake basins',biome:'Grassland · woodland · montane forest · alpine meadow · bare rock · wetland',rainfall:'Annual rainfall '+Math.round(layerMin)+'–'+Math.round(layerMax)+' mm/year',temperature:'Mean annual temperature '+layerMin.toFixed(1)+'–'+layerMax.toFixed(1)+' °C',flow:'Log runoff accumulation · equivalent contributing cells at 600 mm/year runoff',direction:'D8 receiver bearing · map-edge outlets',incision:'Bedrock incision 0–'+layerMax.toFixed(2)+' m',deposition:'Deposited sediment 0–'+layerMax.toFixed(2)+' m'};
+  const legends={
+    height:I18n.t('Height')+' '+Math.round(min)+'–'+Math.round(max)+' '+I18n.t('m · contours 50 m · blue: rivers / lake basins'),
+    biome:I18n.t('Grassland · woodland · montane forest · alpine meadow · bare rock · wetland'),
+    rainfall:I18n.t('Annual rainfall')+' '+Math.round(layerMin)+'–'+Math.round(layerMax)+' '+I18n.t('mm/year'),
+    temperature:I18n.t('Mean annual temperature')+' '+layerMin.toFixed(1)+'–'+layerMax.toFixed(1)+' °C',
+    flow:I18n.t('Log runoff accumulation · equivalent contributing cells at 600 mm/year runoff'),
+    direction:I18n.t('D8 receiver bearing · map-edge outlets'),
+    incision:I18n.t('Bedrock incision')+' 0–'+layerMax.toFixed(2)+' '+I18n.t('m'),
+    deposition:I18n.t('Deposited sediment')+' 0–'+layerMax.toFixed(2)+' '+I18n.t('m')
+  };
   if($('terrainLegend'))$('terrainLegend').textContent=legends[terrainLayer];
   const palette=[[199,205,153],[154,181,134],[133,163,135],[188,193,155],[186,179,164],[151,186,172]];
   for(let y=0;y<N;y++)for(let x=0;x<N;x++){
@@ -438,8 +447,8 @@ function draw(){
   if(terrainGenerating){
     x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
     x.fillStyle='#b9c8a9';x.font='bold 16px Courier New';x.textAlign='center';
-    x.fillText('GENERATING TERRAIN...',W/2,H/2);
-    x.font='12px Courier New';x.fillText('PLEASE WAIT',W/2,H/2+24);x.textAlign='left';return;
+    x.fillText(I18n.t('GENERATING TERRAIN...'),W/2,H/2);
+    x.font='12px Courier New';x.fillText(I18n.t('PLEASE WAIT'),W/2,H/2+24);x.textAlign='left';return;
   }x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
   x.imageSmoothingEnabled=true;x.save();x.filter=window.sh95GreenMap?'grayscale(1) sepia(.8) hue-rotate(70deg) saturate(1.5) brightness(.64) contrast(1.2)':'none';x.drawImage(terr,X(ORG.x),Y(ORG.y+WS),WS/v.m,WS/v.m);x.restore();
   const steps=[100,200,500,1000,2000,5000],st=steps.find(s=>s/v.m>=80)||5000;
