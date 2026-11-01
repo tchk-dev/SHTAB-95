@@ -3,7 +3,7 @@
 self.window=self;
 importScripts('terrain-data.js','geology.js','macrorelief.js','hydrology.js','erosion.js','sediment.js','climate.js','water-mask.js','surface-flow.js','catchments.js','reservoir.js','reservoir-network.js','lake-routing.js','hydrology-scenario.js','hydrology-preview.js');
 self.onmessage=function(event){
- const {id,seed,region}=event.data;
+ const {id,seed,region,hydrologyPreview=false}=event.data;
  try{
   if(!Number.isInteger(seed)||seed<0||seed>4294967295)throw Error('Invalid terrain seed');
   if(!Object.prototype.hasOwnProperty.call(self.SH95Geology.REGIONS,region))throw Error('Unknown terrain region');
