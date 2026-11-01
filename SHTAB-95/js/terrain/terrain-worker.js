@@ -1,7 +1,7 @@
 // Dedicated terrain generation worker; independent of DOM and rendering.
 'use strict';
 self.window=self;
-importScripts('terrain-data.js','geology.js','macrorelief.js','hydrology.js','erosion.js','sediment.js','climate.js','water-mask.js');
+importScripts('terrain-data.js','geology.js','macrorelief.js','hydrology.js','erosion.js','sediment.js','climate.js','water-mask.js','surface-flow.js','catchments.js','reservoir.js','reservoir-network.js','lake-routing.js','hydrology-scenario.js','hydrology-preview.js');
 self.onmessage=function(event){
  const {id,seed,region}=event.data;
  try{
@@ -33,7 +33,9 @@ self.onmessage=function(event){
    runoffInput+=forcing.runoff[i];
    if(sediment.hydrology.receiver[i]<0)runoffOutlets+=sediment.hydrology.accumulation[i];
   }
-  const data={id,waterMask,generationVersion:'terrain-v2',waterBudget:{input:runoffInput,outlets:runoffOutlets},waterDepth,biome:climate.biome,temperature:climate.temperature,rainfall:climate.rainfall,heightMap:sediment.heightMap,incision:result.incision,
+  // Diagnostic only: gameplay continues using the validated production hydrology.
+  const preview=hydrologyPreview?self.SH95HydrologyPreview.analyze(sediment.heightMap,size,{gridSize:32,runoffMetres:.1,worldMetres:40000}):null;
+  const data={id,hydrologyPreview:preview,waterMask,generationVersion:'terrain-v2',waterBudget:{input:runoffInput,outlets:runoffOutlets},waterDepth,biome:climate.biome,temperature:climate.temperature,rainfall:climate.rainfall,heightMap:sediment.heightMap,incision:result.incision,
    deposition:sediment.deposition,hillslope:sediment.hillslope,sedimentBudget:sediment.budget,
    accumulation:sediment.hydrology.accumulation,receiver:sediment.hydrology.receiver,
    timings,seed,region};
