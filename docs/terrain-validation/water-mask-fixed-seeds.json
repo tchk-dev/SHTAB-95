@@ -1,0 +1,428 @@
+{
+  "runtime": "v26.12.1",
+  "sourceSha256": "b08e93478af27942e7cc0de7a81d59bb309550fe7847dcc039bf72dfa7f6c7ed",
+  "grid": 512,
+  "worldMetres": 40000,
+  "seeds": [
+    0,
+    42,
+    4294967295
+  ],
+  "regressionCase": {
+    "region": "donja_bukovica",
+    "seed": 501738173
+  },
+  "generations": 26,
+  "checks": "Water-mask coverage, upstream erosion baseline (when supplied), finite fields, exact repeat hash, transferable detachment, acyclic neighbouring drainage to edge, water budget, sediment budget, regional relief ordering, terrain-aware projectile impact",
+  "means": {
+    "donja_bukovica": 54.26506948471069,
+    "popovac": 229.95122782389322,
+    "lipovac": 519.8674163818359,
+    "mckhetovac": 1700.4351501464844
+  },
+  "runs": [
+    {
+      "region": "donja_bukovica",
+      "seed": 0,
+      "sha256": "4eb84e8181fd8f329d547ee24fd3dcb69855fb755d86c334a79ffb31a4cda19c",
+      "physicalSha256": "c5b02a9fb7cb4a5d57920f2973a0c1ff9ff5a85912ee4b2fe4a1fbf154573a71",
+      "waterMaskFraction": 0.06281280517578125,
+      "recoveredShallowCells": 7846,
+      "recoveredSeamCells": 54,
+      "min": 35.617122650146484,
+      "max": 83.75997924804688,
+      "lakeFraction": 0.0328826904296875,
+      "riverCells": 3505,
+      "elapsedMs": 6234.777819,
+      "repeatMs": 5863.349695,
+      "timings": {
+        "macroMs": 2254.2989159999997,
+        "erosionAndHydrologyMs": 2664.9149909999996,
+        "sedimentMs": 935.0469220000004,
+        "climateMs": 255.83943100000033,
+        "waterMaskMs": 87.03257699999995
+      },
+      "sedimentBudget": {
+        "erodedVolume": 19508286.5459461,
+        "depositedVolume": 8081352.2527861595,
+        "exportedVolume": 11426934.29315993
+      },
+      "waterBudget": {
+        "input": 113902.96885707974,
+        "outlets": 113902.97948041558
+      }
+    },
+    {
+      "region": "donja_bukovica",
+      "seed": 42,
+      "sha256": "1e6c3db23270cf24817a1063efd12ae0fb21cc79ade835634ba58806452f7afe",
+      "physicalSha256": "85505579665c50103991549bbef2da7ff9ce0a03832223122dcdcecfa3c67f34",
+      "waterMaskFraction": 0.08684158325195312,
+      "recoveredShallowCells": 6435,
+      "recoveredSeamCells": 22,
+      "min": 38.99205780029297,
+      "max": 88.78791809082031,
+      "lakeFraction": 0.06229400634765625,
+      "riverCells": 3573,
+      "elapsedMs": 5971.598502999999,
+      "repeatMs": 6021.996902999999,
+      "timings": {
+        "macroMs": 2157.7738769999996,
+        "erosionAndHydrologyMs": 2508.3259309999994,
+        "sedimentMs": 908.8104099999982,
+        "climateMs": 256.8156430000017,
+        "waterMaskMs": 100.27124200000253
+      },
+      "sedimentBudget": {
+        "erodedVolume": 24619435.47614248,
+        "depositedVolume": 14660793.809013123,
+        "exportedVolume": 9958641.667129459
+      },
+      "waterBudget": {
+        "input": 113901.15921232104,
+        "outlets": 113901.16051858664
+      }
+    },
+    {
+      "region": "donja_bukovica",
+      "seed": 4294967295,
+      "sha256": "3bcc76f3892674e045ccead31a23e554c29e4acc097d76a0f9a60a0d8398143b",
+      "physicalSha256": "a403504be854411d3fab1265dd28a2112f0eacd37d5e551b386fd82342599fd1",
+      "waterMaskFraction": 0.071807861328125,
+      "recoveredShallowCells": 7225,
+      "recoveredSeamCells": 47,
+      "min": 20.543790817260742,
+      "max": 87.65337371826172,
+      "lakeFraction": 0.044246673583984375,
+      "riverCells": 5174,
+      "elapsedMs": 6026.912680999998,
+      "repeatMs": 6174.452867,
+      "timings": {
+        "macroMs": 2256.4125600000007,
+        "erosionAndHydrologyMs": 2461.662452999997,
+        "sedimentMs": 903.8511369999978,
+        "climateMs": 267.0207359999986,
+        "waterMaskMs": 97.34622500000114
+      },
+      "sedimentBudget": {
+        "erodedVolume": 30048053.19694248,
+        "depositedVolume": 14207529.156310262,
+        "exportedVolume": 15840524.04063222
+      },
+      "waterBudget": {
+        "input": 191051.36017256975,
+        "outlets": 191051.43530631065
+      }
+    },
+    {
+      "region": "donja_bukovica",
+      "seed": 501738173,
+      "sha256": "1c31d61cd9626aaadbec9212d9603386f8eadaaeaa8619169a741834a10e2ec3",
+      "physicalSha256": "a359a5450c08b0748e024e8fe840af2c1ec0f7fff67abfee5fa38829ecf0f63b",
+      "waterMaskFraction": 0.040729522705078125,
+      "recoveredShallowCells": 6166,
+      "recoveredSeamCells": 47,
+      "min": 29.40837860107422,
+      "max": 81.42035675048828,
+      "lakeFraction": 0.017208099365234375,
+      "riverCells": 4943,
+      "elapsedMs": 6037.623122999998,
+      "repeatMs": 5899.258935999998,
+      "timings": {
+        "macroMs": 2287.351809,
+        "erosionAndHydrologyMs": 2441.7233519999936,
+        "sedimentMs": 917.1053820000016,
+        "climateMs": 259.35471900000266,
+        "waterMaskMs": 93.62727799999993
+      },
+      "sedimentBudget": {
+        "erodedVolume": 27177339.376879476,
+        "depositedVolume": 7970703.838326257,
+        "exportedVolume": 19206635.538553208
+      },
+      "waterBudget": {
+        "input": 212851.1014288664,
+        "outlets": 212851.0968902111
+      }
+    },
+    {
+      "region": "popovac",
+      "seed": 0,
+      "sha256": "4f28f16a9519c38a489e6a88c99c19840590d4669450195ba46b34dd21c88470",
+      "physicalSha256": "1377973a4312f9ac25c32ee07fec9594fa655992e574f3fb7feafa029adae8f4",
+      "waterMaskFraction": 0.07754135131835938,
+      "recoveredShallowCells": 4269,
+      "recoveredSeamCells": 56,
+      "min": 131.03419494628906,
+      "max": 393.7086486816406,
+      "lakeFraction": 0.06125640869140625,
+      "riverCells": 2913,
+      "elapsedMs": 7638.3915350000025,
+      "repeatMs": 7698.772063000004,
+      "timings": {
+        "macroMs": 3852.181306999999,
+        "erosionAndHydrologyMs": 2466.6664889999956,
+        "sedimentMs": 937.6345939999956,
+        "climateMs": 258.9765729999999,
+        "waterMaskMs": 89.71971299999859
+      },
+      "sedimentBudget": {
+        "erodedVolume": 69944893.03230363,
+        "depositedVolume": 32317603.700155493,
+        "exportedVolume": 37627289.33214835
+      },
+      "waterBudget": {
+        "input": 120046.25889024138,
+        "outlets": 120046.2556708157
+      }
+    },
+    {
+      "region": "popovac",
+      "seed": 42,
+      "sha256": "20ef5373fd3fb716be4289b70541a448d081b9a53f1c81e9d14a642a45b3b33b",
+      "physicalSha256": "a1b1f1702dbd41118483cf734714802c5ac0b0189629fd79d34e7eb9c9eca0b2",
+      "waterMaskFraction": 0.05484771728515625,
+      "recoveredShallowCells": 3971,
+      "recoveredSeamCells": 54,
+      "min": 165.11607360839844,
+      "max": 403.284423828125,
+      "lakeFraction": 0.039699554443359375,
+      "riverCells": 3137,
+      "elapsedMs": 9108.954722999995,
+      "repeatMs": 9671.310085999998,
+      "timings": {
+        "macroMs": 4621.548713000004,
+        "erosionAndHydrologyMs": 2884.1528230000113,
+        "sedimentMs": 1100.724641000008,
+        "climateMs": 317.0161989999906,
+        "waterMaskMs": 135.91155600000639
+      },
+      "sedimentBudget": {
+        "erodedVolume": 91791828.52490792,
+        "depositedVolume": 37023158.05326934,
+        "exportedVolume": 54768670.4716386
+      },
+      "waterBudget": {
+        "input": 119891.60922089219,
+        "outlets": 119891.60783824325
+      }
+    },
+    {
+      "region": "popovac",
+      "seed": 4294967295,
+      "sha256": "69c89eec97c2e38eb4a01958f578e03a252ceb8ac5dc6d07144ebdd675aeeac7",
+      "physicalSha256": "6b4d4dea8d830d037e2c6cdc318ff405d629c0cf32ede0180c78ea7152f2dfda",
+      "waterMaskFraction": 0.0819244384765625,
+      "recoveredShallowCells": 5476,
+      "recoveredSeamCells": 243,
+      "min": 137.23899841308594,
+      "max": 326.2498779296875,
+      "lakeFraction": 0.06103515625,
+      "riverCells": 4054,
+      "elapsedMs": 7380.611805999986,
+      "repeatMs": 7260.845480000004,
+      "timings": {
+        "macroMs": 3486.791048999992,
+        "erosionAndHydrologyMs": 2546.2109830000118,
+        "sedimentMs": 941.4965979999979,
+        "climateMs": 272.01074299999163,
+        "waterMaskMs": 91.99578700000711
+      },
+      "sedimentBudget": {
+        "erodedVolume": 77110732.37176357,
+        "depositedVolume": 41874010.30240047,
+        "exportedVolume": 35236722.0693634
+      },
+      "waterBudget": {
+        "input": 196157.67482572794,
+        "outlets": 196157.59616702795
+      }
+    },
+    {
+      "region": "lipovac",
+      "seed": 0,
+      "sha256": "ea1b64f4165488610257381f1c02527f53e0c18981569d2b893b170e958d07e5",
+      "physicalSha256": "644628303c75a5146ebdea42bd62a51d5e5e245a4c4d35a74a8c51b1f36fd732",
+      "waterMaskFraction": 0.0639190673828125,
+      "recoveredShallowCells": 1739,
+      "recoveredSeamCells": 78,
+      "min": 237.2360076904297,
+      "max": 691.5302734375,
+      "lakeFraction": 0.057285308837890625,
+      "riverCells": 2465,
+      "elapsedMs": 12121.332539999989,
+      "repeatMs": 12154.943598999991,
+      "timings": {
+        "macroMs": 7977.689295999997,
+        "erosionAndHydrologyMs": 2674.24818699999,
+        "sedimentMs": 1059.9704469999997,
+        "climateMs": 285.71715500000573,
+        "waterMaskMs": 87.5291339999967
+      },
+      "sedimentBudget": {
+        "erodedVolume": 182334476.47039366,
+        "depositedVolume": 76385881.19278502,
+        "exportedVolume": 105948595.27760883
+      },
+      "waterBudget": {
+        "input": 121664.89684608579,
+        "outlets": 121664.90359383821
+      }
+    },
+    {
+      "region": "lipovac",
+      "seed": 42,
+      "sha256": "f64e613dbd10327a96798dc39f0a0b4ea12341735ccc7c6409a66c618b94f98c",
+      "physicalSha256": "36c5bb7338e50eaf215d756531bd11a21aeff52b6df22db310b1cbc744dcfcea",
+      "waterMaskFraction": 0.09932327270507812,
+      "recoveredShallowCells": 2626,
+      "recoveredSeamCells": 64,
+      "min": 230.6318817138672,
+      "max": 783.2216796875,
+      "lakeFraction": 0.08930587768554688,
+      "riverCells": 2146,
+      "elapsedMs": 11683.930047000002,
+      "repeatMs": 11784.94839200002,
+      "timings": {
+        "macroMs": 7911.347735000003,
+        "erosionAndHydrologyMs": 2470.5673010000173,
+        "sedimentMs": 917.6746890000068,
+        "climateMs": 261.85944599998766,
+        "waterMaskMs": 86.11623499999405
+      },
+      "sedimentBudget": {
+        "erodedVolume": 164396433.25781804,
+        "depositedVolume": 82449477.03907299,
+        "exportedVolume": 81946956.21874559
+      },
+      "waterBudget": {
+        "input": 125041.9934090823,
+        "outlets": 125041.99662312865
+      }
+    },
+    {
+      "region": "lipovac",
+      "seed": 4294967295,
+      "sha256": "633d7a018e283c1251f16c5df3d4670d7bd2c05d7f3bf1ab6bc12f095d6078e2",
+      "physicalSha256": "13caf71c5d103e7f80701cdc1a2ca5498ece8c11fc1edd73b9b7c7cd1b5794a5",
+      "waterMaskFraction": 0.1216278076171875,
+      "recoveredShallowCells": 1806,
+      "recoveredSeamCells": 175,
+      "min": 201.2387237548828,
+      "max": 753.9569091796875,
+      "lakeFraction": 0.11473846435546875,
+      "riverCells": 2678,
+      "elapsedMs": 12366.305223000003,
+      "repeatMs": 12942.55476900001,
+      "timings": {
+        "macroMs": 8535.095096000005,
+        "erosionAndHydrologyMs": 2511.8920849999995,
+        "sedimentMs": 934.4218020000262,
+        "climateMs": 259.205369000003,
+        "waterMaskMs": 89.12369400000898
+      },
+      "sedimentBudget": {
+        "erodedVolume": 333332651.03824586,
+        "depositedVolume": 177586692.92721692,
+        "exportedVolume": 155745958.1110291
+      },
+      "waterBudget": {
+        "input": 201552.984639436,
+        "outlets": 201553.00234389305
+      }
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 0,
+      "sha256": "32e696015b068beae9d9b7a07e5160fe17095475b4c942908db929201591c8eb",
+      "physicalSha256": "6c138d716eea33243c0b7e7e66c3e830b5f56d913e9543f2be9098b02eca5513",
+      "waterMaskFraction": 0.051113128662109375,
+      "recoveredShallowCells": 423,
+      "recoveredSeamCells": 28,
+      "min": 445.2525634765625,
+      "max": 1892.6947021484375,
+      "lakeFraction": 0.04949951171875,
+      "riverCells": 1992,
+      "elapsedMs": 13196.248418000003,
+      "repeatMs": 12757.45970800001,
+      "timings": {
+        "macroMs": 9322.909106000006,
+        "erosionAndHydrologyMs": 2542.815942999994,
+        "sedimentMs": 935.6008120000188,
+        "climateMs": 265.81529100000625,
+        "waterMaskMs": 90.96089500002563
+      },
+      "sedimentBudget": {
+        "erodedVolume": 507378588.3775171,
+        "depositedVolume": 89203543.46104503,
+        "exportedVolume": 418175044.91647226
+      },
+      "waterBudget": {
+        "input": 132874.707080476,
+        "outlets": 132874.69000707567
+      }
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 42,
+      "sha256": "5ff894ea3ad5ce4738d4b9e374918587152a4dffa6873add678174b82bf37788",
+      "physicalSha256": "52faa01f79671e924e23145976981396073084c112e155c2a2eb112ba95ffe3b",
+      "waterMaskFraction": 0.048858642578125,
+      "recoveredShallowCells": 579,
+      "recoveredSeamCells": 18,
+      "min": 396.7792053222656,
+      "max": 2164.08544921875,
+      "lakeFraction": 0.046649932861328125,
+      "riverCells": 2619,
+      "elapsedMs": 11328.989541999996,
+      "repeatMs": 11136.744254999998,
+      "timings": {
+        "macroMs": 7441.953699999984,
+        "erosionAndHydrologyMs": 2517.0760229999723,
+        "sedimentMs": 935.0096170000033,
+        "climateMs": 278.4211720000021,
+        "waterMaskMs": 114.48144800000591
+      },
+      "sedimentBudget": {
+        "erodedVolume": 501603218.62003034,
+        "depositedVolume": 78643899.53549649,
+        "exportedVolume": 422959319.0845337
+      },
+      "waterBudget": {
+        "input": 130603.50813321769,
+        "outlets": 130603.56238228083
+      }
+    },
+    {
+      "region": "mckhetovac",
+      "seed": 4294967295,
+      "sha256": "763c141122c2637d2c0fb2d8c8626f3ae4f8b81abcbd4774b2d9fed4676fcdb0",
+      "physicalSha256": "fd738032f9b9aaeb84dc4de704304fb00de1e4d1ebcb6121981ec1e917400b7a",
+      "waterMaskFraction": 0.176422119140625,
+      "recoveredShallowCells": 621,
+      "recoveredSeamCells": 95,
+      "min": 328.00592041015625,
+      "max": 2214.56298828125,
+      "lakeFraction": 0.17405319213867188,
+      "riverCells": 2100,
+      "elapsedMs": 11305.708011999988,
+      "repeatMs": 11060.006599999993,
+      "timings": {
+        "macroMs": 7486.091737999988,
+        "erosionAndHydrologyMs": 2509.4183330000087,
+        "sedimentMs": 925.7786180000112,
+        "climateMs": 259.1319369999983,
+        "waterMaskMs": 86.55241000000387
+      },
+      "sedimentBudget": {
+        "erodedVolume": 962047846.4616847,
+        "depositedVolume": 330860752.1064601,
+        "exportedVolume": 631187094.35522
+      },
+      "waterBudget": {
+        "input": 217657.26525036246,
+        "outlets": 217657.23693608493
+      }
+    }
+  ]
+}

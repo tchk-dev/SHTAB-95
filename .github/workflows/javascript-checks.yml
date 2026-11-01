@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -33,3 +32,12 @@ jobs:
         run: |
           node --test tests/*.test.mjs
           node --test SHTAB-95/tests/i18n.test.js
+      - name: Audit experimental lake routing on generated terrain
+        run: |
+          for region in donja_bukovica popovac lipovac mckhetovac; do
+            node tests/hydrology-region-audit.mjs "$region" 42 32
+          done
+          node tests/hydrology-region-audit.mjs mckhetovac 4294967295 32
+          node tests/hydrology-region-audit.mjs donja_bukovica 501738173 32
+      - name: Verify full-resolution terrain seed matrix
+        run: node tests/terrain-worker-matrix.mjs

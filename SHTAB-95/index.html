@@ -19,8 +19,8 @@
   <div class="file-body"><div id="filesList" class="file-list">Loading…</div><div class="file-detail" id="filesInfo">Select a recording to play or open it in MG-95.</div><audio id="filesAudio" controls preload="none" style="width:100%;margin-top:8px"></audio></div>
  </div>
  <div class="tool">
-  <button id="languageToggle" type="button" title="Switch language">EN · English</button><button id="newt">🗺 New Mission</button><button id="nowind">🍃 No Wind</button>
-  <button id="fit">⌂ Reset View</button><span class="sfx-control"><button type="button" id="sfxToggle" aria-pressed="true" title="Mute Interface Sounds">♫ SOUND</button><input id="sfxVolume" type="range" min="0" max="100" value="65" aria-label="Interface Volume" title="Interface Volume"><span id="sfxPercent">65%</span></span><button id="zin">＋</button><button id="zout">－</button>
+  <div class="tool-primary"><button id="languageToggle" type="button" title="Switch language">EN · English</button><button id="newt">🗺 New Mission</button><button id="nowind">🍃 No Wind</button><div class="terrain-region-label"><span id="terrainRegionLabel">REGION</span><div class="region-combo" id="terrainRegionCombo"><button type="button" class="region-combo-trigger" id="terrainRegionTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="terrainRegionLabel terrainRegionValue"><span id="terrainRegionValue">Donja Bukovica</span><span class="region-combo-arrow" aria-hidden="true">▼</span></button><div class="region-combo-menu" id="terrainRegionMenu" role="listbox" aria-labelledby="terrainRegionLabel" hidden><button type="button" role="option" class="region-combo-option" data-region="donja_bukovica" aria-selected="true">Donja Bukovica</button><button type="button" role="option" class="region-combo-option" data-region="popovac" aria-selected="false">Popovac</button><button type="button" role="option" class="region-combo-option" data-region="lipovac" aria-selected="false">Lipovac</button><button type="button" role="option" class="region-combo-option" data-region="mckhetovac" aria-selected="false">Mckhetovac</button></div><input type="hidden" id="terrainRegion" value="donja_bukovica"></div></div></div>
+  <div class="tool-secondary"><span class="sfx-control"><button type="button" id="sfxToggle" aria-pressed="true" title="Mute Interface Sounds">♫ SOUND</button><input id="sfxVolume" type="range" min="0" max="100" value="65" aria-label="Interface Volume" title="Interface Volume"><span id="sfxPercent">65%</span></span><span class="tool-zoom"><button id="zin" title="Zoom in">＋</button><button id="zout" title="Zoom out">－</button></span></div>
  </div>
  <div class="mission-conditions" id="missionConditions" aria-label="Mission Conditions"></div><div class="bootstrip"><span class="led"></span> LOCAL NODE / COMMUNICATION CHANNEL <strong id="sysmode">STANDBY</strong><span class="bootright">SIMULATION • DOS/Win95 workstation</span></div><div class="main">
   <div class="pane">
@@ -116,6 +116,11 @@
 <script src="js/ballistics.js"></script>
 <script src="js/mission-setup.js"></script>
 <script src="js/weather-system.js"></script>
+<script src="js/terrain/terrain-data.js"></script>
+<script src="js/terrain/geology.js"></script>
+<script src="js/terrain/macrorelief.js"></script>
+<script src="js/terrain/hydrology.js"></script>
+<script src="js/terrain/erosion.js"></script>
 <script src="js/artillery-map.js"></script>
 
 <script src="js/notifications.js"></script>

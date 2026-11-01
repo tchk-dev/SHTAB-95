@@ -1,45 +1,151 @@
-const WS=32000,N=192,CELL=WS/(N-1),G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
-let S,HM,ORG,terr,CR=[],last=null,v={cx:0,cy:0,m:30};
+const {WORLD_SIZE:WS,GRID_SIZE:N,CELL_SIZE:CELL}=window.SH95TerrainData;
+const G=9.81,K=8e-5,V0=[250,350,450,550,800],R_HIT=15;
+let S,HM,ORG,terr,terrainHydrology,CR=[],last=null,v={cx:0,cy:0,m:30};
 const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a);
 const mapC=$('map'),W=mapC.width,H=mapC.height;
 const X=wx=>W/2+(wx-v.cx)/v.m,Y=wy=>H/2-(wy-v.cy)/v.m;
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function genTerrain(seed){
-  const r=mulberry(seed),hm=new Float32Array(N*N),oct=[];let tot=0;
-  for(let o=0;o<5;o++){const f=3*2**o,amp=.55**o,L=new Float32Array((f+1)*(f+1));tot+=amp;for(let i=0;i<L.length;i++)L[i]=r();oct.push({f,amp,L})}
-  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
-    let n=0;
-    for(const{f,amp,L}of oct){const u=i/(N-1)*f,w=j/(N-1)*f,i0=Math.min(u|0,f-1),j0=Math.min(w|0,f-1),s=f+1;let a=u-i0,b=w-j0;a=a*a*(3-2*a);b=b*b*(3-2*b);
-      n+=amp*(L[j0*s+i0]*(1-a)*(1-b)+L[j0*s+i0+1]*a*(1-b)+L[(j0+1)*s+i0]*(1-a)*b+L[(j0+1)*s+i0+1]*a*b)}
-    hm[j*N+i]=Math.pow(Math.min(1,Math.max(0,(n/tot-.30)*2.4)),1.25)*520;
+// Four regional geological profiles.
+let terrainRegion='donja_bukovica';
+
+function initTerrainRegionCombo(){
+ const combo=$('terrainRegionCombo'),trigger=$('terrainRegionTrigger'),menu=$('terrainRegionMenu'),value=$('terrainRegionValue'),input=$('terrainRegion');
+ if(!combo||!trigger||!menu||!input)return;
+ const options=[...menu.querySelectorAll('[data-region]')];
+ const close=()=>{menu.hidden=true;trigger.setAttribute('aria-expanded','false')};
+ const open=()=>{menu.hidden=false;trigger.setAttribute('aria-expanded','true')};
+ const choose=option=>{input.value=option.dataset.region;value.textContent=option.textContent;options.forEach(item=>item.setAttribute('aria-selected',String(item===option)));close();trigger.focus()};
+ trigger.addEventListener('click',()=>menu.hidden?open():close());
+ trigger.addEventListener('keydown',event=>{
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();open();const current=options.findIndex(option=>option.dataset.region===input.value);options[(current+(event.key==='ArrowDown'?1:-1)+options.length)%options.length].focus()}
+  else if(event.key==='Escape')close();
+ });
+ menu.addEventListener('click',event=>{const option=event.target.closest('[data-region]');if(option)choose(option)});
+ menu.addEventListener('keydown',event=>{
+  const current=options.indexOf(document.activeElement);
+  if(event.key==='Escape'){event.preventDefault();close();trigger.focus()}
+  else if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();options[(current+(event.key==='ArrowDown'?1:-1)+options.length)%options.length].focus()}
+  else if(event.key==='Home'||event.key==='End'){event.preventDefault();options[event.key==='Home'?0:options.length-1].focus()}
+  else if(event.key==='Enter'||event.key===' '){event.preventDefault();if(current>=0)choose(options[current])}
+ });
+ document.addEventListener('pointerdown',event=>{if(!combo.contains(event.target))close()});
+ combo.addEventListener('focusout',event=>{if(!combo.contains(event.relatedTarget))close()});
+}
+initTerrainRegionCombo();
+
+// Worker generation and terrain diagnostics.
+let terrainDiagnostics=null,terrainLayer='height',terrainJob=0,terrainWorker=null,terrainRequest=0,terrainGenerating=false;
+function terrainGenerate(seed,region){
+ return new Promise((resolve,reject)=>{
+  if(typeof Worker==='undefined'){reject(Error('Web Worker unavailable'));return}
+  const worker=new Worker('js/terrain/terrain-worker.js');
+  terrainWorker=worker;
+  const id=++terrainJob;
+  worker.onmessage=event=>{
+   if(event.data.id!==id)return;
+   worker.terminate();if(terrainWorker===worker)terrainWorker=null;
+   if(event.data.error)reject(Error(event.data.error));else resolve(event.data);
+  };
+  worker.onerror=event=>{worker.terminate();if(terrainWorker===worker)terrainWorker=null;reject(Error(event.message||'Worker failed'))};
+  worker.postMessage({id,seed,region});
+ });
+}
+function initTerrainDiagnostics(){
+ const toolbar=$('map')?.parentElement;
+ if(!toolbar||document.getElementById('terrainDiagnosticLayer'))return;
+ const label=document.createElement('div');
+ label.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:11px monospace;margin:6px 4px';
+ label.textContent=I18n.t('TERRAIN:');
+ const select=document.createElement('select');select.id='terrainDiagnosticLayer';select.style.width='170px';select.setAttribute('aria-label',I18n.t('Terrain layer'));
+ for(const [value,name] of [['height','Topographic'],['biome','Biomes'],['rainfall','Annual rainfall'],['temperature','Mean temperature'],['flow','Runoff accumulation'],['direction','Flow direction'],['incision','Erosion depth'],['deposition','Sediment deposition']]){
+  const option=document.createElement('option');option.value=value;option.textContent=I18n.t(name);select.appendChild(option);
+ }
+ select.onchange=()=>{terrainLayer=select.value;if(HM){renderTerrain();draw()}};
+ label.appendChild(select);
+ const seedLabel=document.createElement('label');seedLabel.textContent=' '+I18n.t('Seed')+' ';
+ const seedInput=document.createElement('input');seedInput.id='terrainSeed';seedInput.type='number';seedInput.min='0';seedInput.max='4294967295';seedInput.step='1';seedInput.placeholder=I18n.t('Random');seedInput.style.width='110px';seedInput.setAttribute('aria-label',I18n.t('Terrain seed'));
+ seedLabel.appendChild(seedInput);label.appendChild(seedLabel);
+ const legend=document.createElement('span');legend.id='terrainLegend';legend.style.cssText='flex-basis:100%;line-height:1.5';label.appendChild(legend);
+ const info=document.createElement('span');info.id='terrainInfo';info.style.marginLeft='8px';label.appendChild(info);
+ toolbar.parentElement?.insertBefore(label,toolbar);
+}
+initTerrainDiagnostics();
+// Canvas and dynamically-created terrain controls are not translated by the
+// DOM localization observer unless their content is explicitly refreshed.
+window.addEventListener('shtab:languagechange',()=>{
+ const selector=$('terrainDiagnosticLayer');
+ if(selector){
+  const title=selector.parentElement;
+  if(title?.firstChild?.nodeType===3)title.firstChild.nodeValue=I18n.t('TERRAIN:')+' ';
+  selector.setAttribute('aria-label',I18n.t('Terrain layer'));
+  for(const option of selector.options){
+   const names={height:'Topographic',biome:'Biomes',rainfall:'Annual rainfall',temperature:'Mean temperature',flow:'Runoff accumulation',direction:'Flow direction',incision:'Erosion depth',deposition:'Sediment deposition'};
+   option.textContent=I18n.t(names[option.value]||option.value);
   }
-  return hm}
+  const seed=$('terrainSeed');
+  if(seed){
+   seed.parentElement.firstChild.nodeValue=' '+I18n.t('Seed')+' ';
+   seed.placeholder=I18n.t('Random');
+   seed.setAttribute('aria-label',I18n.t('Terrain seed'));
+  }
+ }
+ if(HM)renderTerrain();
+ if(mapC)draw();
+});
 function ground(x,y){
   let u=(x-ORG.x)/CELL,w=(y-ORG.y)/CELL;u=Math.min(N-1.001,Math.max(0,u));w=Math.min(N-1.001,Math.max(0,w));
   const i=u|0,j=w|0,a=u-i,b=w-j;
   return HM[j*N+i]*(1-a)*(1-b)+HM[j*N+i+1]*a*(1-b)+HM[(j+1)*N+i]*(1-a)*b+HM[(j+1)*N+i+1]*a*b}
 
-// Hypsometric palette: green lowlands, ochre slopes, brown highlands.
-const RAMP=[[0,[105,160,95]],[.22,[155,187,111]],[.45,[210,190,119]],[.7,[174,135,101]],[1,[235,227,204]]];
-function colorAt(h){
-  if(h<4)return[78,132,200];
-  const t=Math.min(1,h/480);for(let k=1;k<RAMP.length;k++)if(t<=RAMP[k][0]){const[a,ca]=RAMP[k-1],[b,cb]=RAMP[k],f=(t-a)/(b-a);return ca.map((c,i)=>c+(cb[i]-c)*f)}
-  return RAMP[4][1]}
 function renderTerrain(){
-  const P=768,cv=document.createElement('canvas');cv.width=cv.height=P;const c=cv.getContext('2d'),im=c.createImageData(P,P),hh=new Float32Array(P*P),px=WS/P;
-  // Cache the bilinear interpolation coordinates once per column/row instead of recomputing
-  // divisions, clamps and indices for every rendered pixel.
-  const ax=new Array(P),ay=new Array(P);
-  for(let i=0;i<P;i++){let u=(i+.5)*px/CELL;u=clamp(u,0,N-1.001);const ix=u|0;ax[i]=[ix,u-ix]}
-  for(let j=0;j<P;j++){let u=(WS-(j+.5)*px)/CELL;u=clamp(u,0,N-1.001);const iy=u|0;ay[j]=[iy,u-iy]}
-  for(let j=0;j<P;j++){const [iy,b]=ay[j],row=iy*N,next=(iy+1)*N;for(let i=0;i<P;i++){const [ix,a]=ax[i];hh[j*P+i]=HM[row+ix]*(1-a)*(1-b)+HM[row+ix+1]*a*(1-b)+HM[next+ix]*(1-a)*b+HM[next+ix+1]*a*b}}
-  for(let j=1;j<P-1;j++)for(let i=1;i<P-1;i++){
-    const k=j*P+i,h=hh[k];let col=colorAt(h),sh=1;
-    if(h>=4){const gx=(hh[k+1]-hh[k-1])/(2*px),gy=(hh[k-P]-hh[k+P])/(2*px);sh=Math.min(1.35,Math.max(.55,1+1.8*(gx-gy)));
-      const b=Math.floor(h/40);if(b!==Math.floor(hh[k+1]/40)||b!==Math.floor(hh[k+P]/40))sh*=.8}
-    const o=k*4;im.data[o]=col[0]*sh;im.data[o+1]=col[1]*sh;im.data[o+2]=col[2]*sh;im.data[o+3]=255}
-  c.putImageData(im,0,0);terr=cv}
-
+  const rasterStart=performance.now();
+  // Elevation and diagnostic rasters.
+  terr=document.createElement('canvas');
+  terr.width=terr.height=N;
+  const ctx=terr.getContext('2d');
+  const image=ctx.createImageData(N,N);
+  let min=Infinity,max=-Infinity;
+  for(const h of HM){min=Math.min(min,h);max=Math.max(max,h)}
+  const layer=terrainLayer==='flow'?terrainDiagnostics?.accumulation:terrainLayer==='direction'?terrainDiagnostics?.receiver:['incision','deposition','rainfall','temperature'].includes(terrainLayer)?terrainDiagnostics?.[terrainLayer]:null;
+  let layerMin=Infinity,layerMax=-Infinity;
+  if(layer)for(const v of layer){layerMin=Math.min(layerMin,v);layerMax=Math.max(layerMax,v)}
+  const legends={
+    height:I18n.t('Height')+' '+Math.round(min)+'–'+Math.round(max)+' '+I18n.t('m · contours 50 m · blue: rivers / lake basins'),
+    biome:I18n.t('Grassland · woodland · montane forest · alpine meadow · bare rock · wetland'),
+    rainfall:I18n.t('Annual rainfall')+' '+Math.round(layerMin)+'–'+Math.round(layerMax)+' '+I18n.t('mm/year'),
+    temperature:I18n.t('Mean annual temperature')+' '+layerMin.toFixed(1)+'–'+layerMax.toFixed(1)+' °C',
+    flow:I18n.t('Log runoff accumulation · equivalent contributing cells at 600 mm/year runoff'),
+    direction:I18n.t('D8 receiver bearing · map-edge outlets'),
+    incision:I18n.t('Bedrock incision')+' 0–'+layerMax.toFixed(2)+' '+I18n.t('m'),
+    deposition:I18n.t('Deposited sediment')+' 0–'+layerMax.toFixed(2)+' '+I18n.t('m')
+  };
+  if($('terrainLegend'))$('terrainLegend').textContent=legends[terrainLayer];
+  const palette=[[199,205,153],[154,181,134],[133,163,135],[188,193,155],[186,179,164],[151,186,172]];
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const ix=x,iy=N-1-y,index=iy*N+ix;
+    const t=layer?(terrainLayer==='flow'?Math.log1p(layer[index])/Math.log1p(Math.max(1,layerMax)):terrainLayer==='direction'?(layer[index]<0?0:(Math.atan2(Math.floor(layer[index]/N)-iy,layer[index]%N-ix)+Math.PI)/(2*Math.PI)):(layer[index]-layerMin)/Math.max(.001,layerMax-layerMin)):(HM[index]-min)/Math.max(1,max-min);
+    const k=(y*N+x)*4;
+    let color=layer?[245-205*t,242-165*t,231-100*t]:[222-72*t,225-85*t,188-70*t];
+    if(!layer){
+     if(terrainLayer==='biome')color=palette[terrainDiagnostics?.biome?.[index]??0].slice();
+     const west=HM[iy*N+Math.max(0,ix-1)],east=HM[iy*N+Math.min(N-1,ix+1)];
+     const south=HM[Math.max(0,iy-1)*N+ix],north=HM[Math.min(N-1,iy+1)*N+ix];
+     const dx=(east-west)/(CELL*(ix===0||ix===N-1?1:2)),dy=(north-south)/(CELL*(iy===0||iy===N-1?1:2));
+     // Light from NW; relief shading follows physical slopes in metres.
+     const light=Math.max(.52,Math.min(1.18,.88+(-dx+dy)*.65/Math.sqrt(1+dx*dx+dy*dy)));
+     color=color.map(c=>c*light);
+     // Discrete isolines at real elevations, not periodic illumination bands.
+     const interval=50;
+     if(terrainLayer==='height'&&((ix>0&&Math.floor(HM[index]/interval)!==Math.floor(west/interval))||(iy>0&&Math.floor(HM[index]/interval)!==Math.floor(south/interval))))color=color.map(c=>c*.81);
+     if(terrainDiagnostics?.waterMask?.[index])color=[142,184,198];
+     else if((terrainDiagnostics?.accumulation?.[index]??0)>600)color=[73,131,156];
+    }
+    image.data[k]=color[0];image.data[k+1]=color[1];image.data[k+2]=color[2];
+    image.data[k+3]=255;
+  }
+  ctx.putImageData(image,0,0);
+  console.info('Terrain raster (ms)',Math.round(performance.now()-rasterStart));
+}
 
 // Fictional Moravican unit callsigns. Draw three distinct names per assignment.
 const CALL_NAMES=["Sokol","Kovač","Vihor","Jastreb","Ris","Vuk","Medved","Orao","Gavran","Zubr","Jelen","Vepar","Sova","Lisica","Kuna","Vran","Breg","Kamen","Dub","Javor","Bor","Jasen","Hrast","Plamen","Iskra","Munja","Oluja","Zora","Sever","Perun"];
@@ -68,10 +174,18 @@ function missionRangeLimit(){
  }
  return Math.max(3000,Math.min(15000,maximum*.85));
 }
+function isDryTerrain(point){
+ const mask=terrainDiagnostics?.waterMask;
+ const water=terrainDiagnostics?.waterDepth;
+ if(!mask&&!water)return true;
+ const x=Math.max(0,Math.min(N-1,Math.round((point.x-ORG.x)/CELL)));
+ const y=Math.max(0,Math.min(N-1,Math.round((point.y-ORG.y)/CELL)));
+ return mask?!mask[y*N+x]:water[y*N+x]<=.4;
+}
 function place(maxDistance){
   const valid=(g,t)=>t.x>=ORG.x+1200&&t.x<=ORG.x+WS-1200&&t.y>=ORG.y+1200&&t.y<=ORG.y+WS-1200&&
     g.x>=ORG.x+1200&&g.x<=ORG.x+WS-1200&&g.y>=ORG.y+1200&&g.y<=ORG.y+WS-1200&&
-    Math.hypot(t.x-g.x,t.y-g.y)>=3000&&Math.hypot(t.x-g.x,t.y-g.y)<=maxDistance&&ground(g.x,g.y)>=30&&ground(t.x,t.y)>=30;
+    isDryTerrain(g)&&isDryTerrain(t)&&Math.hypot(t.x-g.x,t.y-g.y)>=3000&&Math.hypot(t.x-g.x,t.y-g.y)<=maxDistance&&ground(g.x,g.y)>=30&&ground(t.x,t.y)>=30;
   let best=null,bestScore=-Infinity;
   for(let tries=0;tries<2500;tries++){
     const R=rnd(3000,maxDistance),b=rnd(0,2*Math.PI);
@@ -79,7 +193,7 @@ function place(maxDistance){
     const t={x:Math.round(g.x+R*Math.sin(b)),y:Math.round(g.y+R*Math.cos(b))};
     const inside=t.x>=ORG.x+1200&&t.x<=ORG.x+WS-1200&&t.y>=ORG.y+1200&&t.y<=ORG.y+WS-1200;
     const gz=ground(g.x,g.y),tz=ground(t.x,t.y),score=Math.min(gz,tz)+(inside?1000:0);
-    if(score>bestScore){bestScore=score;best={g,t,gz,tz}}
+    if(inside&&isDryTerrain(g)&&isDryTerrain(t)&&score>bestScore){bestScore=score;best={g,t,gz,tz}}
     if(valid(g,t)){g.z=Math.round(gz);t.z=Math.round(tz);return{g,t}}
   }
   // Extremely unusual terrain fallback: choose the best sampled in-bounds pair rather than
@@ -195,12 +309,38 @@ window.sh95AcceptDecodedCoordinates=(crewNumber,x,y,recordTaskId)=>{
  if(window.sh95Event)window.sh95Event(I18n.format('mission.intercept',{crew:crewNumber}));
  return true;
 };
-function newTask(noWind){
- cancelProjectiles();
-  missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;updateTimedConditions(window.GameClock?.now()||new Date(),true);S={...S,...(noWind?{ws:0}:{})};
+async function newTask(noWind){
+  const seedText=$('terrainSeed')?.value.trim()||'';
+  const enteredSeed=Number(seedText);
+  if(seedText&&(!Number.isInteger(enteredSeed)||enteredSeed<0||enteredSeed>4294967295)){
+   alert('Terrain seed must be an integer from 0 to 4294967295');return;
+  }
+  const seed=seedText?enteredSeed:(Math.random()*0xFFFFFFFF)>>>0;
+  const requestedRegion=$('terrainRegion')?.value||terrainRegion;
+  const request=++terrainRequest;
+  if(terrainWorker){terrainWorker.terminate();terrainWorker=null}
+  cancelProjectiles();
+  const newButton=$('newt'),noWindButton=$('nowind');
+  newButton.disabled=true;noWindButton.disabled=true;
+  terrainGenerating=true;draw();
+  let generated;
+  try{
+   generated=await terrainGenerate(seed,requestedRegion);
+  }catch(error){
+   if(request===terrainRequest){terrainGenerating=false;draw();newButton.disabled=false;noWindButton.disabled=false;console.error('Terrain generation failed:',error);alert('Terrain generation failed: '+error.message)}
+   return;
+  }
+  if(request!==terrainRequest)return;
+  newButton.disabled=false;noWindButton.disabled=false;
+  missionOver=false;$('defeat95').hidden=true;windlessTask=!!noWind;
+  updateTimedConditions(window.GameClock?.now()||new Date(),true);S={...S,...(noWind?{ws:0}:{})};
   window.sh95CurrentTaskId='task-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   ORG={x:Math.round(rnd(10,50))*1000,y:Math.round(rnd(10,50))*1000};
-  HM=genTerrain((Math.random()*1e9)|0);
+  terrainRegion=requestedRegion;
+  HM=generated.heightMap;terrainDiagnostics=generated;
+  console.info('Terrain generation timing (ms)',JSON.stringify(generated.timings));
+  window.sh95TerrainSummary={seed,region:terrainRegion,timings:generated.timings,sedimentBudget:generated.sedimentBudget};
+  if($('terrainInfo'))$('terrainInfo').textContent='Seed '+seed+' · 40 × 40 km · 512²';
   const fr=pickFreqs(),maxDistance=missionRangeLimit();
   CR=pickCrewNames().map((name,k)=>({k,name,color:CALL_COLORS[k],f:fr[k],identified:false,decodedTarget:null,...place(maxDistance),shots:[],trajs:[],hit:false,ammo:12,ammoMax:12,reloadUntil:0,temperature:32,thermalAt:(window.GameClock?.nowMs()??performance.now())}));
   renderCrewResources();
@@ -209,7 +349,7 @@ function newTask(noWind){
   last=null;lkKey='';$('res').innerHTML='';updateBearingPanel();annotations.length=0;selectedAnnotation=null;if($('coordX')){$('coordX').value='';$('coordY').value='';$('coordState').textContent=I18n.t("NOT SELECTED")}showTargets.checked=false;
   renderWindReadout();
   $('log').innerHTML='<tr>'+['Shot','Crew','Azimuth','Elevation','Charge','Time, s','Deviation, m'].map(label=>'<th>'+I18n.t(label)+'</th>').join('')+'</tr>';
-  renderData();renderTerrain();fitView();updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
+  renderData();renderTerrain();fitView();terrainGenerating=false;updateLink();draw();if(window.sh95Event)window.sh95Event(I18n.format('mission.created',{crews:CR.length,weather:S.ws?I18n.t('wind ')+S.ws+I18n.t(' m/s'):I18n.t('calm')}));if(window.sh95Brief)window.sh95Brief()}
 
 function simulate(az,el,v0,c){
   return window.SH95Ballistics.simulate(az,el,v0,c,{weather:S,ground,dragMultiplier:missionConditions?.drag||1});
@@ -325,7 +465,13 @@ function marker(x,wx,wy,sym,col,label){
 
 window.sh95RedrawMap=()=>draw();
 function draw(){
-  const x=mapC.getContext('2d');x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
+  const x=mapC.getContext('2d');
+  if(terrainGenerating){
+    x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
+    x.fillStyle='#b9c8a9';x.font='bold 16px Courier New';x.textAlign='center';
+    x.fillText(I18n.t('GENERATING TERRAIN...'),W/2,H/2);
+    x.font='12px Courier New';x.fillText(I18n.t('PLEASE WAIT'),W/2,H/2+24);x.textAlign='left';return;
+  }x.clearRect(0,0,W,H);x.fillStyle='#071b15';x.fillRect(0,0,W,H);
   x.imageSmoothingEnabled=true;x.save();x.filter=window.sh95GreenMap?'grayscale(1) sepia(.8) hue-rotate(70deg) saturate(1.5) brightness(.64) contrast(1.2)':'none';x.drawImage(terr,X(ORG.x),Y(ORG.y+WS),WS/v.m,WS/v.m);x.restore();
   const steps=[100,200,500,1000,2000,5000],st=steps.find(s=>s/v.m>=80)||5000;
   x.lineWidth=1;x.strokeStyle='rgba(95,209,130,.27)';x.font='bold 11px Courier New,monospace';x.textBaseline='alphabetic';
@@ -341,18 +487,12 @@ function draw(){
     if(tr){x.setLineDash([5,4]);x.strokeStyle=c.color;x.lineWidth=1.5;x.beginPath();tr.forEach((p,i)=>{const px=X(c.g.x+p[0]),py=Y(c.g.y+p[1]);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();x.setLineDash([])}
     c.shots.forEach((s,i)=>{const px=X(s.x),py=Y(s.y);x.font='bold 20px Tahoma';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#d62000';halo(x,'✹',px,py);x.font='bold 11px Tahoma';x.fillStyle=c.color;x.textBaseline='bottom';halo(x,(c.k+1)+'.'+(i+1),px+14,py-6);x.textAlign='start'})});
   CR.forEach(c=>{marker(x,c.g.x,c.g.y,'◉',c.color,I18n.t(c.name).toUpperCase());(showTargets.checked||c.hit?marker(x,c.t.x,c.t.y,c.hit?'✔':'✖',c.hit?'#2e8420':c.color,'T'+(c.k+1)):null)});
-  // Elevation legend matching the original terrain palette.
-  const lx=W-155,ly=H-47,lw=138,lh=9;
-  x.fillStyle='rgba(5,17,14,.90)';x.fillRect(lx-8,ly-18,lw+16,51);
-  x.fillStyle='#eef4e5';x.font='bold 10px Courier New';x.textAlign='left';
-  x.fillText(I18n.t("ELEVATION, M"),lx,ly-5);
-  for(let i=0;i<lw;i++){
-    const rgb=colorAt(520*i/(lw-1));x.fillStyle=`rgb(${rgb.map(Math.round).join(',')})`;
-    x.fillRect(lx+i,ly,1,lh);
-  }
-  x.strokeStyle='#d5d9c7';x.strokeRect(lx-.5,ly-.5,lw+1,lh+1);
-  x.fillStyle='#eef4e5';x.font='10px Courier New';
-  x.fillText('0',lx,ly+21);x.textAlign='right';x.fillText('520+',lx+lw,ly+21);x.textAlign='left';
+  // Scale and provisional flat-map status.
+  x.fillStyle='rgba(248,246,225,.95)';x.fillRect(W-166,H-45,158,38);
+  x.strokeStyle='#777465';x.strokeRect(W-166.5,H-45.5,159,39);
+  x.fillStyle='#34362f';x.font='bold 11px Courier New';x.textAlign='left';
+  x.fillText('40 km × 40 km',W-159,H-29);
+  x.font='10px Courier New';x.fillText('GEOLOGY / WATER',W-159,H-15);
   x.fillStyle='#06190f';x.fillRect(4,3,340,18);x.fillStyle='#d7f1d7';x.font='bold 11px Courier New';x.textBaseline='alphabetic';x.fillText(I18n.format('map.grid',{size:st}),9,16);x.strokeStyle='#4fa86e';x.strokeRect(.5,.5,W-1,H-1);
   drawAnnotations(x);drawProfile()}
 function drawProfile(){
@@ -481,7 +621,7 @@ function chooseMapTool(tool){activeMapTool=tool;for(const [id,name] of [['toolPo
 $('toolPoint').onclick=()=>chooseMapTool('point');
 $('toolLine').onclick=()=>chooseMapTool('line');
 mapC.addEventListener('pointerdown',e=>{
- if(![0,1,2].includes(e.button))return;
+ if(!HM||!ORG||terrainGenerating||![0,1,2].includes(e.button))return;
  e.preventDefault();const [px,py]=pos(e);mapC.setPointerCapture(e.pointerId);
  if(e.button===2){eraseAt(px,py);mapGesture={kind:'erase',id:e.pointerId};}
  else if(e.button===1){mapGesture={kind:'pan',id:e.pointerId,p:[px,py],cx:v.cx,cy:v.cy}}
@@ -494,6 +634,7 @@ mapC.addEventListener('pointerdown',e=>{
  draw();
 });
 mapC.addEventListener('pointermove',e=>{
+ if(!HM||!ORG||terrainGenerating)return;
  const [px,py]=pos(e);hover=[px,py];const w=toWorld(px,py);
  $('s1').textContent=I18n.format('map.cursor',{x:Math.round(w.x),y:Math.round(w.y),height:Math.round(ground(w.x,w.y))});
  $('mapread').textContent=`X ${Math.round(w.x)} · Y ${Math.round(w.y)} | px ${Math.round(px)},${Math.round(py)}`;
@@ -515,7 +656,7 @@ $('clearMarks').onclick=()=>{annotations.length=0;selectPoint(null);draw()};
 $('undoMark').onclick=()=>{const a=annotations.pop();if(a===selectedAnnotation)selectPoint(null);draw()};
 mapC.addEventListener('wheel',e=>{e.preventDefault();const[px,py]=pos(e);zoom(e.deltaY<0?.8:1.25,px,py)},{passive:false});
 $('fire').onclick=fire;$('newt').onclick=()=>newTask(false);$('nowind').onclick=()=>newTask(true);
-$('fit').onclick=()=>{fitView();draw()};$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
+$('zin').onclick=()=>zoom(.7);$('zout').onclick=()=>zoom(1.4);
 $('unit').onchange=()=>{$('az').value='';$('el').value=''};
 
 // The desktop clock is maintained by GameClock.
