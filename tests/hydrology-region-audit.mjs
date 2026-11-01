@@ -16,8 +16,11 @@ runtime.importScripts=(...files)=>{for(const file of files)vm.runInContext(sourc
 let produced;
 runtime.postMessage=(data)=>{produced=data};
 vm.runInContext(sources.get('terrain-worker.js'),runtime);
-runtime.onmessage({data:{id:1,seed,region}});
+runtime.onmessage({data:{id:1,seed,region,hydrologyPreview:true}});
 assert.ok(produced&&!produced.error,produced?.error||'Worker did not produce a map');
+assert.ok(produced.hydrologyPreview,'worker did not return requested hydrology preview');
+assert.equal(produced.hydrologyPreview.gridSize,32);
+assert.equal(produced.hydrologyPreview.uphill,0);
 const size=Number(process.argv[4]??32),sourceSize=512;
 if(!Number.isInteger(size)||size<8||size>sourceSize)throw Error('Invalid audit grid resolution');
 const count=size*size;
@@ -49,6 +52,11 @@ for(let i=0;i<count;i++){
  }
 }
 assert.equal(uphill,0);assert.equal(invalidDepth,0);
+if(size===32){
+ assert.ok(Math.abs(produced.hydrologyPreview.wetFraction-wetCells/count)<1e-12,'worker preview must match standalone audit');
+ assert.ok(Math.abs(produced.hydrologyPreview.retained-a.retained)<Math.max(1,a.input)*1e-8);
+ assert.ok(Math.abs(produced.hydrologyPreview.exported-a.exported)<Math.max(1,a.input)*1e-8);
+}
 const queue=[];for(let i=0;i<count;i++)if(indegree[i]===0)queue.push(i);
 for(let p=0;p<queue.length;p++){const j=a.receiver[queue[p]];if(j>=0&&--indegree[j]===0)queue.push(j)}
 assert.equal(queue.length,count,'cycle in hydrological receiver network');
